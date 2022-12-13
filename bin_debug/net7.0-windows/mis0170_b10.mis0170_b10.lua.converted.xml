@@ -1,0 +1,9 @@
+<DominoMetadata IsStateless="0" IsSystem="0">
+	<ControlsIn>
+		<ControlIn Name="In" AnchorDynType="0" HostExecFunc="" />
+		<ControlIn Name="OnLeaveZone" AnchorDynType="0" HostExecFunc="" />
+	</ControlsIn>
+	<ControlsOut />
+	<DatasIn />
+	<DatasOut />
+</DominoMetadata>

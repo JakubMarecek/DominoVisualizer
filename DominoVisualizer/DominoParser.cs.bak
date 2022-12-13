@@ -1,0 +1,654 @@
+﻿using Gibbed.IO;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Xml.Linq;
+using WpfPanAndZoom.CustomControls;
+
+namespace DominoVisualizer
+{
+    internal class DominoParser
+    {
+        Dictionary<string, DominoBox> dominoBoxes = new();
+        Dictionary<string, DominoConnector> dominoConnectors = new();
+        Dictionary<string, DominoBoxMetadata> regBoxes = new();
+        Dictionary<string, string> variables = new();
+
+        string file = "";
+        StreamReader reader = null;
+        PanAndZoomCanvas canvas;
+
+        DominoBox tempBox = null;
+
+        public DominoParser(string dominoPath, PanAndZoomCanvas canvas)
+        {
+            file = dominoPath;
+            this.canvas = canvas;
+        }
+
+        public void Parse()
+        {
+            DominoConnector inConn = new();
+            inConn.ID = "In";
+            dominoConnectors.Add(inConn.ID, inConn);
+
+            var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            reader = new StreamReader(stream, System.Text.Encoding.UTF8);
+
+            int newBoxID = 10000;
+            Dictionary<string, int> newBoxIDAssigned = new();
+
+            string l;
+            bool allowNewBoxes = false;
+            string func = "";
+            while ((l = reader.ReadLine()) != null)
+            {
+                l = l.Trim();
+
+                if (l.StartsWith("cboxRes:RegisterBox("))
+                {
+                    string f = l.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "");
+
+                    // parse nebo conv - ziskat xml
+                    string ff = "lib\\" + f.ToLower().Replace("domino/system", "");
+                    if (File.Exists(ff))
+                    {
+                        FileStream fs = File.Open(ff, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        fs.ReadValueU32();
+                        uint len = fs.ReadValueU32();
+                        fs.ReadBytes((int)len);
+                        //byte[] xml = fs.ReadBytes((int)(fs.Length - fs.Position));
+                        //MemoryStream ms = new(xml);
+
+                        DominoBoxMetadata m = new();
+                        XDocument meta = XDocument.Load(fs);
+
+                        var a = meta.Descendants("ControlIn");
+                        foreach (var b in a)
+                            m.ControlsIn.Add(b.Attribute("Name").Value);
+
+                        a = meta.Descendants("ControlOut");
+                        foreach (var b in a)
+                            m.ControlsOut.Add(b.Attribute("Name").Value);
+
+                        a = meta.Descendants("DataIn");
+                        foreach (var b in a)
+                            m.DatasIn.Add(b.Attribute("Name").Value);
+
+                        regBoxes.Add(f, m);
+                    }
+                }
+
+                if (l.Contains("l0:GetDataOutValue("))
+                {
+                    string[] v = l.Replace("self.", "").Split("=");
+                    tempBox.SetVariables.Add(v[0].Trim(), v[1].Trim());
+                }
+                else if (l.StartsWith("self."))
+                {
+                    string[] var = l.Replace("self.", "").Split("=");
+
+                    variables.Add(var[0].Trim(), var[1].Trim());
+                }
+
+                if (l.StartsWith("self[") && l.Contains("cbox:CreateBox("))
+                {
+                    if (tempBox != null)
+                    {
+                        dominoBoxes.Add(tempBox.ID, tempBox);
+                    }
+
+                    Regex regex = new Regex(@"self\[(.*?)\]");
+                    var v = regex.Match(l);
+                    string tempBoxID = v.Groups[1].ToString();
+
+                    regex = new Regex(@"cbox:CreateBox\(""(.*?)""\)");
+                    v = regex.Match(l);
+                    string tempBoxName = v.Groups[1].ToString();
+
+                    tempBox = new();
+                    tempBox.ID = tempBoxID;
+                    tempBox.Name = tempBoxName;
+                }
+
+                if (l == "end" && tempBox != null)
+                {
+                    dominoBoxes.Add(tempBox.ID, tempBox);
+                    tempBox = null;
+                }
+
+                if (tempBox != null)
+                {
+                    if (l.StartsWith("l0:SetConnections(") && !l.EndsWith(")"))
+                    {
+                        while ((l = reader.ReadLine().Trim()) != "})")
+                        {
+                            ParseConnectionsArray(l, null);
+                        }
+                    }
+                }
+
+                if (l.StartsWith("function export:en_") || l.StartsWith("function export:ex_"))
+                {
+                    func = l.Replace("function export:", "").Replace("()", "");
+                    allowNewBoxes = true;
+                }
+
+                if (l.StartsWith("l0 = Boxes[GetPathID(") && !func.StartsWith("ex_") && allowNewBoxes)
+                {
+                    var regex = new Regex(@"Boxes\[GetPathID\(""(.*?)""\)\]");
+                    var v = regex.Match(l);
+                    string tempBoxName = v.Groups[1].ToString();
+
+                    tempBox = new();
+                    tempBox.ID = newBoxID.ToString();
+                    tempBox.Name = tempBoxName;
+
+                    newBoxIDAssigned.Add(func, newBoxID);
+
+                    newBoxID++;
+                }
+
+                if (l.StartsWith("params = {") && tempBox != null && !func.StartsWith("ex_") && allowNewBoxes)
+                {
+                    dominoBoxes.Add(tempBox.ID, tempBox);
+                    tempBox = null;
+                    func = "";
+                }
+            }
+
+            stream.Position = 0;
+            reader.DiscardBufferedData();
+
+            while ((l = reader.ReadLine()) != null)
+            {
+                l = l.Trim();
+
+                string connName = l.Replace("function export:", "").Replace("()", "");
+
+                if (dominoConnectors.ContainsKey(connName))
+                {
+                    DominoConnector conn = dominoConnectors[connName];
+
+                    Dictionary<int, string> tempParams = null;
+                    string boxID = "";
+                    string paramsFunc = "";
+
+                    while ((l = reader.ReadLine().Trim()) != "end")
+                    {
+                        if (l.StartsWith("self:"))
+                        {
+                            paramsFunc = l.Replace("self:", "").Replace("()", "");
+
+
+                        }
+
+                        if (l.StartsWith("params = self:"))
+                        {
+                            paramsFunc = l.Replace("params = self:", "").Replace("()", "");
+
+                            tempParams = GetParamsFuncData(paramsFunc);
+                        }
+
+                        if (l.StartsWith("l0 = "))
+                        {
+                            string boxCall = l.Replace("l0 = ", "");
+
+                            if (boxCall.StartsWith("Boxes"))
+                            {
+                                boxID = newBoxIDAssigned[paramsFunc].ToString();
+                            }
+
+                            if (boxCall.StartsWith("self["))
+                            {
+                                boxID = boxCall.Replace("self[", "").Replace("]", "");
+                            }
+                        }
+
+                        if (l.StartsWith("l0:Exec(") || l.StartsWith("l0:ExecDynInt("))
+                        {
+                            string[] execParams = l.Replace("l0:Exec(", "").Replace("l0:ExecDynInt(", "").Replace(")", "").Split(",");
+
+                            ExecBox execBox = new();
+                            execBox.Exec = int.Parse(execParams[0]);
+                            execBox.Params = tempParams;
+                            execBox.Box = dominoBoxes[boxID];
+
+                            if (l.Contains(":Exec(")) execBox.Type = ExecType.Exec;
+                            if (l.Contains(":ExecDynInt("))
+                            {
+                                execBox.Type = ExecType.ExecDynInt;
+                                execBox.DynIntExec = int.Parse(execParams[2]);
+                            }
+
+                            conn.ExecBoxes.Add(execBox);
+
+                            tempParams = null;
+                            boxID = "";
+                            paramsFunc = "";
+                        }
+                    }
+                }
+            }
+
+            reader.Close();
+            stream.Dispose();
+        }
+
+        Dictionary<int, string> GetParamsFuncData(string funcName)
+        {
+            Dictionary<int, string> prm = new();
+
+            var streamParams = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var readerParams = new StreamReader(streamParams, System.Text.Encoding.UTF8);
+
+            string l = "";
+
+            while (l != "function export:" + funcName + "()")
+            {
+                l = readerParams.ReadLine();
+            }
+
+            while ((l = readerParams.ReadLine()) != "end")
+            {
+                l = l.Trim();
+
+                if (l.StartsWith("params = {") && l != "params = {}")
+                {
+                    while (!(l = readerParams.ReadLine().Trim()).StartsWith("}"))
+                    {
+                        string[] cData = l.Split('=');
+                        int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
+                        cData[1] = cData[1].Replace(",", "").Trim();
+
+                        prm.Add(num, cData[1]);
+                    }
+                }
+            }
+
+            readerParams.Close();
+            streamParams.Dispose();
+
+            return prm;
+        }
+
+        void ParseConnectionsArray(string l, DominoConnector parentConn)
+        {
+            if (l.Contains("[") && l.Contains("=") && !l.Contains("{") && !l.Contains("}"))
+            {
+                string[] cData = l.Split('=');
+                int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
+                cData[1] = cData[1].Replace(",", "").Replace("self.", "").Trim();
+
+                DominoConnector conn = new();
+                conn.ID = cData[1];
+                conn.FromBoxConnectID = num;
+                conn.FromBoxes.Add(tempBox);
+
+                if (parentConn == null)
+                    tempBox.Connections.Add(conn);
+                else
+                    parentConn.SubConnections.Add(conn);
+
+                dominoConnectors.Add(conn.ID, conn);
+            }
+
+            else if (l.Contains("[") && l.Contains("=") && l.Contains("{"))
+            {
+                string[] cData = l.Split('=');
+                int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
+
+                DominoConnector conn = new();
+                conn.FromBoxConnectID = num;
+                conn.FromBoxes.Add(tempBox);
+
+                if (parentConn == null)
+                    tempBox.Connections.Add(conn);
+                else
+                    parentConn.SubConnections.Add(conn);
+
+                while (!(l = reader.ReadLine().Trim()).StartsWith("}"))
+                {
+                    ParseConnectionsArray(l, conn);
+                }
+            }
+
+            else if (l.StartsWith("value = "))
+            {
+                parentConn.ID = l.Replace("value = ", "").Replace(",", "").Replace("self.", "").Trim();
+                dominoConnectors.Add(parentConn.ID, parentConn);
+            }
+        }
+
+        List<Point> selectedPoints = new();
+        Dictionary<string, Point> linesPoints = new();
+        List<Tuple<string, string, int>> linesJoin = new();
+        List<Color> linesColors = new() { Colors.Red, Colors.Yellow, Colors.Blue, Colors.Green, Colors.Beige, Colors.White, Colors.Pink };
+
+        public void Draw()
+        {
+            int width = 300;
+            int spaceX = 400;
+
+            DrawConnector(dominoConnectors["In"], 0, 0, 0);
+
+            foreach (var lineJoin in linesJoin)
+            {
+                if(linesPoints.ContainsKey(lineJoin.Item1) && linesPoints.ContainsKey(lineJoin.Item2))
+                {
+                    Point a = linesPoints[lineJoin.Item1];
+                    Point b = linesPoints[lineJoin.Item2];
+                    int clr = lineJoin.Item3;
+
+                    Line l = new()
+                    {
+                        StrokeThickness = 2,
+                        Stroke = new SolidColorBrush(linesColors[clr]),
+                        X1 = a.X,
+                        Y1 = a.Y,
+                        X2 = b.X,
+                        Y2 = b.Y
+                    };
+                    canvas.Children.Add(l);
+                }
+            }
+
+            Point GetFreePos(int x, int y)
+            {
+                Point pnt = new Point(x, y);
+
+                bool ex = selectedPoints.Where(a => a == pnt).Any();
+
+                if (ex)
+                    return GetFreePos((int)pnt.X, (int)pnt.Y + 300);
+
+                selectedPoints.Add(pnt);
+                return pnt;
+            }
+
+            string GetParamName(string file, int paramID, int type)
+            {
+                if (regBoxes.ContainsKey(file))
+                {
+                    if (type == 0)
+                        return "(" + paramID.ToString() + ") " + regBoxes[file].ControlsIn[paramID];
+
+                    if (type == 1)
+                        return "(" + paramID.ToString() + ") " + regBoxes[file].ControlsOut[paramID];
+
+                    if (type == 2)
+                        return "(" + paramID.ToString() + ") " + regBoxes[file].DatasIn[paramID];
+                }
+                return paramID.ToString();
+            }
+
+            void DrawConnector(DominoConnector conn, int currX, int currY, int aaa)
+            {
+                aaa++;
+
+                bool exists = false;
+                Widget w = null;
+                if (conn.Widget == null)
+                {
+                    w = new Widget();
+                    w.Header.Text = conn.ID;
+                    w.Height = 30;
+                    w.Width = width;
+                    w.HeaderRectangle.Fill = conn.ID == "In" ? Brushes.Red : Brushes.Yellow;
+                    canvas.Children.Add(w);
+                    var pos = GetFreePos(currX, currY);
+                    currX = (int)pos.X;
+                    currY = (int)pos.Y;
+                    Canvas.SetLeft(w, currX);
+                    Canvas.SetTop(w, currY);
+                    conn.DrawX = currX;
+                    conn.DrawY = currY;
+                    conn.Widget = w;
+                }
+                else
+                {
+                    w = conn.Widget;
+                    exists = true;
+                }
+
+                currX += spaceX;
+
+                int currYBox = currY;
+                int colorBoxSel = 0;
+                foreach (var execBox in conn.ExecBoxes)
+                {
+                    if (!exists)
+                    {
+                        if (execBox.Params != null)
+                        {
+                            StackPanel sp = new();
+                            foreach (var param in execBox.Params)
+                            {
+                                Grid g = new() { Height = 30 };
+                                g.Children.Add(new TextBlock() { Text = GetParamName(execBox.Box.Name, param.Key, 2), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold });
+                                g.Children.Add(new TextBlock() { Text = param.Value, Margin = new(10, 13, 0, 0) });
+                                sp.Children.Add(g);
+
+                                w.Height += 36;
+                            }
+                            Border b = new() { BorderBrush = new SolidColorBrush(linesColors[colorBoxSel]), BorderThickness = new(2, 2, 2, 2), Child = sp };
+                            w.list.Children.Add(b);
+                        }
+
+                        if (execBox.Box.Widget == null)
+                        {
+                            Widget wb = new Widget();
+                            wb.Header.Text = execBox.Box.ID + " - " + execBox.Box.Name;
+                            wb.Height = 30;
+                            wb.Width = width;
+                            wb.HeaderRectangle.Fill = Brushes.White;
+                            canvas.Children.Add(wb);
+                            var pos = GetFreePos(currX, currYBox);
+                            currX = (int)pos.X;
+                            currYBox = (int)pos.Y;
+                            Canvas.SetLeft(wb, currX);
+                            Canvas.SetTop(wb, currYBox);
+                            execBox.Box.DrawX = currX;
+                            execBox.Box.DrawY = currYBox;
+                            execBox.Box.Widget = wb;
+
+                            int colorConnSel = 0;
+                            foreach (var subConn in execBox.Box.Connections)
+                            {
+                                //if (aaa > 4) continue;
+
+                                StackPanel sp2 = new();
+
+                                Grid g = new() { Height = 18 };
+                                g.Children.Add(new TextBlock() { Text = GetParamName(execBox.Box.Name, subConn.FromBoxConnectID, 1) + " = " + subConn.ID, Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold });
+                                sp2.Children.Add(g);
+
+                                wb.Height += 22;
+
+                                Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+                                wb.list.Children.Add(b2);
+
+                                linesJoin.Add(new(execBox.Box.ID + "-P2", subConn.ID + "-P2", colorConnSel));
+
+                                foreach (var subSubConn in subConn.SubConnections)
+                                {
+                                    //if (aaa > 4) continue;
+
+                                    StackPanel sp3 = new();
+
+                                    Grid g3 = new() { Height = 18 };
+                                    g3.Children.Add(new TextBlock() { Text = GetParamName(execBox.Box.Name, subConn.FromBoxConnectID, 1) + " > " + subSubConn.FromBoxConnectID.ToString() + " = " + subSubConn.ID, Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold });
+                                    sp3.Children.Add(g3);
+
+                                    wb.Height += 22;
+
+                                    Border b3 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp3 };
+                                    wb.list.Children.Add(b3);
+
+                                    linesJoin.Add(new(execBox.Box.ID + "-P2", subSubConn.ID + "-P2", colorConnSel));
+
+                                    colorConnSel++;
+                                }
+
+                                colorConnSel++;
+                            }
+
+                            foreach (var setVar in execBox.Box.SetVariables)
+                            {
+                                StackPanel sp2 = new();
+
+                                Grid g = new() { Height = 18 };
+                                g.Children.Add(new TextBlock() { Text = setVar.Key, FontWeight = FontWeights.Bold });
+                                sp2.Children.Add(g);
+
+                                wb.Height += 22;
+
+                                Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+                                wb.list.Children.Add(b2);
+                            }
+
+                            currYBox += (int)wb.Height + 100;
+                        }
+                    }
+
+                    if (!linesPoints.ContainsKey(conn.ID + "-P1"))
+                        linesPoints.Add(conn.ID + "-P1", new(conn.DrawX + w.Width, currY));
+
+                    if (!linesPoints.ContainsKey(execBox.Box.ID + "-P1"))
+                        linesPoints.Add(execBox.Box.ID + "-P1", new(execBox.Box.DrawX, execBox.Box.DrawY));
+
+                    if (!linesPoints.ContainsKey(conn.ID + "-P2"))
+                        linesPoints.Add(conn.ID + "-P2", new(conn.DrawX, currY));
+
+                    if (!linesPoints.ContainsKey(execBox.Box.ID + "-P2"))
+                        linesPoints.Add(execBox.Box.ID + "-P2", new(execBox.Box.DrawX + width, execBox.Box.DrawY));
+
+                    linesJoin.Add(new(conn.ID + "-P1", execBox.Box.ID + "-P1", colorBoxSel));
+
+                    colorBoxSel++;
+                }
+
+                currX += spaceX;
+
+                //if (aaa > 4) return;
+
+                if (!exists)
+                    foreach (var execBox in conn.ExecBoxes)
+                    {
+                        foreach (var subConn in execBox.Box.Connections)
+                        {
+                            if (subConn.ID == null)
+                            {
+                                foreach (var subSubConn in subConn.SubConnections)
+                                {
+                                    DrawConnector(subSubConn, currX, currY, aaa);
+                                    //currY += 300;
+                                }
+                            }
+                            else
+                            {
+                                DrawConnector(subConn, currX, currY, aaa);
+                                //currY += 300;
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    public class DominoBox
+    {
+        public DominoBox()
+        {
+            Connections = new();
+            SetVariables = new();
+
+        }
+
+        public string ID { set; get; }
+
+        public string Name { set; get; }
+
+        public int DrawX { set; get; }
+
+        public int DrawY { set; get; }
+
+        public Widget Widget { set; get; }
+
+        public Dictionary<string, string> SetVariables { set; get; }
+
+        public List<DominoConnector> Connections { set; get; }
+    }
+
+    public enum ExecType
+    {
+        Exec = 0,
+        ExecDynInt = 1
+    }
+
+    public class ExecBox
+    {
+        public ExecBox()
+        {
+            Params = new();
+        }
+
+        public DominoBox Box { set; get; }
+
+        public ExecType Type { set; get; }
+
+        public int Exec { set; get; }
+
+        public int DynIntExec { set; get; }
+
+        public Dictionary<int, string> Params { set; get; }
+    }
+
+    public class DominoConnector
+    {
+        public DominoConnector()
+        {
+            SubConnections = new();
+            FromBoxes = new();
+            ExecBoxes = new();
+        }
+
+        public string ID { set; get; }
+
+        public int FromBoxConnectID { set; get; }
+
+        public int DrawX { set; get; }
+
+        public int DrawY { set; get; }
+
+        public Widget Widget { set; get; }
+
+        public List<DominoConnector> SubConnections { set; get; }
+
+        public List<DominoBox> FromBoxes { set; get; }
+
+        public List<ExecBox> ExecBoxes { set; get; }
+    }
+
+    public class DominoBoxMetadata
+    {
+        public DominoBoxMetadata()
+        {
+            ControlsIn = new();
+            ControlsOut = new();
+            DatasIn = new();
+        }
+
+        public List<string> ControlsIn { set; get; }
+
+        public List<string> ControlsOut { set; get; }
+
+        public List<string> DatasIn { set; get; }
+    }
+}

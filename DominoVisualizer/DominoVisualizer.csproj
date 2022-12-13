@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>domino.ico</ApplicationIcon>
+    <Copyright>Copyright © ArmanIII 2022</Copyright>
+    <Company>ArmanIII</Company>
+    <Product>Domino Visualizer</Product>
+    <PackageId>DominoVisualizer</PackageId>
+    <Authors>ArmanIII</Authors>
+    <Description>Domino Visualizer</Description>
+	  <AssemblyTitle>Domino Visualizer</AssemblyTitle>
+    <TieredPGO>true</TieredPGO>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+		<PlatformTarget>x64</PlatformTarget>
+		<OutputPath>..\bin_debug\</OutputPath>
+	</PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\</OutputPath>
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+	  <PublishSingleFile>true</PublishSingleFile>
+	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	  <SelfContained>false</SelfContained>
+
+	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="domino.ico" />
+    <Resource Include="OpenSans.ttf" />
+  </ItemGroup>
+
+</Project>

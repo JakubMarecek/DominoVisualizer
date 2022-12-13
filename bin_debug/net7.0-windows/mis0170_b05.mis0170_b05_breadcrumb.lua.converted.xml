@@ -1,0 +1,15 @@
+<DominoMetadata IsStateless="0" IsSystem="0">
+	<ControlsIn>
+		<ControlIn Name="In" AnchorDynType="0" HostExecFunc="" />
+	</ControlsIn>
+	<ControlsOut>
+		<ControlOut Name="SomeoneNear" AnchorDynType="0" IsDelayed="0" />
+	</ControlsOut>
+	<DatasIn>
+		<DataIn Name="ActiveObjective" AnchorDynType="0" DataTypeID="oasis" />
+		<DataIn Name="ObjectiveMarker" AnchorDynType="0" DataTypeID="entity" />
+		<DataIn Name="ProximityRadius" AnchorDynType="0" DataTypeID="float" />
+		<DataIn Name="ProximitySP" AnchorDynType="0" DataTypeID="entity" />
+	</DatasIn>
+	<DatasOut />
+</DominoMetadata>

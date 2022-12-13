@@ -1,0 +1,13 @@
+<DominoMetadata IsStateless="0" IsSystem="0">
+	<ControlsIn>
+		<ControlIn Name="In" AnchorDynType="0" HostExecFunc="" />
+		<ControlIn Name="OnLeaveZone" AnchorDynType="0" HostExecFunc="" />
+	</ControlsIn>
+	<ControlsOut />
+	<DatasIn>
+		<DataIn Name="SpecOpsActivity" AnchorDynType="0" DataTypeID="genericdb" />
+		<DataIn Name="SpecOpsTrigger1" AnchorDynType="0" DataTypeID="entity" />
+		<DataIn Name="SpecOpsTrigger2" AnchorDynType="0" DataTypeID="entity" />
+	</DatasIn>
+	<DatasOut />
+</DominoMetadata>

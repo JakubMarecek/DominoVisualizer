@@ -33,7 +33,7 @@ namespace DominoVisualizer
 		 * -all delete ask dialog						ok
 		 * -styles comboboxes							ok
 		 * -unique box ID - no matter self en			ok
-		 * -add array bug - adds to all items
+		 * -add array bug - adds to all items			ok
 		 * -toggle box local global						ok
 		 * -two exec boxes to same box -> check if exist -> add same params automatically, same with edit		ok
 		 * -connections - subconnetion name				ok
@@ -54,6 +54,8 @@ namespace DominoVisualizer
 		 * -save alone box warn							ok
 		 * -border childs make duplicate
 		 * -adding exec box, editing exec box - check AnchorDynType			ok
+		 * -new, saved - wnd title upd
+		 * -change close unsaved behav
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -2548,7 +2550,7 @@ namespace DominoVisualizer
 					{ 
 						ParamName = paramName ?? prmVal.Name, 
 						ParamNameRaw = baseID != -1 ? baseID.ToString() : prmVal.Name, 
-						UniqueID = prmVal != null ? prmVal.UniqueID : "", 
+						UniqueID = prmVal != null ? prmVal.UniqueID : Helpers.RandomString(), 
 						UniqueIDParent = uniqueIDParent, 
 						ParamValue = "",
 						ParamUsed = false, 

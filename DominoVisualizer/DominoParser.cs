@@ -58,10 +58,11 @@ namespace DominoVisualizer
 		 * -change close unsaved behav					canc
 		 * -settings - line style, bezier curve			?
 		 * -edit exec box - add row resets data
-		 * -box - get data list
-		 * -swap box - check vars rename
+		 * -box - return data list - variable
+		 * -swap box - vars rename
 		 * -future - custom boxes
 		 * -auto add dynint - check numbering - 1
+		 * -add box - order list
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -3236,9 +3237,9 @@ namespace DominoVisualizer
                 }
                 if (tag[0] == "globalvar")
                 {
-                    var m = globalVariables.Where(a => a.Name == tag[1]).Single();
+                    var m = globalVariables.Where(a => a.UniqueID == tag[1]).Single();
                     wiGlobalVars.list.Children.Remove(m.ContainerUI);
-                    globalVariables.RemoveAll(a => a.Name == tag[1]);
+                    globalVariables.RemoveAll(a => a.UniqueID == tag[1]);
                 }
                 /*if (tag[0] == "controlin")
                 {

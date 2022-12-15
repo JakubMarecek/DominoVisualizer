@@ -59,17 +59,17 @@ namespace DominoVisualizer
 		 * -settings - line style, bezier curve			?
 		 * -edit exec box - add row resets data
 		 * -box - return data list - variable
-		 * -swap box - vars rename
+		 * -swap box - vars rename						ok
 		 * -future - custom boxes
-		 * -auto add dynint - check numbering - 1
-		 * -add box - order list
-		 * -swap error - lines not move, can't save
+		 * -auto add dynint - check numbering - 1		ok
+		 * -add box - order list						ok
+		 * -swap error - lines not move, can't save		ok
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
 		Dictionary<string, DominoBoxMetadata> regBoxes = new();
-		Dictionary<string, DominoBoxMetadata> regBoxesAll = new();
+		SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
         Dictionary<ulong, string> regBoxesCRC64 = new();
 		List<DominoDict> globalVariables = new();
 		Dictionary<string, string> lastBoxesAssign = new();
@@ -1285,7 +1285,23 @@ namespace DominoVisualizer
 			}
 		}
 
-		List<Tuple<string, string, ArrowLine>> lines = new();
+        class LinesVal
+        {
+			public LinesVal(string point1, string point2, ArrowLine ui)
+			{
+				Point1 = point1;
+				Point2 = point2;
+				UI = ui;
+			}
+
+            public string Point1 { set; get; }
+
+            public string Point2 { set; get; }
+
+            public ArrowLine UI { set; get; }
+        }
+
+        List<LinesVal> lines = new();
 		int width = 300;
         int spaceX = 400;
         private List<Color> linesColors = new() {
@@ -1302,15 +1318,15 @@ namespace DominoVisualizer
 		{
 			foreach (var line in lines)
 			{
-				if (line.Item1 == id + "-P1" || line.Item1 == id + "-P2")
+				if (line.Point1 == id + "-P1" || line.Point1 == id + "-P2")
 				{
-					line.Item3.X1 = x + width;
-					line.Item3.Y1 = y;
+					line.UI.X1 = x + width;
+					line.UI.Y1 = y;
 				}
-				if (line.Item2 == id + "-P2" || line.Item2 == id + "-P1")
+				if (line.Point2 == id + "-P2" || line.Point2 == id + "-P1")
 				{
-					line.Item3.X2 = x;
-					line.Item3.Y2 = y;
+					line.UI.X2 = x;
+					line.UI.Y2 = y;
 				}
 			}
 
@@ -1333,18 +1349,18 @@ namespace DominoVisualizer
 			foreach (var line in lines)
 			{
 				if (
-					(line.Item1 == boxID + "-P1" || line.Item1 == boxID + "-P2") ||
-					(line.Item2 == boxID + "-P2" || line.Item2 == boxID + "-P1")
+					(line.Point1 == boxID + "-P1" || line.Point1 == boxID + "-P2") ||
+					(line.Point2 == boxID + "-P2" || line.Point2 == boxID + "-P1")
 					)
 				{
-					line.Item3.Opacity = 1;
+					line.UI.Opacity = 1;
 
 					List<string> lnb = new()
 									{
-										line.Item1.Replace("-P1", ""),
-										line.Item1.Replace("-P2", ""),
-										line.Item2.Replace("-P1", ""),
-										line.Item2.Replace("-P2", "")
+										line.Point1.Replace("-P1", ""),
+										line.Point1.Replace("-P2", ""),
+										line.Point2.Replace("-P1", ""),
+										line.Point2.Replace("-P2", "")
 									};
 
 					foreach (var child2 in canvas.Children)
@@ -1370,14 +1386,14 @@ namespace DominoVisualizer
 				{
 					foreach (var line in lines)
 					{
-						if (line.Item3 == e.Source)
+						if (line.UI == e.Source)
 						{
 							List<string> lnb = new()
 							{
-								line.Item1.Replace("-P1", ""),
-								line.Item1.Replace("-P2", ""),
-								line.Item2.Replace("-P1", ""),
-								line.Item2.Replace("-P2", "")
+								line.Point1.Replace("-P1", ""),
+								line.Point1.Replace("-P2", ""),
+								line.Point2.Replace("-P1", ""),
+								line.Point2.Replace("-P2", "")
 							};
 
 							foreach (var child in canvas.Children)
@@ -2185,13 +2201,13 @@ namespace DominoVisualizer
 		private void RemoveLine(string a, string b)
         {
             foreach (var i in lines)
-                if (i.Item1 == a && i.Item2 == b)
+                if (i.Point1 == a && i.Point2 == b)
                 {
-                    canvas.Children.Remove(i.Item3);
+                    canvas.Children.Remove(i.UI);
                     break;
                 }
 
-            lines.RemoveAll(aa => aa.Item1 == a && aa.Item2 == b);
+            lines.RemoveAll(aa => aa.Point1 == a && aa.Point2 == b);
         }
 
 		private void RemoveConector(object sender, RoutedEventArgs e)
@@ -2350,6 +2366,20 @@ namespace DominoVisualizer
 				b.ID = "self[" + num + "]";
 
 			b.Widget.Header.Text = b.ID + " - " + b.Name;
+			b.Widget.ID = b.ID;
+			(sender as Button).Tag = b.ID;
+
+			dominoBoxes[b.ID] = b;
+			dominoBoxes.Remove(tag);
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (lines[i].Point1.StartsWith(tag))
+                    lines[i].Point1 = lines[i].Point1.Replace(tag, b.ID);
+
+                if (lines[i].Point2.StartsWith(tag))
+                    lines[i].Point2 = lines[i].Point2.Replace(tag, b.ID);
+            }
 			
             foreach (var c in dominoConnectors.Values)
             {
@@ -2359,6 +2389,30 @@ namespace DominoVisualizer
                     c.Widget.list.Children.Remove(eb.ContainerUI);
 					DrawExecBoxContainerUI(c, eb, eb.INT_clr);
                 }
+
+				bool a(DominoDict v)
+                {
+					bool changed = false;
+
+                    if (v.Value.Contains(tag))
+                    {
+                        v.Value = v.Value.Replace(tag, b.ID);
+						changed = true;
+                    }
+
+					foreach (var sv in v.ValueArray)
+						if (a(sv))
+							changed = true;
+
+					return changed;
+                }
+
+				foreach (var v in c.SetVariables)
+					if (a(v))
+					{
+						c.Widget.list.Children.Remove(v.ContainerUI);
+                        DrawConnVariable(c, v);
+					}
             }
 
 			wasEdited = true;
@@ -2789,7 +2843,6 @@ namespace DominoVisualizer
 			eb.Exec = 0;
 			eb.DynIntExec = 0;
 			eb.Params = ep;
-			connEdit.ExecBoxes.Add(eb);
 			
 			var ctrlMeta = regBoxesAll[eb.Box.Name].ControlsIn[0].AnchorDynType > 0;
 			if (ctrlMeta)
@@ -2807,6 +2860,8 @@ namespace DominoVisualizer
 			else
 				eb.Type = ExecType.Exec;
 
+            connEdit.ExecBoxes.Add(eb);
+            
 			var clr = connEdit.Widget.list.Children.Count;
 
 			DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);

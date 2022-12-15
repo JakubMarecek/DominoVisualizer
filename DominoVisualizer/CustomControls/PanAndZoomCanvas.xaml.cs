@@ -27,7 +27,7 @@ namespace WpfPanAndZoom.CustomControls
         private Color _backgroundColor = Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
         private List<Line> _gridLines = new List<Line>();
 
-        public delegate void MyEventHandler(string foo, int x, int y);
+        public delegate void MyEventHandler(string foo, double x, double y);
 
         public event MyEventHandler SomethingHappened;
 
@@ -299,7 +299,7 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
                         var b = Point.Subtract(a, Mouse.GetPosition(_selectedElement));
-                        SomethingHappened(widget.ID, (int)b.X, (int)b.Y);
+                        SomethingHappened(widget.ID, b.X, b.Y);
                     }
 
                     if (_borderChilds.Any())
@@ -322,7 +322,7 @@ namespace WpfPanAndZoom.CustomControls
                                 var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
                                 var c = Point.Subtract(a, Mouse.GetPosition(_borderChilds[i]));
 
-                                SomethingHappened(widgetC.ID, (int)c.X, (int)c.Y);
+                                SomethingHappened(widgetC.ID, c.X, c.Y);
                             }
                         }
                     }

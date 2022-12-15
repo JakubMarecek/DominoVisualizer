@@ -86,6 +86,38 @@ namespace Petzold.Media2D
         }
 
         /// <summary>
+        /// </summary>
+        public static readonly DependencyProperty X1TangentProperty =
+            DependencyProperty.Register("X1Tangent",
+                typeof(double), typeof(ArrowLine),
+                new FrameworkPropertyMetadata(0.0,
+                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        /// <summary>
+        /// </summary>
+        public double X1Tangent
+        {
+            set { SetValue(X1TangentProperty, value); }
+            get { return (double)GetValue(X1TangentProperty); }
+        }
+
+        /// <summary>
+        /// </summary>
+        public static readonly DependencyProperty X2TangentProperty =
+            DependencyProperty.Register("X2Tangent",
+                typeof(double), typeof(ArrowLine),
+                new FrameworkPropertyMetadata(0.0,
+                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        /// <summary>
+        /// </summary>
+        public double X2Tangent
+        {
+            set { SetValue(X2TangentProperty, value); }
+            get { return (double)GetValue(X2TangentProperty); }
+        }
+
+        /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
         /// </summary>
         protected override Geometry DefiningGeometry
@@ -95,10 +127,26 @@ namespace Petzold.Media2D
                 // Clear out the PathGeometry.
                 pathgeo.Figures.Clear();
 
-                // Define a single PathFigure with the points.
-                pathfigLine.StartPoint = new Point(X1, Y1);
-                polysegLine.Points.Clear();
-                polysegLine.Points.Add(new Point(X2, Y2));
+                if (bezsegLine != null)
+                {
+                    var p1 = new Point(X1, Y1);
+                    var p2 = new Point(X2, Y2);
+                    var lineLen = Point.Subtract(p2, p1).Length;
+
+                    // Define a single PathFigure with the points.
+                    pathfigLine.StartPoint = p1;
+                    bezsegLine.Point1 = new Point(X1 + Math.Min(100, lineLen / 3), Y1); // (lineLen / 5)
+                    bezsegLine.Point2 = new Point(X2 - Math.Min(100, lineLen / 3), Y2); // (lineLen / 5)
+                    bezsegLine.Point3 = p2;
+                }
+                else
+                {
+                    // Define a single PathFigure with the points.
+                    pathfigLine.StartPoint = new Point(X1, Y1);
+                    polysegLine.Points.Clear();
+                    polysegLine.Points.Add(new Point(X2, Y2));
+                }
+
                 pathgeo.Figures.Add(pathfigLine);
 
                 // Call the base property to add arrows on the ends.

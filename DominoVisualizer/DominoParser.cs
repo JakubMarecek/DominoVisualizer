@@ -55,7 +55,13 @@ namespace DominoVisualizer
 		 * -border childs make duplicate
 		 * -adding exec box, editing exec box - check AnchorDynType			ok
 		 * -new, saved - wnd title upd
-		 * -change close unsaved behav
+		 * -change close unsaved behav					canc
+		 * -settings - line style, bezier curve			?
+		 * -edit exec box - add row resets data
+		 * -box - get data list
+		 * -swap box - check vars rename
+		 * -future - custom boxes
+		 * -auto add dynint - check numbering - 1
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -1290,7 +1296,7 @@ namespace DominoVisualizer
 				Colors.Firebrick, Colors.FloralWhite,
 			};
 
-		private void HandleSomethingHappened(string id, int x, int y)
+		private void HandleSomethingHappened(string id, double x, double y)
 		{
 			foreach (var line in lines)
 			{
@@ -1592,10 +1598,10 @@ namespace DominoVisualizer
 				if (linesPoints.ContainsKey(lineJoin.Item1) && linesPoints.ContainsKey(lineJoin.Item2))
 				{
 					DrawLine(
-						(int)linesPoints[lineJoin.Item1].X,
-						(int)linesPoints[lineJoin.Item1].Y,
-						(int)linesPoints[lineJoin.Item2].X,
-						(int)linesPoints[lineJoin.Item2].Y,
+						linesPoints[lineJoin.Item1].X,
+						linesPoints[lineJoin.Item1].Y,
+						linesPoints[lineJoin.Item2].X,
+						linesPoints[lineJoin.Item2].Y,
 						lineJoin.Item1,
 						lineJoin.Item2,
 						lineJoin.Item3
@@ -1864,7 +1870,7 @@ namespace DominoVisualizer
 			return bOpen;
         }
 
-        private void DrawLine(int x1, int y1, int x2, int y2, string startIndex, string endIndex, int clrIndx)
+        private void DrawLine(double x1, double y1, double x2, double y2, string startIndex, string endIndex, int clrIndx)
 		{
 			ArrowLine l = new()
 			{
@@ -1875,7 +1881,9 @@ namespace DominoVisualizer
 				X2 = x2,
 				Y2 = y2
 			};
+			l.MakeBezier();
 			l.Cursor = Cursors.Hand;
+
 			canvas.Children.Add(l);
             Panel.SetZIndex(l, 40);
 
@@ -1971,10 +1979,10 @@ namespace DominoVisualizer
                     var b = canvas.Transform2(new(Canvas.GetLeft(c.Widget), Canvas.GetTop(c.Widget)));
 
                     DrawLine(
-                        (int)a.X + width,
-                        (int)a.Y,
-                        (int)b.X,
-                        (int)b.Y,
+                        a.X + width,
+                        a.Y,
+                        b.X,
+                        b.Y,
                         box.ID + "-P2",
                         c.ID + "-P2",
                         colorConnSel
@@ -2805,10 +2813,10 @@ namespace DominoVisualizer
 			var b = canvas.Transform2(new(Canvas.GetLeft(eb.Box.Widget), Canvas.GetTop(eb.Box.Widget)));
 
 			DrawLine(
-                (int)a.X + width,
-                (int)a.Y,
-                (int)b.X,
-                (int)b.Y,
+                a.X + width,
+                a.Y,
+                b.X,
+                b.Y,
 				connEdit.ID + "-P1",
 				eb.Box.ID + "-P1",
 				clr
@@ -3072,11 +3080,11 @@ namespace DominoVisualizer
 
             if (isIn == true)
             {
-                DrawLine(width, 0, (int)pnt.X, (int)pnt.Y, "ControlsIn-P1", name + "-P2", -1);
+                DrawLine(width, 0, pnt.X, pnt.Y, "ControlsIn-P1", name + "-P2", -1);
             }
             if (isOut == true)
             {
-                DrawLine((int)pnt.X + width, (int)pnt.Y, spaceX + width, 0, name + "-P1", "ControlsOut-P2", -1);
+                DrawLine(pnt.X + width, pnt.Y, spaceX + width, 0, name + "-P1", "ControlsOut-P2", -1);
             }
 
             canvas.RefreshChilds();
@@ -3707,6 +3715,10 @@ namespace DominoVisualizer
 
         public string Export()
         {
+            var acb = CheckConnBox();
+            if (acb != "")
+                return acb;
+
 			string exportPath = "";
 
 			if (file == "" || file.EndsWith(".lua"))
@@ -3723,10 +3735,6 @@ namespace DominoVisualizer
 			}
 			else
 				exportPath = file.Replace(".domino.xml", ".lua");
-
-            var acb = CheckConnBox();
-            if (acb != "")
-                return acb;
 
             string nl = Environment.NewLine;
 
@@ -4303,6 +4311,10 @@ namespace DominoVisualizer
 
 		public string Save()
         {
+			var acb = CheckConnBox();
+			if (acb != "")
+				return acb;
+
 			if (file == "" || file.EndsWith(".lua"))
 			{
 				SaveFileDialog sfd = new();
@@ -4315,10 +4327,6 @@ namespace DominoVisualizer
 				else
 					return "";
 			}
-
-			var acb = CheckConnBox();
-			if (acb != "")
-				return acb;
 
 			//canvas.ResetZoom();
 			wasEdited = false;

@@ -55,10 +55,20 @@ namespace Petzold.Media2D
                 {
                     // Define a PathFigure containing the points.
                     pathfigLine.StartPoint = Points[0];
-                    polysegLine.Points.Clear();
 
-                    for (int i = 1; i < Points.Count; i++)
-                        polysegLine.Points.Add(Points[i]);
+                    if (bezsegLine != null)
+                    {
+                        bezsegLine.Point1 = Points[0];
+                        bezsegLine.Point2 = Points[1];
+                        bezsegLine.Point3 = Points[1];
+                    }
+                    else
+                    {
+                        polysegLine.Points.Clear();
+
+                        for (int i = 1; i < Points.Count; i++)
+                            polysegLine.Points.Add(Points[i]);
+                    }
 
                     pathgeo.Figures.Add(pathfigLine);
                 }

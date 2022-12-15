@@ -63,6 +63,7 @@ namespace DominoVisualizer
 		 * -future - custom boxes
 		 * -auto add dynint - check numbering - 1
 		 * -add box - order list
+		 * -swap error - lines not move, can't save
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();

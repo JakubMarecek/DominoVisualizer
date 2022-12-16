@@ -54,10 +54,10 @@ namespace DominoVisualizer
 		 * -save alone box warn							ok
 		 * -border childs make duplicate
 		 * -adding exec box, editing exec box - check AnchorDynType			ok
-		 * -new, saved - wnd title upd
+		 * -new, saved - wnd title upd					ok
 		 * -change close unsaved behav					canc
-		 * -settings - line style, bezier curve			?
-		 * -edit exec box - add row resets data
+		 * -settings - line style, bezier curve			canc
+		 * -edit exec box - add row resets data			ok
 		 * -box - return data list - variable
 		 * -swap box - vars rename						ok
 		 * -future - custom boxes
@@ -65,9 +65,9 @@ namespace DominoVisualizer
 		 * -add box - order list						ok
 		 * -swap error - lines not move, can't save		ok
 		 * -export params getdataval					ok
-		 * -rename connector - btn tag
-		 * -exec box add box - sort
-		 * -adding box - if has out delayed, force global
+		 * -rename connector - btn tag					ok
+		 * -exec box add box - sort						ok
+		 * -adding box - if has out delayed, force global		ok
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -2879,6 +2879,8 @@ namespace DominoVisualizer
 				boxes.Add(new() { Name = b.Value.ID });
 			}
 
+			boxes = boxes.OrderBy(a => a.Name).ToList();
+
 			openAddExecBoxDialog(boxes);
 		}
 
@@ -3253,8 +3255,16 @@ namespace DominoVisualizer
 
             editConnector.ID = name;
 			editConnector.Widget.Header.Text = name;
+            editConnector.Widget.delBtn.Tag = b.ID;
+            editConnector.Widget.swapBtn.Tag = b.ID;
 
-			string findParentName(string currName, List<DominoConnector> c)
+            foreach (var btn in editConnector.Widget.list.Children)
+                if (btn is Button)
+                {
+                    ((Button)btn).Tag = b.ID;
+                }
+
+            string findParentName(string currName, List<DominoConnector> c)
             {
                 var conn = c.Where(a => a.ID == editConnector.ID).SingleOrDefault();
 				if (conn != null)
@@ -3302,6 +3312,10 @@ namespace DominoVisualizer
                 if (!a)
                     newID = i.ToString();
 			}
+
+			var metaD = regBoxesAll[name].ControlsOut.Where(a => a.IsDelayed).Any();
+			if (metaD)
+				global = true;
 
 			if (global)
 				newID = "self[" + newID + "]";
@@ -4440,7 +4454,7 @@ namespace DominoVisualizer
 			return output;
 		}
 
-		public string Save()
+		public string Save(Window wnd = null)
         {
 			var acb = CheckConnBox();
 			if (acb != "")
@@ -4458,6 +4472,9 @@ namespace DominoVisualizer
 				else
 					return "";
 			}
+
+			if (wnd != null)
+				wnd.Title = MainWindow.appName + " - " + file;
 
 			//canvas.ResetZoom();
 			wasEdited = false;

@@ -3,21 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
-using static DominoVisualizer.DominoParser;
 
 namespace DominoVisualizer
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
-	public partial class MainWindow : Window
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
 	{
 		DominoParser parser;
 		//string fileSel = "";
@@ -550,7 +548,7 @@ namespace DominoVisualizer
 
 		private void ButtonSave_Click(object sender, RoutedEventArgs e)
 		{
-			var a = parser.Save();
+			var a = parser.Save(this);
 			if (a != "")
             {
 				OpenInfoDialog("Save", a);

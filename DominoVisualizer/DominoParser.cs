@@ -65,6 +65,9 @@ namespace DominoVisualizer
 		 * -add box - order list						ok
 		 * -swap error - lines not move, can't save		ok
 		 * -export params getdataval					ok
+		 * -rename connector - btn tag
+		 * -exec box add box - sort
+		 * -adding box - if has out delayed, force global
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -1901,14 +1904,11 @@ namespace DominoVisualizer
 			}
 		}
 
-		private Border DrawBtn(string name, string tag, RoutedEventHandler act)
+		private Button DrawBtn(string name, string tag, RoutedEventHandler act)
 		{
             Button btn = new Button() { Content = name, Tag = tag, Style = Application.Current.FindResource("BoxBtn") as Style };
             btn.Click += act;
-            StackPanel spOpen = new();
-            spOpen.Children.Add(btn);
-            Border bOpen = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = spOpen };
-			return bOpen;
+			return btn;
         }
 
         private void DrawLine(double x1, double y1, double x2, double y2, string startIndex, string endIndex, int clrIndx)
@@ -2390,7 +2390,14 @@ namespace DominoVisualizer
 
 			b.Widget.Header.Text = b.ID + " - " + b.Name;
 			b.Widget.ID = b.ID;
-			(sender as Button).Tag = b.ID;
+			b.Widget.delBtn.Tag = b.ID;
+			b.Widget.swapBtn.Tag = b.ID;
+
+            foreach (var btn in b.Widget.list.Children)
+				if (btn is Button)
+				{
+					((Button)btn).Tag = b.ID;
+                }
 
 			dominoBoxes[b.ID] = b;
 			dominoBoxes.Remove(tag);
@@ -2417,11 +2424,12 @@ namespace DominoVisualizer
                 {
 					bool changed = false;
 
-                    if (v.Value.Contains(tag))
-                    {
-                        v.Value = v.Value.Replace(tag, b.ID);
-						changed = true;
-                    }
+					if (v.Value != null)
+						if (v.Value.Contains(tag))
+						{
+							v.Value = v.Value.Replace(tag, b.ID);
+							changed = true;
+						}
 
 					foreach (var sv in v.ValueArray)
 						if (a(sv))
@@ -2436,6 +2444,16 @@ namespace DominoVisualizer
 						c.Widget.list.Children.Remove(v.ContainerUI);
                         DrawConnVariable(c, v);
 					}
+
+				foreach (var ee in c.ExecBoxes)
+				{
+					foreach (var p in ee.Params)
+						if (a(p))
+                        {
+                            c.Widget.list.Children.Remove(ee.ContainerUI);
+                            DrawExecBoxContainerUI(c, ee, ee.INT_clr);
+                        }
+				}
             }
 
 			wasEdited = true;

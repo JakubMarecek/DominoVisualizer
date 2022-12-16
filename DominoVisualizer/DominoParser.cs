@@ -64,8 +64,7 @@ namespace DominoVisualizer
 		 * -auto add dynint - check numbering - 1		ok
 		 * -add box - order list						ok
 		 * -swap error - lines not move, can't save		ok
-		 * 
-		 * -export params getdataval
+		 * -export params getdataval					ok
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
@@ -333,7 +332,7 @@ namespace DominoVisualizer
 					isExtFuncs = true;
                 }
 
-				if ((l.StartsWith("l0 = Boxes[GetPathID(") || l.StartsWith("l0 = Boxes[")) && allowNewBoxes)
+				if ((l.StartsWith("l0 = Boxes[GetPathID(") || l.StartsWith("l0 = Boxes[")) && allowNewBoxes && tempBox == null)
 				{
 					string[] funcParts = func.Split("_");
 					func = funcParts[0] + "_" + funcParts[1];
@@ -850,13 +849,18 @@ namespace DominoVisualizer
 					if (boxCall.StartsWith("Boxes"))
 					{
 						boxID = paramsFunc; //newBoxIDAssigned[paramsFunc].ToString();
-					}
 
-					if (boxCall.StartsWith("self["))
+                        if (lastBoxesAssign.ContainsKey(boxCall))
+                            lastBoxesAssign[boxCall] = boxID;
+                        else
+                            lastBoxesAssign.Add(boxCall, boxID);
+                    }
+
+                    if (boxCall.StartsWith("self["))
 					{
 						boxID = boxCall; //.Replace("self[", "").Replace("]", "");
-					}
-				}
+                    }
+                }
 
 				if (l.StartsWith("l0:Exec(") || l.StartsWith("l0:ExecDynInt("))
 				{
@@ -989,7 +993,7 @@ namespace DominoVisualizer
 					string[] sp = l.Split('=');
 
 					string box = sp[1].Trim().Split(':')[0];
-					string boxName = assigns[box];
+					/*string boxName = assigns[box];
 					if (boxName.StartsWith("Boxes["))
 					{
 						if (lastBoxesAssign.ContainsKey(boxName))
@@ -998,7 +1002,7 @@ namespace DominoVisualizer
 							lastBoxesAssign.Add(boxName, func);
 
 						//boxName = func.Replace("ex_", "en_");
-					}
+					}*/
 
 					string var = sp[0].Trim();
 					string varAssign = sp[1].Trim();
@@ -1082,10 +1086,19 @@ namespace DominoVisualizer
 								l = l.Replace(kvAssigns.Key, kvAssigns.Value);
 							}
 
-						string[] cData = l.Split('=');
-						string num = cData[0].Replace("[", "").Replace("]", "").Trim();
+						string num = "";
+						string val;
 
-						if (cData[1].Trim().EndsWith("{"))
+						if (l.Contains('='))
+						{
+							string[] cData = l.Split('=');
+							num = cData[0].Replace("[", "").Replace("]", "").Trim();
+							val = cData[1].Trim();
+						}
+						else
+							val = l.Trim();
+
+						if (val.EndsWith("{"))
 						{
 							List<DominoDict> tmpPrm = new();
 
@@ -1110,10 +1123,14 @@ namespace DominoVisualizer
 
 							return new() { Name = num, ValueArray = tmpPrm };
 						}
+						else if (val.EndsWith("{}"))
+                        {
+                            return new() { Name = num, ValueArray = new() };
+                        }
 						else
 						{
-							cData[1] = cData[1].Replace(",", "").Trim();
-							return new() { Name = num, Value = cData[1] };
+                            val = val.Replace(",", "");
+							return new() { Name = num, Value = val };
 						}
 					}
 
@@ -1205,7 +1222,7 @@ namespace DominoVisualizer
 				bool a = false;
 				foreach (var s in p.ValueArray)
 				{
-					v += (a ? ("," + (export ? Environment.NewLine + "  " + indd : " ")) : "") + s.Name + " = ";
+					v += (a ? ("," + (export ? Environment.NewLine + "  " + indd : " ")) : "") + (s.Name == "" ? "" : s.Name + " = ");
 
 					v += ParamsAsString(s, export, ind++);
 
@@ -1213,6 +1230,10 @@ namespace DominoVisualizer
 				}
 
 				v += (export ? Environment.NewLine + indd : "") + "}";
+			}
+			else if (p.Value == null && !p.ValueArray.Any())
+			{
+				v = "{}";
 			}
 			else
 			{
@@ -2568,7 +2589,7 @@ namespace DominoVisualizer
 
 			void aa(DominoDict prmVal, string uniqueIDParent, int arrayLeft = 0, string paramName = null, bool isBase = false, int baseID = -1)
 			{
-				if (prmVal != null && prmVal.ValueArray.Count == 0)
+				if (prmVal != null && prmVal.ValueArray.Count == 0 && prmVal.Value != null)
 				{
                 	wndData.Add(new()
 					{ 
@@ -2587,7 +2608,7 @@ namespace DominoVisualizer
                         NameMargin = new(arrayLeft, 0, 5, 0)
                     });
 				}
-				else if (prmVal != null && prmVal.ValueArray.Count > 0 && prmVal.Value == null)
+				else if (prmVal != null && prmVal.ValueArray.Count >= 0 && prmVal.Value == null)
 				{
                 	wndData.Add(new() 
 					{ 
@@ -2599,7 +2620,7 @@ namespace DominoVisualizer
 						ParamUsed = true,
 						ParamHasArray = true,
 						ParamIsBase = isBase,
-                        AddArrayVs = Visibility.Hidden,
+                        AddArrayVs = Visibility.Visible,
                         AddVs = Visibility.Visible,
                         RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
                         ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
@@ -2670,7 +2691,7 @@ namespace DominoVisualizer
                     if (param.ParamIsBase)
                         p.Name = param.ParamNameRaw;
                     else
-                        p.Name = param.ParamName;
+                        p.Name = param.ParamName.Replace(" ", "");
 
                     if (!param.ParamHasArray)
                         p.Value = param.ParamValue;
@@ -2708,16 +2729,35 @@ namespace DominoVisualizer
 				paramsEdit.Add(aa(paramsList[0], ""));*/
         }
 
-        public List<ParamEntry> EditExecBoxParamsAddRow(string uniqueID, bool makeArray)
+        public List<ParamEntry> EditExecBoxParamsAddRow(List<ParamEntry> paramsList, string uniqueID, bool makeArray)
         {
+			EditExecBoxUIGetParams(paramsList);
+
             void a(List<DominoDict> aa)
             {
                 foreach (var c in aa)
 				{
 					if (c.UniqueID == uniqueID)
 					{
-						if (makeArray) c.Value = null;
-                        c.ValueArray.Add(new() { Name = "New Param", Value = "A Value" });
+						//if (makeArray) c.Value = null;
+                        //c.ValueArray.Add(new() { Name = "New Param", Value = "A Value" });
+
+						if (makeArray)
+                        {
+                            if (c.Value != null)
+                            {
+                                c.Value = null;
+                            }
+                            else if (c.Value == null)
+                            {
+                                c.Value = "";
+                                c.ValueArray.Clear();
+                            }
+                        }
+						else
+                        {
+                            c.ValueArray.Add(new() { Name = "NewParam", Value = "\"A Value\"" });
+                        }
 					}
 
                     if (c.ValueArray.Count > 0)
@@ -4018,8 +4058,10 @@ namespace DominoVisualizer
 						Dictionary<string, string> tmpVaBAs = new();
 						int tmpIdx = 0;
 
-						void processParamsOutVal(List<DominoDict> listParams)
+						string processParamsOutVal(List<DominoDict> listParams)
 						{
+							string outData = "";
+
 							if (listParams.Any())
 							{
 								foreach (var ppm in listParams)
@@ -4037,19 +4079,21 @@ namespace DominoVisualizer
 												bN = "Boxes[GetPathID(\"" + dominoBoxes[bN].Name + "\")]";
 										}
 
-										streamWriter.WriteLine($"  l{tmpIdx} = {bN}");
+                                        outData += $"  l{tmpIdx} = {bN}{Environment.NewLine}";
 										tmpIdx++;
 									}
 
-									processParamsOutVal(ppm.ValueArray);
+									outData += processParamsOutVal(ppm.ValueArray);
 								}
 							}
+
+							return outData;
 						}
 
-						processParamsOutVal(exec.Params);
+						var varSetBoxes = processParamsOutVal(exec.Params);
 
 						string locDefs = "";
-						for (int i = 0; i < tmpIdx + (wasLocalBox ? 1 : 0); i++)
+						for (int i = 0; i < tmpIdx + (wasLocalBox && tmpIdx == 0 ? 1 : 0); i++)
 							locDefs += ", l" + i.ToString();
 						streamWriter.WriteLine($"  local params{locDefs}");
 
@@ -4063,6 +4107,8 @@ namespace DominoVisualizer
 							streamWriter.WriteLine("  l0:SetParentGraph(self._cbox)");
 							streamWriter.WriteLine(ExportConns(exec.Box));
 						}
+
+						streamWriter.Write(varSetBoxes);
 
 						string a(string param)
 						{
@@ -4095,10 +4141,15 @@ namespace DominoVisualizer
 								{
 									string cc = cnt != listParams.Count - 1 ? "," : "";
 
-									bool dIsNum = int.TryParse(ppm.Name, out _);
-									streamWriter.Write($"{indentSpaces}{(dIsNum ? "[" : "")}{ppm.Name}{(dIsNum ? "]" : "")} = ");
+									if (ppm.Name != "")
+                                    {
+                                        bool dIsNum = int.TryParse(ppm.Name, out _);
+                                        streamWriter.Write($"{indentSpaces}{(dIsNum ? "[" : "")}{ppm.Name}{(dIsNum ? "]" : "")} = ");
+                                    }
+									else if (ppm.Name == "")
+                                        streamWriter.Write($"{indentSpaces}");
 
-									if (ppm.Value != null)
+                                    if (ppm.Value != null)
 										streamWriter.WriteLine($"{a(ppm.Value)}{cc}");
 
 									if (ppm.ValueArray.Any())
@@ -4110,7 +4161,10 @@ namespace DominoVisualizer
 										streamWriter.WriteLine(indentSpaces + "}" + cc);
 									}
 
-									cnt++;
+									if (!ppm.ValueArray.Any() && ppm.Value == null)
+                                        streamWriter.WriteLine("{}" + cc);
+
+                                    cnt++;
 								}
 							}
 

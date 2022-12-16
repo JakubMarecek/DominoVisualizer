@@ -591,12 +591,12 @@ namespace DominoVisualizer
 
 		private void ButtonLVArray_Click(object sender, RoutedEventArgs e)
 		{
-            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow((string)((Button)sender).Tag, true);
+            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
 		}
 
 		private void ButtonLVAdd_Click(object sender, RoutedEventArgs e)
 		{
-            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow((string)((Button)sender).Tag, false);
+            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
 		}
 
 		private void ButtonLVDelete_Click(object sender, RoutedEventArgs e)
@@ -762,12 +762,12 @@ namespace DominoVisualizer
 
         private void ButtonEDLArray_Click(object sender, RoutedEventArgs e)
         {
-            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow((string)((Button)sender).Tag, true);
+            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
         }
 
         private void ButtonEDLAdd_Click(object sender, RoutedEventArgs e)
         {
-            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow((string)((Button)sender).Tag, false);
+            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
         }
 
         private void ButtonEDLDelete_Click(object sender, RoutedEventArgs e)

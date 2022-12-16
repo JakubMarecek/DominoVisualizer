@@ -64,6 +64,8 @@ namespace DominoVisualizer
 		 * -auto add dynint - check numbering - 1		ok
 		 * -add box - order list						ok
 		 * -swap error - lines not move, can't save		ok
+		 * 
+		 * -export params getdataval
 		 */
 
 		Dictionary<string, DominoBox> dominoBoxes = new();

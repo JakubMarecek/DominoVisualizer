@@ -101,6 +101,8 @@ namespace DominoVisualizer
 		bool errFilesB = false;
 		bool wasEdited = false;
 
+        //Random r = new();
+
         public DominoParser(PanAndZoomCanvas canvas, string game)
         {
             this.canvas = canvas;
@@ -109,6 +111,7 @@ namespace DominoVisualizer
             runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             ParseAllBoxes();
+            AddColors();
         }
 
         public DominoParser(string dominoPath, PanAndZoomCanvas canvas)
@@ -117,6 +120,8 @@ namespace DominoVisualizer
 			this.canvas = canvas;
 			
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            AddColors();
         }
 
 		public DominoParser(string dominoPath, PanAndZoomCanvas canvas, string game)
@@ -130,9 +135,10 @@ namespace DominoVisualizer
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             ParseAllBoxes();
+			AddColors();
         }
 
-		public DominoParser(string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
+        public DominoParser(string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
 		{
 			file = dominoSearchFolder;
 			this.canvas = canvas;
@@ -145,6 +151,7 @@ namespace DominoVisualizer
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
 			ParseAllBoxes();
+			AddColors();
         }
 
 		public void Create()
@@ -1332,15 +1339,98 @@ namespace DominoVisualizer
         List<LinesVal> lines = new();
 		int width = 300;
         int spaceX = 400;
-        private List<Color> linesColors = new() {
-				Colors.Red, Colors.Yellow, Colors.Blue, Colors.Green, Colors.LawnGreen, Colors.White, Colors.Pink, Colors.Orange, Colors.Azure,
-				Colors.Purple, Colors.Violet, Colors.Brown, Colors.Cyan, Colors.Crimson, Colors.Fuchsia, Colors.Gold, Colors.Khaki,
-				Colors.Navy, Colors.Olive, Colors.Silver, Colors.Turquoise, Colors.Tomato, Colors.Aqua, Colors.GreenYellow, Colors.LightGreen,
-				Colors.LightGray, Colors.LightCyan, Colors.LightBlue, Colors.LightYellow, Colors.DarkBlue, Colors.DarkCyan, Colors.DarkGray,
-				Colors.DarkKhaki, Colors.DarkMagenta, Colors.DarkOrange, Colors.DarkViolet, Colors.DeepPink, Colors.DarkRed, Colors.Lime,
-				Colors.SkyBlue, Colors.DarkTurquoise,Colors.DeepSkyBlue,Colors.BlueViolet, Colors.BurlyWood,Colors.Chocolate,
-				Colors.Firebrick, Colors.FloralWhite,
-			};
+		private List<Color> linesColors = new();
+
+		private void AddColors()
+		{
+            // Colors.Red, Colors.Yellow, Colors.DodgerBlue, Colors.Green, Colors.White, Colors.Orange
+            /*var a = typeof(Colors).GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public)
+                                .Select(c => (Color)c.GetValue(null, null))
+                                .ToList();
+
+			foreach (var c in a)
+				if (!linesColors.Contains(c))
+					linesColors.Add(c);*/
+
+            // https://www.materialpalette.com/colors
+
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff1744")); // red
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#2979ff")); // blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#00e676")); // green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffea00")); // yellow
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#f50057")); // pink
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#d500f9")); // purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#651fff")); // deep purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#3d5afe")); // indigo
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#00b0ff")); // light blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#00e5ff")); // cyan
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#1de9b6")); // teal
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#76ff03")); // light green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#c6ff00")); // lime
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc400")); // amber
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9100")); // orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff3d00")); // deep orange
+
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#f44336")); // red
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#2196f3")); // blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#4caf50")); // green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffeb3b")); // yellow
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#e91e63")); // pink
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#9c27b0")); // purple
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#673ab7")); // deep purple
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#3f51b5")); // indigo
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#03a9f4")); // light blue
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#00bcd4")); // cyan
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#009688")); // teal
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#8bc34a")); // light green
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#cddc39")); // lime
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc107")); // amber
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9800")); // orange
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff5722")); // deep orange
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#795548")); // brown
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#9e9e9e")); // grey
+			linesColors.Add((Color)ColorConverter.ConvertFromString("#607d8b")); // blue grey
+
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ef9a9a")); // red
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#90caf9")); // blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#a5d6a7")); // green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#fff59d")); // yellow
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#f48fb1")); // pink
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ce93d8")); // purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#b39ddb")); // deep purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#9fa8da")); // indigo
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#81d4fa")); // light blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#80deea")); // cyan
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#80cbc4")); // teal
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#c5e1a5")); // light green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#e6ee9c")); // lime
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffe082")); // amber
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffcc80")); // orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffab91")); // deep orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#bcaaa4")); // brown
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#eeeeee")); // grey
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#b0bec5")); // blue grey
+
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#b71c1c")); // red
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#0d47a1")); // blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#1b5e20")); // green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#f57f17")); // yellow
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#880e4f")); // pink
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#4a148c")); // purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#311b92")); // deep purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#1a237e")); // indigo
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#01579b")); // light blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#006064")); // cyan
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#004d40")); // teal
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#33691e")); // light green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#827717")); // lime
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff6f00")); // amber
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#e65100")); // orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#bf360c")); // deep orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#3e2723")); // brown
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#212121")); // grey
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#263238")); // blue grey
+        }
 
 		private void HandleSomethingHappened(string id, double x, double y)
 		{
@@ -1717,7 +1807,9 @@ namespace DominoVisualizer
 				{
 					if (!exists)
 					{
-						DrawExecBoxContainerUI(conn, execBox, linesColors[colorBoxSel]);
+						//colorBoxSel = r.Next(0, 16);
+
+                        DrawExecBoxContainerUI(conn, execBox, linesColors[colorBoxSel]);
 
 						// ===
 
@@ -1837,7 +1929,7 @@ namespace DominoVisualizer
 						if (execBoxNull)
 							selectedPoints.Add(new(execBox.Box.DrawX, execBox.Box.DrawY + execBox.Box.Height));
 
-						/*if (execBoxNull)
+                        /*if (execBoxNull)
                             if (execBox.Box.Height > 300)
                             {
                                 for (int i = 0; i < execBox.Box.Height; i += 300)
@@ -1845,9 +1937,9 @@ namespace DominoVisualizer
                                     selectedPoints.Add(new(execBox.Box.DrawX, execBox.Box.DrawY + i));
                                 }
                             }*/
-					}
 
-					colorBoxSel++;
+                        colorBoxSel++;
+                    }
 				}
 
 				if (!exists)
@@ -1987,10 +2079,12 @@ namespace DominoVisualizer
 			return sp;
         }
 
-		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", List<Tuple<string, string, int>> linesJoin = null, bool addLine = true, int selClr = -1)
+        private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", List<Tuple<string, string, int>> linesJoin = null, bool addLine = true, int selClr = -1)
 		{
             string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
-			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count;
+			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
+
+            //colorConnSel = r.Next(0, linesColors.Count);
 
             if (c.ID != null && c.ID != "")
             {

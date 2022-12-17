@@ -643,7 +643,10 @@ namespace DominoVisualizer
         private void OpenAddBoxConnectorDialog(List<ExecEntry> boxFuncs, List<ExecEntry> connectors)
         {
             addBoxConnectorC.ItemsSource = connectors;
+            addBoxConnectorC.SelectedIndex = 0;
             addBoxConnectorB.ItemsSource = boxFuncs;
+            if (boxFuncs.Any())
+                addBoxConnectorB.SelectedIndex = 0;
             Animation(true, gridDialogAddBoxConnector);
         }
 
@@ -966,7 +969,8 @@ namespace DominoVisualizer
         private void OpenGetDataFromBoxDialog(List<string> boxes)
         {
             addGetDataFromBoxBox.ItemsSource = boxes;
-            addGetDataFromBoxBox.SelectedIndex = 0;
+            if (boxes.Any())
+                addGetDataFromBoxBox.SelectedIndex = 0;
             Animation(true, gridDialogGetDataFromBox);
         }
 
@@ -975,7 +979,14 @@ namespace DominoVisualizer
             string tag = (string)((Button)sender).Tag;
 
             if (tag == "1")
+            {
+                if (addGetDataFromBoxBox.SelectedIndex == -1)
+                {
+                    OpenInfoDialog("Get data from box", "No box selected.");
+                    return;
+                }
                 parser.GetDataFromBoxCreate(addGetDataFromBoxBox.SelectedItem.ToString(), ((ExecEntry)addGetDataFromBoxData.SelectedItem).Num);
+            }
 
             Animation(false, gridDialogGetDataFromBox);
         }

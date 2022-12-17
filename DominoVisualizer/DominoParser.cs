@@ -73,7 +73,7 @@ namespace DominoVisualizer
 
         Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
-		Dictionary<string, DominoBoxMetadata> regBoxes = new();
+        SortedDictionary<string, DominoBoxMetadata> regBoxes = new();
 		SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
         Dictionary<ulong, string> regBoxesCRC64 = new();
 		List<DominoDict> globalVariables = new();
@@ -3897,7 +3897,8 @@ namespace DominoVisualizer
 			foreach (var b in regBoxes)
 				streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{b.Key}\")");
 
-			foreach (var res in dominoResources)
+			dominoResources.Sort();
+            foreach (var res in dominoResources)
 				streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
 
 			streamWriter.WriteLine("  --end");

@@ -1,11 +1,13 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
@@ -602,9 +604,20 @@ namespace DominoVisualizer
 		private void ButtonLVDelete_Click(object sender, RoutedEventArgs e)
 		{
             paramsList.ItemsSource = parser.EditExecBoxParamsRemoveRow((string)((Button)sender).Tag);
-		}
+        }
 
-		private void OpenAddExecBoxDialog(List<ExecEntry> boxes)
+        private void ButtonLVGetData_Click(object sender, RoutedEventArgs e)
+        {
+            parser.GetDataFromBox((outDta) => 
+            {
+                var rowItem = (sender as Button).DataContext as ParamEntry;
+                rowItem.ParamValue = outDta;
+                ICollectionView view = CollectionViewSource.GetDefaultView(paramsList.ItemsSource);
+                view.Refresh();
+            });
+        }
+
+        private void OpenAddExecBoxDialog(List<ExecEntry> boxes)
         {
 			addExecBoxBox.ItemsSource = boxes;
             Animation(true, gridDialogAddExecBox);
@@ -773,6 +786,17 @@ namespace DominoVisualizer
         private void ButtonEDLDelete_Click(object sender, RoutedEventArgs e)
         {
             editDataList.ItemsSource = parser.EditExecBoxParamsRemoveRow((string)((Button)sender).Tag);
+        }
+
+        private void ButtonEDLGetData_Click(object sender, RoutedEventArgs e)
+        {
+            parser.GetDataFromBox((outDta) =>
+            {
+                var rowItem = (sender as Button).DataContext as ParamEntry;
+                rowItem.ParamValue = outDta;
+                ICollectionView view = CollectionViewSource.GetDefaultView(editDataList.ItemsSource);
+                view.Refresh();
+            });
         }
 
         private void OpenEditConnVarDialog(string name, string val)

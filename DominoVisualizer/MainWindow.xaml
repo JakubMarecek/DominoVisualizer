@@ -55,7 +55,7 @@
                 <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="810" MaxHeight="600">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit exec box" Style="{StaticResource Header}" />
                     <TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
@@ -134,6 +134,13 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Style="{StaticResource EditExecRemoveBtn}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Click="ButtonLVGetData_Click" Visibility="{Binding GetDataVs}" Style="{StaticResource EditExecGetDataBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -247,7 +254,7 @@
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditData" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="810">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Name="editDataLblName" Content="--name--" Style="{StaticResource Header}" />
                     <TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
@@ -321,6 +328,13 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
+                                <GridViewColumn Header="">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Click="ButtonEDLGetData_Click" Visibility="{Binding GetDataVs}" Style="{StaticResource EditExecGetDataBtn}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -338,9 +352,9 @@
                     <TextBox Text="" Name="editConnVarName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                     <TextBlock Text="Value of the variable to set" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
-                    <TextBox Text="" Name="editConnVarSet" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Text="" Name="editConnVarSet" Width="490" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Get data from box" Click="ButtonDialogEditConnVar_Click" Tag="2" Margin="10,0,130,10" Width="150" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource EditExecGetDataBtn}" Click="ButtonDialogEditConnVar_Click" Tag="2" Margin="0,185,15,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 
                     <Button Style="{StaticResource CBtn}" Content="Set" Click="ButtonDialogEditConnVar_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditConnVar_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
@@ -490,7 +504,7 @@
                 <Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
                 <TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
             </Grid>
-            <Grid Background="#99000000" Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="90" Visibility="Hidden">
+            <Grid Background="#99000000" Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="160,0,0,0" Width="500" Height="90" Visibility="Hidden">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stroke="#F28C28" RadiusX="3" RadiusY="3" StrokeThickness="1" />
                 <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,25,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
                 <Button Style="{StaticResource CBtn}" Content="Search" Click="ButtonSearch_Click" Margin="270,25,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />

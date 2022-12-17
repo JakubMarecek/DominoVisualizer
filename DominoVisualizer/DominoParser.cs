@@ -2634,6 +2634,7 @@ namespace DominoVisualizer
 						AddVs = Visibility.Hidden,
 						RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
                         ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
+                        GetDataVs = Visibility.Visible,
                         NameMargin = new(arrayLeft, 0, 5, 0)
                     });
 				}
@@ -2653,6 +2654,7 @@ namespace DominoVisualizer
                         AddVs = Visibility.Visible,
                         RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
                         ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
+                        GetDataVs = Visibility.Hidden,
                         NameMargin = new(arrayLeft, 0, 5, 0)
                     });
 				
@@ -2676,6 +2678,7 @@ namespace DominoVisualizer
                         AddVs = Visibility.Hidden,
                         RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
 						ArrayBulletVs = Visibility.Collapsed,
+                        GetDataVs = Visibility.Visible,
 						NameMargin = new(0,0,0,0)
                     });
 			}

@@ -222,8 +222,8 @@ namespace WpfPanAndZoom.CustomControls
                                     if (widgetC.DisableMove)
                                         continue;
 
-                                if (child is BorderD)
-                                    continue;
+                                /*if (child is BorderD)
+                                    continue;*/
 
                                 double xc = Canvas.GetLeft(child);
                                 double yc = Canvas.GetTop(child);

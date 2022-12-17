@@ -29,5 +29,7 @@ namespace DominoVisualizer
         public Visibility RemoveVs { set; get; }
 
         public Visibility ArrayBulletVs { set; get; }
+
+        public Visibility GetDataVs { set; get; }
     }
 }

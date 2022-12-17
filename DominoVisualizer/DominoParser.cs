@@ -58,7 +58,7 @@ namespace DominoVisualizer
 		 * -change close unsaved behav					canc
 		 * -settings - line style, bezier curve			canc
 		 * -edit exec box - add row resets data			ok
-		 * -box - return data list - variable			half
+		 * -box - return data list - variable			ok
 		 * -swap box - vars rename						ok
 		 * -future - custom boxes
 		 * -auto add dynint - check numbering - 1		ok
@@ -69,6 +69,7 @@ namespace DominoVisualizer
 		 * -exec box add box - sort						ok
 		 * -adding box - if has out delayed, force global		canc
 		 * -if it's NOT stateless - do not allow non global		ok
+		 * -add execbox default selected
 		 */
 
         Dictionary<string, DominoBox> dominoBoxes = new();

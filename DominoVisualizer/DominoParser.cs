@@ -28,7 +28,7 @@ namespace DominoVisualizer
 {
 	internal class DominoParser
 	{
-		/* TODO
+        /* TODO
 		 * -param lua file open							ok / maybe
 		 * -all delete ask dialog						ok
 		 * -styles comboboxes							ok
@@ -67,10 +67,11 @@ namespace DominoVisualizer
 		 * -export params getdataval					ok
 		 * -rename connector - btn tag					ok
 		 * -exec box add box - sort						ok
-		 * -adding box - if has out delayed, force global		ok
+		 * -adding box - if has out delayed, force global		canc
+		 * -if it's NOT stateless - do not allow non global		ok
 		 */
 
-		Dictionary<string, DominoBox> dominoBoxes = new();
+        Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
 		Dictionary<string, DominoBoxMetadata> regBoxes = new();
 		SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
@@ -2381,7 +2382,14 @@ namespace DominoVisualizer
 
 			var b = dominoBoxes[tag];
 
-			string num = b.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
+            var isStateless = regBoxesAll[b.Name].IsStateless;
+            if (!isStateless && b.ID.StartsWith("self["))
+			{
+                openInfoDialog("Swap box", "Selected box is not stateless and must be defined as global.");
+                return;
+            }
+
+            string num = b.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
 
 			if (b.ID.StartsWith("self["))
 				b.ID = "en_" + num;
@@ -2569,6 +2577,9 @@ namespace DominoVisualizer
 			if (dialogAskActionCancel != null)
 				dialogAskActionCancel();
         }
+
+		public delegate void OpenInfoDialog(string name, string val);
+		public OpenInfoDialog openInfoDialog;
 
         public void InfoDialogAct()
 		{
@@ -3313,9 +3324,9 @@ namespace DominoVisualizer
                     newID = i.ToString();
 			}
 
-			var metaD = regBoxesAll[name].ControlsOut.Where(a => a.IsDelayed).Any();
-			if (metaD)
-				global = true;
+			var isStateless = regBoxesAll[name].IsStateless;
+			if (!isStateless && !global)
+				return "Selected box is not stateless and must be defined as global.";
 
 			if (global)
 				newID = "self[" + newID + "]";

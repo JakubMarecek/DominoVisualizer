@@ -148,6 +148,7 @@ namespace DominoVisualizer
 					parser.openAddBorderDialog = OpenAddBorderDialog;
 					parser.openEditResourceDialog = OpenEditResourceDialog;
 					parser.openEditConnectorDialog = OpenEditConnectorDialog;
+                    parser.openInfoDialog = OpenInfoDialog;
 
                     loaded = true;
 					Animation(true, gridMainClose);

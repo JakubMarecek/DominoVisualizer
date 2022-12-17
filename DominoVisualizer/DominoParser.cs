@@ -2603,6 +2603,10 @@ namespace DominoVisualizer
             btnDel.Click += EditBorderDialog;
             g.Children.Add(btnDel);
 
+            Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DelBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
+            btnDup.Click += DuplicateBorder;
+            g.Children.Add(btnDup);
+
             System.Windows.Shapes.Rectangle r = new();
 			r.StrokeDashArray = lineStyle;
 			r.Stroke = new SolidColorBrush(linesColors[b.Color]);
@@ -3947,6 +3951,28 @@ namespace DominoVisualizer
 			getDataFromBoxAction(d);
         }
 
+
+
+		private void DuplicateBorder(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+			DominoBorder bd = dominoBorders.Where(a => a.UniqueID == tag).Single();
+
+            DominoBorder bdNew = new();
+			bdNew.Color = bd.Color;
+			bdNew.Style = bd.Style;
+
+			double x = Canvas.GetLeft(bd.ContainerUI);
+			double y = Canvas.GetTop(bd.ContainerUI);
+            DrawBorder(bdNew, x, y + canvas.Transform(new(0, bd.ContainerUI.Height)).Y, bd.ContainerUI.ActualWidth, bd.ContainerUI.ActualHeight, bd.ContainerUI.EnableMovingChilds);
+
+			dominoBorders.Add(bdNew);
+
+
+
+
+		}
 
 
 

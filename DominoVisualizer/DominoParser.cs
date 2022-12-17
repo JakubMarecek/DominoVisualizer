@@ -58,7 +58,7 @@ namespace DominoVisualizer
 		 * -change close unsaved behav					canc
 		 * -settings - line style, bezier curve			canc
 		 * -edit exec box - add row resets data			ok
-		 * -box - return data list - variable
+		 * -box - return data list - variable			half
 		 * -swap box - vars rename						ok
 		 * -future - custom boxes
 		 * -auto add dynint - check numbering - 1		ok
@@ -3810,9 +3810,50 @@ namespace DominoVisualizer
 
 
 
+		public delegate void OpenGetDataFromBoxDialog(List<string> boxes);
+		public OpenGetDataFromBoxDialog openGetDataFromBoxDialog;
+		public Action<string> getDataFromBoxAction;
+
+        public void GetDataFromBox(Action<string> action)
+        {
+			getDataFromBoxAction = action;
+
+            List<string> boxes = new();
+            foreach (var b in dominoBoxes.Values)
+            {
+                var m = regBoxes[b.Name].DatasOut.Any();
+				if (m)
+					boxes.Add(b.ID);
+            }
+
+            boxes.Sort();
+
+            openGetDataFromBoxDialog(boxes);
+        }
+
+		public List<ExecEntry> GetDataFromBoxDatas(string selBox)
+		{
+			var b = dominoBoxes[selBox];
+			var m = regBoxes[b.Name].DatasOut;
+
+			List<ExecEntry> entries = new();
+			for (int i = 0; i < m.Count; i++)
+                entries.Add(new() { Name = m[i].Name, Num = i.ToString() });
+
+			return entries;
+		}
+
+		public void GetDataFromBoxCreate(string selBox, string selData)
+		{
+			var d = selBox + $":GetDataOutValue({selData})";
+			getDataFromBoxAction(d);
+        }
 
 
-		public void CheckEdited(Action afterAction)
+
+
+
+        public void CheckEdited(Action afterAction)
 		{
 			if (wasEdited)
             {

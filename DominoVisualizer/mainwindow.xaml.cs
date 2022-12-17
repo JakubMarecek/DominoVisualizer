@@ -149,6 +149,7 @@ namespace DominoVisualizer
 					parser.openEditResourceDialog = OpenEditResourceDialog;
 					parser.openEditConnectorDialog = OpenEditConnectorDialog;
                     parser.openInfoDialog = OpenInfoDialog;
+                    parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
 
                     loaded = true;
 					Animation(true, gridMainClose);
@@ -788,6 +789,12 @@ namespace DominoVisualizer
 			if (tag == "1")
 				parser.EditConnVarCreate(editConnVarName.Text, editConnVarSet.Text);
 
+            if (tag == "2")
+            {
+                parser.GetDataFromBox((outDta) => { editConnVarSet.Text = outDta; });
+                return;
+            }
+
             Animation(false, gridDialogEditConnVar);
         }
 
@@ -930,6 +937,29 @@ namespace DominoVisualizer
             }
 
             Animation(false, gridDialogEditConnector);
+        }
+
+        private void OpenGetDataFromBoxDialog(List<string> boxes)
+        {
+            addGetDataFromBoxBox.ItemsSource = boxes;
+            addGetDataFromBoxBox.SelectedIndex = 0;
+            Animation(true, gridDialogGetDataFromBox);
+        }
+
+        private void ButtonDialogGetDataFromBox_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "1")
+                parser.GetDataFromBoxCreate(addGetDataFromBoxBox.SelectedItem.ToString(), ((ExecEntry)addGetDataFromBoxData.SelectedItem).Num);
+
+            Animation(false, gridDialogGetDataFromBox);
+        }
+
+        private void addGetDataFromBoxBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(addGetDataFromBoxBox.SelectedItem.ToString());
+            addGetDataFromBoxData.SelectedIndex = 0;
         }
 
         /*private void ExportPicture(object sender, RoutedEventArgs e)

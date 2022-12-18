@@ -69,7 +69,7 @@ namespace DominoVisualizer
 		 * -exec box add box - sort						ok
 		 * -adding box - if has out delayed, force global		canc
 		 * -if it's NOT stateless - do not allow non global		ok
-		 * -add execbox default selected
+		 * -add execbox default selected				ok
 		 */
 
         Dictionary<string, DominoBox> dominoBoxes = new();
@@ -3963,15 +3963,52 @@ namespace DominoVisualizer
 			bdNew.Color = bd.Color;
 			bdNew.Style = bd.Style;
 
-			double x = Canvas.GetLeft(bd.ContainerUI);
-			double y = Canvas.GetTop(bd.ContainerUI);
-            DrawBorder(bdNew, x, y + canvas.Transform(new(0, bd.ContainerUI.Height)).Y, bd.ContainerUI.ActualWidth, bd.ContainerUI.ActualHeight, bd.ContainerUI.EnableMovingChilds);
+			var pos = new Point(Canvas.GetLeft(bd.ContainerUI), Canvas.GetTop(bd.ContainerUI));
+			var add = new Point(bd.ContainerUI.Width, bd.ContainerUI.Height + 20);
+			add = canvas.Transform4(add);
+
+			var newPosY = add.Y + 20;
+
+            DrawBorder(bdNew, pos.X, pos.Y + newPosY, bd.ContainerUI.Width, bd.ContainerUI.Height, bd.ContainerUI.EnableMovingChilds);
 
 			dominoBorders.Add(bdNew);
 
+			Dictionary<string, DominoBox> newBoxes = new();
+			foreach (var b in dominoBoxes.Values)
+			{
+				var bx = Canvas.GetLeft(b.Widget);
+				var by = Canvas.GetTop(b.Widget);
+
+                if (
+                    pos.X > bx &&
+                    pos.Y > by &&
+                    pos.X < bx + add.X &&
+                    pos.Y < by + add.Y
+                    )
+                {
+                    string newBoxID = dominoBoxes.Count.ToString();
+
+					if (b.ID.StartsWith("self["))
+						newBoxID = $"self[{newBoxID}]";
+                    else
+                        newBoxID = $"en_{newBoxID}";
+
+                    DominoBox boxNew = new();
+					boxNew.ID = newBoxID;
+					boxNew.Name = b.Name;
+
+					DrawBox(boxNew, bx, by + newPosY);
+
+                    newBoxes.Add(newBoxID, boxNew);
+                }
+            }
+			foreach (var a in newBoxes)
+				dominoBoxes.Add(a.Key, a.Value);
 
 
 
+
+            canvas.RefreshChilds();
 		}
 
 

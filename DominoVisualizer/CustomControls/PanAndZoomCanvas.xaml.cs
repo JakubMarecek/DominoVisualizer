@@ -150,6 +150,12 @@ namespace WpfPanAndZoom.CustomControls
             return new(dd.X, dd.Y);
         }
 
+        public Point Transform4(Point source)
+        {
+            var bb = Point.Subtract(_transform.Transform(source), _transform.Transform(new Point(0, 0)));
+            return new(bb.X, bb.Y);
+        }
+
         public float Zoomfactor { get; set; } = 1.1f;
 
         public Color LineColor

@@ -53,7 +53,7 @@ namespace DominoVisualizer
 		 * -rename connector							ok
 		 * -export fc5									ok
 		 * -save alone box warn							ok
-		 * -border childs make duplicate
+		 * -border childs make duplicate				ok
 		 * -adding exec box, editing exec box - check AnchorDynType			ok
 		 * -new, saved - wnd title upd					ok
 		 * -change close unsaved behav					canc
@@ -2568,11 +2568,11 @@ namespace DominoVisualizer
             Grid g = new();
             g.Children.Add(new TextBlock() { Text = c.Name, Foreground = new SolidColorBrush(Colors.White), Margin = new Thickness(0, 0, 50, 0) });
 			
-            Button btn = new Button() { Tag = "edit|" + c.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
+            Button btn = new Button() { Tag = "edit|" + c.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style) };
             btn.Click += EditCommentDialog;
             g.Children.Add(btn);
 
-            Button btnDel = new Button() { Tag = "delete|" + c.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
+            Button btnDel = new Button() { Tag = "delete|" + c.UniqueID, Style = (Application.Current.FindResource("DelBtnWhite") as Style) };
             btnDel.Click += EditCommentDialog;
             g.Children.Add(btnDel);
 
@@ -2582,7 +2582,7 @@ namespace DominoVisualizer
 			canvas.Children.Add(b2);
             Canvas.SetLeft(b2, currX);
             Canvas.SetTop(b2, currY);
-            Panel.SetZIndex(b2, 20);
+            Panel.SetZIndex(b2, 40);
         }
 
         private void DrawBorder(DominoBorder b, double currX, double currY, double w, double h, bool? moveChilds)
@@ -2604,7 +2604,7 @@ namespace DominoVisualizer
             btnDel.Click += EditBorderDialog;
             g.Children.Add(btnDel);
 
-            Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DelBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
+            Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DuplBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
             btnDup.Click += DuplicateBorder;
             g.Children.Add(btnDup);
 
@@ -3976,7 +3976,31 @@ namespace DominoVisualizer
 
                 dominoBorders.Add(bdNew);
 
+                List<DominoComment> newComments = new();
+                foreach (var c in dominoComments)
+                {
+                    var cx = Canvas.GetLeft(c.ContainerUI);
+                    var cy = Canvas.GetTop(c.ContainerUI);
 
+                    if (
+                        cx > pos.X &&
+                        cy > pos.Y &&
+                        cx < pos.X + add.X &&
+                        cy < pos.Y + add.Y
+                        )
+                    {
+						DominoComment newComm = new();
+						newComm.Name = c.Name;
+						newComm.Color = c.Color;
+
+						DrawComment(newComm, cx, cy + newPosY);
+
+						newComments.Add(newComm);
+                    }
+                }
+
+                foreach (var c in newComments)
+                    dominoComments.Add(c);
 
                 int newBoxID = dominoBoxes.Count;
                 Dictionary<string, DominoBox> newBoxes = new();
@@ -4097,6 +4121,8 @@ namespace DominoVisualizer
 
                 foreach (var c in newConnectors)
                     dominoConnectors.Add(c.Key, c.Value);
+
+				wasEdited = true;
 
                 canvas.RefreshChilds();
             });

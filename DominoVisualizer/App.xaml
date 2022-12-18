@@ -389,6 +389,30 @@
             </Setter>
         </Style>
 
+        <Style x:Key="DuplBtnWhite" TargetType="Button" BasedOn="{StaticResource DelBtn}">
+            <Setter Property="ToolTip" Value="Duplicate" />
+            
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="#01000000" />
+                            <Path
+                                Width="15"
+                                Height="15"
+                                x:Name="CheckMark"
+                                SnapsToDevicePixels="False"
+                                StrokeThickness="1"
+                                Stretch="Uniform"
+                                Data="M0 448c0 35.3 28.7 64 64 64H288c35.3 0 64-28.7 64-64V384H224c-53 0-96-43-96-96V160H64c-35.3 0-64 28.7-64 64V448zm224-96H448c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H224c-35.3 0-64 28.7-64 64V288c0 35.3 28.7 64 64 64z"
+                                Fill="White">
+                            </Path>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ParamsList" TargetType="ListView">
             <Setter Property="Background" Value="#00000000" />
             <Setter Property="BorderThickness" Value="0,0,0,0" />

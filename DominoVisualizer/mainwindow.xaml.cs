@@ -693,6 +693,7 @@ namespace DominoVisualizer
         {
             addBoxName.ItemsSource = parser.AddBoxNames();
 			addBoxName.SelectedIndex = 0;
+            addBoxGlobal.IsChecked = false;
             Animation(true, gridDialogAddBox);
         }
 

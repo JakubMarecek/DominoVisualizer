@@ -519,10 +519,10 @@
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAsk" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="170">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Name="dialogAskName" Content="--name--" Style="{StaticResource Header}" />
-                    <TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
                     <Button Style="{StaticResource CBtn}" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                     <Button Style="{StaticResource CBtn}" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>

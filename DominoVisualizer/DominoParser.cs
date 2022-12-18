@@ -11,6 +11,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -3955,60 +3956,150 @@ namespace DominoVisualizer
 
 		private void DuplicateBorder(object sender, RoutedEventArgs e)
         {
-            string tag = (string)((Button)sender).Tag;
+			AskDialog("Duplicate border", $"This will duplicate selected border with all its boxes and connectors.{Environment.NewLine}Also make sure there is free space under the border, because the border will appear under this one.{Environment.NewLine}Continue?", () =>
+            {
+                string tag = (string)((Button)sender).Tag;
 
-			DominoBorder bd = dominoBorders.Where(a => a.UniqueID == tag).Single();
+                DominoBorder bd = dominoBorders.Where(a => a.UniqueID == tag).Single();
 
-            DominoBorder bdNew = new();
-			bdNew.Color = bd.Color;
-			bdNew.Style = bd.Style;
+                DominoBorder bdNew = new();
+                bdNew.Color = bd.Color;
+                bdNew.Style = bd.Style;
 
-			var pos = new Point(Canvas.GetLeft(bd.ContainerUI), Canvas.GetTop(bd.ContainerUI));
-			var add = new Point(bd.ContainerUI.Width, bd.ContainerUI.Height + 20);
-			add = canvas.Transform4(add);
+                var pos = new Point(Canvas.GetLeft(bd.ContainerUI), Canvas.GetTop(bd.ContainerUI));
+                var add = new Point(bd.ContainerUI.Width, bd.ContainerUI.Height + 20);
+                add = canvas.Transform4(add);
 
-			var newPosY = add.Y + 20;
+                var newPosY = add.Y + 20;
 
-            DrawBorder(bdNew, pos.X, pos.Y + newPosY, bd.ContainerUI.Width, bd.ContainerUI.Height, bd.ContainerUI.EnableMovingChilds);
+                DrawBorder(bdNew, pos.X, pos.Y + newPosY, bd.ContainerUI.Width, bd.ContainerUI.Height, bd.ContainerUI.EnableMovingChilds);
 
-			dominoBorders.Add(bdNew);
+                dominoBorders.Add(bdNew);
 
-			Dictionary<string, DominoBox> newBoxes = new();
-			foreach (var b in dominoBoxes.Values)
-			{
-				var bx = Canvas.GetLeft(b.Widget);
-				var by = Canvas.GetTop(b.Widget);
 
-                if (
-                    pos.X > bx &&
-                    pos.Y > by &&
-                    pos.X < bx + add.X &&
-                    pos.Y < by + add.Y
-                    )
+
+                int newBoxID = dominoBoxes.Count;
+                Dictionary<string, DominoBox> newBoxes = new();
+                Dictionary<string, DominoConnector> newConnectors = new();
+                Dictionary<string, string> oldNewBoxes = new();
+                foreach (var b in dominoBoxes.Values)
                 {
-                    string newBoxID = dominoBoxes.Count.ToString();
+                    var bx = Canvas.GetLeft(b.Widget);
+                    var by = Canvas.GetTop(b.Widget);
 
-					if (b.ID.StartsWith("self["))
-						newBoxID = $"self[{newBoxID}]";
-                    else
-                        newBoxID = $"en_{newBoxID}";
+                    if (
+                        bx > pos.X &&
+                        by > pos.Y &&
+                        bx < pos.X + add.X &&
+                        by < pos.Y + add.Y
+                        )
+                    {
+                        string ni = "";
+                        if (b.ID.StartsWith("self["))
+                            ni = $"self[{newBoxID}]";
+                        else
+                            ni = $"en_{newBoxID}";
 
-                    DominoBox boxNew = new();
-					boxNew.ID = newBoxID;
-					boxNew.Name = b.Name;
+                        oldNewBoxes.Add(b.ID, ni);
 
-					DrawBox(boxNew, bx, by + newPosY);
+                        DominoBox boxNew = new();
+                        boxNew.ID = ni;
+                        boxNew.Name = b.Name;
+                        DrawBox(boxNew, bx, by + newPosY);
+                        newBoxes.Add(ni, boxNew);
 
-                    newBoxes.Add(newBoxID, boxNew);
+                        newBoxID++;
+                    }
                 }
-            }
-			foreach (var a in newBoxes)
-				dominoBoxes.Add(a.Key, a.Value);
 
+                foreach (var a in newBoxes)
+                {
+                    dominoBoxes.Add(a.Key, a.Value);
 
+                    var origBox = dominoBoxes[oldNewBoxes.Single(aa => aa.Value == a.Key).Key];
 
+                    DominoConnector addConn(DominoConnector orig)
+                    {
+                        var cx = Canvas.GetLeft(orig.Widget);
+                        var cy = Canvas.GetTop(orig.Widget);
 
-            canvas.RefreshChilds();
+                        string oldID = origBox.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
+                        string newID = a.Key.Replace("self[", "").Replace("]", "").Replace("en_", "");
+
+                        string newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
+
+                        DominoConnector newConn = new();
+                        newConn.ID = newConnID;
+                        newConn.SetVariables = orig.SetVariables;
+                        newConn.FromBoxConnectID = orig.FromBoxConnectID;
+                        newConn.FromBoxConnectIDStr = orig.FromBoxConnectIDStr;
+                        newConn.OutFuncName = orig.OutFuncName;
+
+                        foreach (var sc in orig.SubConnections)
+                            newConn.SubConnections.Add(addConn(sc));
+
+                        newConnectors.Add(newConnID, newConn);
+
+                        DrawConnector(newConn, cx, cy + newPosY);
+                        DrawBoxConnectors(a.Value, newConn);
+
+                        foreach (var e in orig.ExecBoxes)
+                        {
+                            int clr = newConn.ExecBoxes.Count;
+
+                            int cc = e.DynIntExec;
+                            DominoBox execBox = null;
+
+                            if (oldNewBoxes.TryGetValue(e.Box.ID, out string value))
+                                execBox = newBoxes[value];
+                            else
+                            {
+                                execBox = dominoBoxes[e.Box.ID];
+
+                                cc = 0;
+                                foreach (var aa in dominoConnectors.Values)
+                                    foreach (var bb in aa.ExecBoxes)
+                                        if (bb.Box.ID == e.Box.ID)
+                                            cc++;
+                            }
+
+                            ExecBox execBoxNew = new();
+                            execBoxNew.Exec = e.Exec;
+                            execBoxNew.DynIntExec = cc;
+                            execBoxNew.ExecStr = e.ExecStr;
+                            execBoxNew.Type = e.Type;
+                            execBoxNew.Params = e.Params;
+                            execBoxNew.Box = execBox;
+                            newConn.ExecBoxes.Add(execBoxNew);
+
+                            DrawExecBoxContainerUI(newConn, execBoxNew, linesColors[clr]);
+
+                            var a = canvas.Transform2(new(Canvas.GetLeft(newConn.Widget), Canvas.GetTop(newConn.Widget)));
+                            var b = canvas.Transform2(new(Canvas.GetLeft(execBoxNew.Box.Widget), Canvas.GetTop(execBoxNew.Box.Widget)));
+
+                            DrawLine(
+                                a.X + width,
+                                a.Y,
+                                b.X,
+                                b.Y,
+                                newConn.ID + "-P1",
+                                execBoxNew.Box.ID + "-P1",
+                                clr
+                            );
+                        }
+
+                        return newConn;
+                    }
+
+                    foreach (var c in origBox.Connections)
+                        a.Value.Connections.Add(addConn(c));
+                }
+
+                foreach (var c in newConnectors)
+                    dominoConnectors.Add(c.Key, c.Value);
+
+                canvas.RefreshChilds();
+            });
 		}
 
 

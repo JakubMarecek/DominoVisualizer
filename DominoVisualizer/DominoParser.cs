@@ -71,6 +71,8 @@ namespace DominoVisualizer
 		 * -adding box - if has out delayed, force global		canc
 		 * -if it's NOT stateless - do not allow non global		ok
 		 * -add execbox default selected				ok
+		 * -own execbox color
+		 * -duplicate - instances
 		 */
 
         Dictionary<string, DominoBox> dominoBoxes = new();
@@ -3768,7 +3770,7 @@ namespace DominoVisualizer
 
 			canvas.Children.Remove(editComment.ContainerUI);
 			
-			DrawComment(editComment, (int)x, (int)y);
+			DrawComment(editComment, x, y);
 
             canvas.RefreshChilds();
 
@@ -3839,7 +3841,7 @@ namespace DominoVisualizer
 
             canvas.Children.Remove(editBorder.ContainerUI);
 
-            DrawBorder(editBorder, (int)x, (int)y, (int)w, (int)h, moveChilds);
+            DrawBorder(editBorder, x, y, w, h, moveChilds);
 
             canvas.RefreshChilds();
 
@@ -4044,13 +4046,13 @@ namespace DominoVisualizer
 
                     DominoConnector addConn(DominoConnector orig)
                     {
-                        var cx = Canvas.GetLeft(orig.Widget);
-                        var cy = Canvas.GetTop(orig.Widget);
-
                         string oldID = origBox.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
                         string newID = a.Key.Replace("self[", "").Replace("]", "").Replace("en_", "");
 
-                        string newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
+						string newConnID = null;
+
+						if (orig.ID != null)
+							newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
 
                         DominoConnector newConn = new();
                         newConn.ID = newConnID;
@@ -4062,10 +4064,16 @@ namespace DominoVisualizer
                         foreach (var sc in orig.SubConnections)
                             newConn.SubConnections.Add(addConn(sc));
 
-                        newConnectors.Add(newConnID, newConn);
+						if (orig.ID != null)
+                        {
+                            newConnectors.Add(newConnID, newConn);
 
-                        DrawConnector(newConn, cx, cy + newPosY);
-                        DrawBoxConnectors(a.Value, newConn);
+                            var cx = Canvas.GetLeft(orig.Widget);
+                            var cy = Canvas.GetTop(orig.Widget);
+
+                            DrawConnector(newConn, cx, cy + newPosY);
+                            DrawBoxConnectors(a.Value, newConn);
+                        }
 
                         foreach (var e in orig.ExecBoxes)
                         {

@@ -24,7 +24,7 @@ namespace WpfPanAndZoom.CustomControls
         private Vector _draggingDelta;
 
         private Color _lineColor = Color.FromArgb(0xFF, 0x66, 0x66, 0x66);
-        private Color _backgroundColor = Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
+        private Color _backgroundColor = (Color)ColorConverter.ConvertFromString("#1e1e1e"); // Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
         private List<Line> _gridLines = new List<Line>();
 
         public delegate void MyEventHandler(string foo, double x, double y);

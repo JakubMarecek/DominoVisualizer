@@ -31,8 +31,14 @@ namespace WpfPanAndZoom.CustomControls
 
         public event MyEventHandler SomethingHappened;
 
+        public delegate void ZoomEventHandler(int zoomFactor);
+
+        public event ZoomEventHandler Zoomed;
+
         private List<UIElement> _borderChilds = new();
         private List<Vector> _borderChildsDeltas = new();
+
+        int zoom = 0;
 
         public PanAndZoomCanvas()
         {
@@ -53,7 +59,7 @@ namespace WpfPanAndZoom.CustomControls
             Children.Clear();
             _borderChilds = new();
             _borderChildsDeltas = new();
-            //zoom = 0;
+            zoom = 0;
 
             BackgroundColor = _backgroundColor;
 
@@ -390,10 +396,12 @@ namespace WpfPanAndZoom.CustomControls
 
         private void PanAndZoomCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            /*if (e.Delta > 0)
+            if (e.Delta > 0)
                 zoom++;
             else
-                zoom--;*/
+                zoom--;
+
+            Zoomed(zoom);
 
             float scaleFactor = Zoomfactor;
             if (e.Delta < 0)

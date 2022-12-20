@@ -1454,6 +1454,32 @@ namespace DominoVisualizer
 			wasEdited = true;
 		}
 
+		private void HandleZoomed(int zoom)
+        {
+            foreach (var b in dominoBoxes.Values)
+            {
+                b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+                b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+                b.Widget.swapBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+            }
+
+            foreach (var b in dominoConnectors.Values)
+            {
+                b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+                b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+                b.Widget.editBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+            }
+
+            foreach (var b in dominoComments)
+                b.ContainerUI.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+
+            foreach (var b in lines)
+                b.UI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
+
+            foreach (var b in dominoBorders)
+                b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
+        }
+
 		private void CleanChilds(UIElement except)
 		{
 			foreach (var child in canvas.Children)
@@ -1571,7 +1597,8 @@ namespace DominoVisualizer
         private void Draw(bool workspace = false)
 		{
 			canvas.SomethingHappened += new MyEventHandler(HandleSomethingHappened);
-			canvas.MouseLeftButtonDown += W_MouseDoubleClick;
+			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
+            canvas.MouseLeftButtonDown += W_MouseDoubleClick;
 
 			List<Point> selectedPoints = new();
 			Dictionary<string, Point> linesPoints = new();

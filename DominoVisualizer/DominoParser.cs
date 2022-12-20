@@ -4056,7 +4056,7 @@ namespace DominoVisualizer
 
                         DominoConnector newConn = new();
                         newConn.ID = newConnID;
-                        newConn.SetVariables = orig.SetVariables;
+                        newConn.SetVariables = Helpers.CopyList(orig.SetVariables);
                         newConn.FromBoxConnectID = orig.FromBoxConnectID;
                         newConn.FromBoxConnectIDStr = orig.FromBoxConnectIDStr;
                         newConn.OutFuncName = orig.OutFuncName;
@@ -4100,7 +4100,7 @@ namespace DominoVisualizer
                             execBoxNew.DynIntExec = cc;
                             execBoxNew.ExecStr = e.ExecStr;
                             execBoxNew.Type = e.Type;
-                            execBoxNew.Params = e.Params;
+                            execBoxNew.Params = Helpers.CopyList(e.Params);
                             execBoxNew.Box = execBox;
                             newConn.ExecBoxes.Add(execBoxNew);
 

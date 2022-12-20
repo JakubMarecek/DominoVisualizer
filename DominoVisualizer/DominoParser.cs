@@ -158,12 +158,12 @@ namespace DominoVisualizer
 			AddColors();
         }
 
-		public void Create()
-		{
+		public void Create(string workspace, string graph)
+        {
+            workspaceName = workspace;
+            graphName = graph;
 
-
-
-			Draw();
+            Draw();
 		}
 
 		public string Parse()
@@ -4210,6 +4210,9 @@ namespace DominoVisualizer
 
 
 
+		public delegate void SetWorkspaceName(string workspace, string graph);
+		public SetWorkspaceName setWorkspaceName;
+
         public void CheckEdited(Action afterAction)
 		{
 			if (wasEdited)
@@ -4937,19 +4940,16 @@ namespace DominoVisualizer
 				return null;
 			}
 
-			XElement xRoot = new("DominoDocument");
-			//xRoot.Add(new XElement("IsStateless", thisMetadata.IsStateless ? "1" : "0"));
-			//xRoot.Add(new XElement("IsSystem", thisMetadata.IsSystem ? "1" : "0"));
-			xRoot.Add(new XElement("Game", game));
+			XElement xGraph = new("Graph");
 
-			xRoot.Add(ExportDominoMetadata());
+            xGraph.Add(ExportDominoMetadata());
 
 			XElement xResources = new("Resources");
 			foreach (var c in dominoResources)
 				xResources.Add(new XElement("Resource", new XAttribute("File", c.Name), new XAttribute("Type", c.Value)));
-			xRoot.Add(xResources);
+            xGraph.Add(xResources);
 
-			xRoot.Add(writeParams(globalVariables, "Variables", "Variable"));
+            xGraph.Add(writeParams(globalVariables, "Variables", "Variable"));
 
             XElement xComments = new("Comments");
             foreach (var c in dominoComments)
@@ -4957,7 +4957,7 @@ namespace DominoVisualizer
                 var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
                 xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
             }
-            xRoot.Add(xComments);
+            xGraph.Add(xComments);
 
             XElement xBorders = new("Borders");
             foreach (var b in dominoBorders)
@@ -4973,7 +4973,7 @@ namespace DominoVisualizer
 					new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
 					));
             }
-            xRoot.Add(xBorders);
+            xGraph.Add(xBorders);
 
             XElement xBoxes = new("Boxes");
 			foreach (var c in dominoBoxes)
@@ -5000,7 +5000,7 @@ namespace DominoVisualizer
 
 				xBoxes.Add(xBox);
 			}
-			xRoot.Add(xBoxes);
+            xGraph.Add(xBoxes);
 
 			XElement xConns = new("Connectors");
 			foreach (var c in dominoConnectors)
@@ -5067,11 +5067,30 @@ namespace DominoVisualizer
 
 				xConns.Add(xc);
 			}
-			xRoot.Add(xConns);
+            xGraph.Add(xConns);
 
-			XDocument doc = new();
-			doc.Add(xRoot);
-			doc.Save(file);
+			if (File.Exists(file))
+            {
+				XDocument doc = XDocument.Load(file);
+				XElement xGraphs = doc.Element("DominoDocument").Element("Graphs");
+				var e = xGraphs.Elements("Graph").Where(a => a.Attribute("Name").Value == graphName).SingleOrDefault();
+				e?.Remove();
+
+                xGraphs.Add(xGraph);
+
+				doc.Save(file);
+            }
+			else
+            {
+                XElement xRoot = new("DominoDocument");
+                xRoot.Add(new XElement("Game", game));
+
+				xRoot.Add(new XElement("Graphs", xGraph));
+
+                XDocument doc = new();
+                doc.Add(xRoot);
+                doc.Save(file);
+            }
 
 			return "";
 		}
@@ -5133,18 +5152,23 @@ namespace DominoVisualizer
 			XElement xRoot = xDoc.Element("DominoDocument");
 
 			game = xRoot.Element("Game").Value;
+			workspaceName = xRoot.Element("Name").Value;
+
+			XElement xGraph = xRoot.Element("Graphs").Elements("Graph").Where(a => a.Attribute("Default").Value == "1").Single();
+
+			graphName = xGraph.Attribute("Name").Value;
 
             ParseAllBoxes();
 
-            string dmla = ImportDominoMetadata(xRoot.Element("DominoMetadata"));
+            string dmla = ImportDominoMetadata(xGraph.Element("DominoMetadata"));
 			if (dmla != "")
 				return dmla;
 
-			var xRess = xRoot.Element("Resources").Elements("Resource");
+			var xRess = xGraph.Element("Resources").Elements("Resource");
 			foreach (var xRe in xRess)
                 dominoResources.Add(new() { Name = xRe.Attribute("File").Value, Value = xRe.Attribute("Type").Value });
 
-            var xComments = xRoot.Element("Comments").Elements("Comment");
+            var xComments = xGraph.Element("Comments").Elements("Comment");
             foreach (var xC in xComments)
             {
                 var c = new DominoComment();
@@ -5158,7 +5182,7 @@ namespace DominoVisualizer
                 DrawComment(c, x, y);
             }
 
-            var xBorders = xRoot.Element("Borders").Elements("Border");
+            var xBorders = xGraph.Element("Borders").Elements("Border");
             foreach (var xB in xBorders)
             {
                 var b = new DominoBorder();
@@ -5176,9 +5200,9 @@ namespace DominoVisualizer
                 DrawBorder(b, x, y, w, h, moveChilds);
             }
 
-            globalVariables = readParams(xRoot, "Variables", "Variable");
+            globalVariables = readParams(xGraph, "Variables", "Variable");
 
-			var xBoxes = xRoot.Element("Boxes").Elements("Box");
+			var xBoxes = xGraph.Element("Boxes").Elements("Box");
 			foreach (var xBox in xBoxes)
 			{
 				DominoBox box = new();
@@ -5195,7 +5219,7 @@ namespace DominoVisualizer
 				}
 			}
 
-			var xConnectors = xRoot.Element("Connectors").Elements("Connector");
+			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
 			foreach (var xConnector in xConnectors)
 			{
 				DominoConnector conn = null;
@@ -5250,7 +5274,9 @@ namespace DominoVisualizer
 
 			Draw(true);
 
-			if (errFilesB)
+			setWorkspaceName(workspaceName, graphName);
+
+            if (errFilesB)
 				return errFiles;
 
 			return "";

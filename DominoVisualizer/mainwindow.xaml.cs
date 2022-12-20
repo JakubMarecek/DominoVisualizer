@@ -131,8 +131,10 @@ namespace DominoVisualizer
 				try
 				{
 					string r = "";
-	
-        	        if (type == OpenType.Open) r = parser.Load();
+
+                    parser.setWorkspaceName = SetWorkspaceName;
+                    
+                    if (type == OpenType.Open) r = parser.Load();
         	        if (type == OpenType.Import || type == OpenType.Binary) r = parser.Parse();
 
 					if (r != "")
@@ -258,7 +260,7 @@ namespace DominoVisualizer
                 Title = appName + " - Unsaved workspace";
 
 				parser = new(canvas, game);
-				parser.Create();
+				parser.Create(wrkspName.Text, wrkspGraph.Text);
 
                 Loading();
 			}
@@ -374,8 +376,7 @@ namespace DominoVisualizer
             }
             if (tag == 2) //create
             {
-                selDialogType = OpenType.Create;
-                Animation(true, gridDialogSelGame);
+                Animation(true, gridDialogWorkspace);
             }
         }
 
@@ -1004,9 +1005,17 @@ namespace DominoVisualizer
 
             if (tag == "1")
             {
+                selDialogType = OpenType.Create;
+                Animation(true, gridDialogSelGame);
             }
 
             Animation(false, gridDialogWorkspace);
+        }
+
+        private void SetWorkspaceName(string workspace, string graph)
+        {
+            mainWorkspaceName.Content = workspace;
+            mainGraphName.Content = graph;
         }
 
         /*private void ExportPicture(object sender, RoutedEventArgs e)

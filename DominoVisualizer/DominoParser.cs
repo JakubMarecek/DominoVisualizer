@@ -29,7 +29,7 @@ namespace DominoVisualizer
 {
 	internal class DominoParser
 	{
-        /* TODO
+		/* TODO
 		 * -param lua file open							ok / maybe
 		 * -all delete ask dialog						ok
 		 * -styles comboboxes							ok
@@ -72,8 +72,11 @@ namespace DominoVisualizer
 		 * -if it's NOT stateless - do not allow non global		ok
 		 * -add execbox default selected				ok
 		 * -own execbox color
-		 * -duplicate - instances
+		 * -duplicate - instances						ok
 		 */
+
+		string workspaceName = "";
+		string graphName = "";
 
         Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
@@ -85,11 +88,9 @@ namespace DominoVisualizer
 		List<DominoDict> dominoResources = new();
 		List<DominoComment> dominoComments = new();
 		List<DominoBorder> dominoBorders = new();
-
         DominoBoxMetadata thisMetadata = new();
 
 		byte[] fileBytes = null;
-
 		string runPath = "";
 
 		string game = "";
@@ -1480,6 +1481,46 @@ namespace DominoVisualizer
                 b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
         }
 
+		private void HandleMoved()
+		{
+			void setGrid(int x, int y)
+			{
+				if (x < canvas.MinX)
+					canvas.MinX = x;
+					
+				if (x > canvas.MaxX)
+					canvas.MaxX = x;
+					
+				if (y < canvas.MinY)
+					canvas.MinY = y;
+					
+				if (y > canvas.MaxY)
+					canvas.MaxY = y;
+
+				canvas.MinX = (int)Math.Round(canvas.MinX / 100d, 0) * 100;
+				canvas.MaxX = (int)Math.Round(canvas.MaxX / 100d, 0) * 100;
+				canvas.MinY = (int)Math.Round(canvas.MinY / 100d, 0) * 100;
+				canvas.MaxY = (int)Math.Round(canvas.MaxY / 100d, 0) * 100;
+			}
+
+			canvas.ResetGridArea();
+
+			foreach (var b in dominoBoxes.Values)
+			{
+                var a = canvas.Transform2(new(Canvas.GetLeft(b.Widget), Canvas.GetTop(b.Widget)));
+				setGrid((int)a.X, (int)a.Y);
+			}
+
+			foreach (var b in dominoConnectors.Values)
+			{
+                var a = canvas.Transform2(new(Canvas.GetLeft(b.Widget), Canvas.GetTop(b.Widget)));
+				setGrid((int)a.X, (int)a.Y);
+			}
+
+			canvas.MakeGrid();
+			canvas.RefreshChilds();
+		}
+
 		private void CleanChilds(UIElement except)
 		{
 			foreach (var child in canvas.Children)
@@ -1599,6 +1640,7 @@ namespace DominoVisualizer
 			canvas.SomethingHappened += new MyEventHandler(HandleSomethingHappened);
 			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
             canvas.MouseLeftButtonDown += W_MouseDoubleClick;
+			canvas.Moved += new MovedEventHandler(HandleMoved);
 
 			List<Point> selectedPoints = new();
 			Dictionary<string, Point> linesPoints = new();
@@ -1774,6 +1816,8 @@ namespace DominoVisualizer
 					);
 				}
 			}
+
+			HandleMoved();
 
 			// ==============================================================================
 

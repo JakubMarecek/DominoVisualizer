@@ -26,6 +26,7 @@ namespace WpfPanAndZoom.CustomControls
         private Color _lineColor = Color.FromArgb(0xFF, 0x66, 0x66, 0x66);
         private Color _backgroundColor = (Color)ColorConverter.ConvertFromString("#1e1e1e"); // Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
         private List<Line> _gridLines = new List<Line>();
+        private List<Line> _gridLinesSmall = new List<Line>();
 
         public delegate void MyEventHandler(string foo, double x, double y);
 
@@ -34,6 +35,10 @@ namespace WpfPanAndZoom.CustomControls
         public delegate void ZoomEventHandler(int zoomFactor);
 
         public event ZoomEventHandler Zoomed;
+
+        public delegate void MovedEventHandler();
+
+        public event MovedEventHandler Moved;
 
         private List<UIElement> _borderChilds = new();
         private List<Vector> _borderChildsDeltas = new();
@@ -61,10 +66,13 @@ namespace WpfPanAndZoom.CustomControls
             _borderChildsDeltas = new();
             zoom = 0;
 
-            BackgroundColor = _backgroundColor;
+            Background = new SolidColorBrush(_backgroundColor);
+
+            ResetGridArea();
+            MakeGrid();
 
             // draw lines
-            for (int x = -1000; x <= 50000; x += 100)
+            /*for (int x = -1000; x <= 50000; x += 100)
             {
                 Line verticalLine = new Line
                 {
@@ -82,6 +90,7 @@ namespace WpfPanAndZoom.CustomControls
                 else
                 {
                     verticalLine.StrokeThickness = 2;
+                    _gridLinesSmall.Add(verticalLine);
                 }
 
                 Children.Add(verticalLine);
@@ -106,6 +115,79 @@ namespace WpfPanAndZoom.CustomControls
                 else
                 {
                     horizontalLine.StrokeThickness = 2;
+                    _gridLinesSmall.Add(horizontalLine);
+                }
+
+                Children.Add(horizontalLine);
+                _gridLines.Add(horizontalLine);
+            }*/
+        }
+
+        public int MinX { set; get; }
+        public int MinY { set; get; }
+        public int MaxX { set; get; }
+        public int MaxY { set; get; }
+
+        public void ResetGridArea()
+        {
+            MinX = 0;
+            MinY = 0;
+            MaxX = 5000;
+            MaxY = 5000;
+        }
+
+        public void MakeGrid()
+        {
+            foreach (var l in _gridLines)
+                Children.Remove(l);
+
+            _gridLines.Clear();
+            _gridLinesSmall.Clear();
+
+            for (int x = MinX - 100; x <= MaxX + 1000; x += 100)
+            {
+                Line verticalLine = new Line
+                {
+                    Stroke = new SolidColorBrush(_lineColor),
+                    X1 = x,
+                    Y1 = MinY - 100,
+                    X2 = x,
+                    Y2 = MaxY + 1000
+                };
+
+                if (x % 1000 == 0)
+                {
+                    verticalLine.StrokeThickness = 6;
+                }
+                else
+                {
+                    verticalLine.StrokeThickness = 2;
+                    _gridLinesSmall.Add(verticalLine);
+                }
+
+                Children.Add(verticalLine);
+                _gridLines.Add(verticalLine);
+            }
+            
+            for (int y = MinY - 100; y <= MaxY + 1000; y += 100)
+            {
+                Line horizontalLine = new Line
+                {
+                    Stroke = new SolidColorBrush(_lineColor),
+                    X1 = MinX - 100,
+                    Y1 = y,
+                    X2 = MaxX + 1000,
+                    Y2 = y
+                };
+
+                if (y % 1000 == 0)
+                {
+                    horizontalLine.StrokeThickness = 6;
+                }
+                else
+                {
+                    horizontalLine.StrokeThickness = 2;
+                    _gridLinesSmall.Add(horizontalLine);
                 }
 
                 Children.Add(horizontalLine);
@@ -163,40 +245,6 @@ namespace WpfPanAndZoom.CustomControls
         }
 
         public float Zoomfactor { get; set; } = 1.1f;
-
-        public Color LineColor
-        {
-            get { return _lineColor; }
-
-            set
-            {
-                _lineColor = value;
-
-                foreach( Line line in _gridLines )
-                {
-                    line.Stroke = new SolidColorBrush(_lineColor);
-                }
-            }
-        }
-
-        public Color BackgroundColor
-        {
-            get { return _backgroundColor; }
-
-            set
-            {
-                _backgroundColor = value;
-                Background = new SolidColorBrush(_backgroundColor);
-            }
-        }
-
-        public void SetGridVisibility(Visibility value)
-        {
-            foreach (Line line in _gridLines)
-            {
-                line.Visibility = value;
-            }
-        }
 
         private void PanAndZoomCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -280,6 +328,8 @@ namespace WpfPanAndZoom.CustomControls
             _borderChilds.Clear();
             _borderChildsDeltas.Clear();
             Cursor = Cursors.Arrow;
+
+            Moved();
         }
 
         private void PanAndZoomCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -402,6 +452,9 @@ namespace WpfPanAndZoom.CustomControls
                 zoom--;
 
             Zoomed(zoom);
+
+            foreach (var b in _gridLinesSmall)
+                b.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
 
             float scaleFactor = Zoomfactor;
             if (e.Delta < 0)

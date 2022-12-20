@@ -45,14 +45,22 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <Grid Background="#99000000" Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="460" Visibility="Hidden">
-                <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+            <Grid Background="Transparent" Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="600" Visibility="Hidden">
+                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="100">
+                    <Label Content="Workspace name:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,10,0,0" Foreground="White" Width="200" />
+                    <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,10,0,0" Foreground="White" Width="290" />
+                    <Label Content="Name of this graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,52,0,0" Foreground="White" Width="200" />
+                    <Label Content="--name--" Name="mainGraphName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,52,0,0" Foreground="White" Width="290" />
+                </Grid>
+                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="460" Margin="0,100,0,0">
+                    <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
@@ -492,6 +500,21 @@
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
+            <Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Visible">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
+                    <Rectangle Style="{StaticResource DialogRect}" />
+                    <Label Content="Workspace" Style="{StaticResource Header}" />
+
+                    <TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBox Text="" Name="wrkspGraph" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+                    <Button Style="{StaticResource CBtn}" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                </Grid>
+            </Grid>
 
             <Grid Width="Auto" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0">
                 <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
@@ -504,7 +527,7 @@
                 <Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
                 <TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
             </Grid>
-            <Grid Background="#99000000" Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="160,0,0,0" Width="500" Height="90" Visibility="Hidden">
+            <Grid Background="#99000000" Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,0" Width="500" Height="90" Visibility="Hidden">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stroke="#F28C28" RadiusX="3" RadiusY="3" StrokeThickness="1" />
                 <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,25,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
                 <Button Style="{StaticResource CBtn}" Content="Search" Click="ButtonSearch_Click" Margin="270,25,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />

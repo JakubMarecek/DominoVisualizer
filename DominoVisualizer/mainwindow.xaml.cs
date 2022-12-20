@@ -998,6 +998,17 @@ namespace DominoVisualizer
             addGetDataFromBoxData.SelectedIndex = 0;
         }
 
+        private void ButtonDialogWrksp_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "1")
+            {
+            }
+
+            Animation(false, gridDialogWorkspace);
+        }
+
         /*private void ExportPicture(object sender, RoutedEventArgs e)
 		{
 			RenderTargetBitmap rtb = new RenderTargetBitmap((int)canvas.RenderSize.Width,

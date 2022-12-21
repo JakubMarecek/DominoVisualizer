@@ -33,7 +33,8 @@ namespace DominoVisualizer
 			Import,
 			Open,
 			Binary,
-			Create
+			Create,
+            SwapGraph
 		}
 
 		public MainWindow()
@@ -124,22 +125,33 @@ namespace DominoVisualizer
 			}*/
 		}
 
-		private void OpenFile(OpenType type, string game)
+		private void OpenFile(OpenType type, string game, string directFile = "")
 		{
 			void Call()
-			{
-				try
+            {
+                bool eS = false;
+                
+                try
 				{
 					string r = "";
 
                     parser.setWorkspaceName = SetWorkspaceName;
                     
                     if (type == OpenType.Open) r = parser.Load();
-        	        if (type == OpenType.Import || type == OpenType.Binary) r = parser.Parse();
+                    if (type == OpenType.SwapGraph) r = parser.Load(game);
+        	        if (type == OpenType.Import || type == OpenType.Binary) (eS, r) = parser.Parse();
+				    if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
 
 					if (r != "")
 					{
 						OpenInfoDialog("Notice", r);
+
+                        if (eS)
+                        {
+                            CloseWorkspace(gridMainMenu, () => { });
+                            Animation(false, gridLoading);
+                            return;
+                        }
 					}
 
 					parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
@@ -165,24 +177,27 @@ namespace DominoVisualizer
 					Animation(true, gridException);
 
 					excLabel.Text = ex.ToString();
-				}
-			}
+                }
+
+                if (!eS)
+                {
+                    Timer aTimer = new Timer(1000);
+                    aTimer.Enabled = true;
+                    aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                    {
+                        aTimer.Stop();
+                        Dispatcher.Invoke(() =>
+                        {
+                            Blur(false);
+                            Animation(false, gridLoading);
+                        });
+                    };
+                }
+            }
 
 			void Loading()
 			{
                 Call();
-
-                Timer aTimer = new Timer(1000);
-                aTimer.Enabled = true;
-                aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-                {
-                    aTimer.Stop();
-                    Dispatcher.Invoke(() =>
-                    {
-                        Blur(false);
-                        Animation(false, gridLoading);
-                    });
-                };
             }
 
 			Animation(false, gridMainMenu);
@@ -255,13 +270,19 @@ namespace DominoVisualizer
 				}
 			}
 
+			if (type == OpenType.SwapGraph)
+			{
+				parser = new(directFile, canvas);
+                Title = appName + " - " + directFile;
+                Loading();
+			}
+
 			if (type == OpenType.Create)
 			{
                 Title = appName + " - Unsaved workspace";
 
 				parser = new(canvas, game);
-				parser.Create(wrkspName.Text, wrkspGraph.Text);
-                SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
+                //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
 
                 Loading();
 			}
@@ -471,6 +492,11 @@ namespace DominoVisualizer
 
 		private void ButtonClose_Click(object sender, RoutedEventArgs e)
 		{
+            CloseWorkspace(gridMainMenu, () => { });
+		}
+
+        private void CloseWorkspace(Grid screen, Action afterAccept)
+        {
 			parser.CheckEdited(() =>
             {
                 if (externalLaunch)
@@ -486,10 +512,12 @@ namespace DominoVisualizer
                 Title = appName;
 
                 Blur(true);
-                Animation(true, gridMainMenu);
+                Animation(true, screen);
                 Animation(false, gridMainClose);
+
+                afterAccept();
             });
-		}
+        }
 
 		private void Animation(bool fadeInOut, Grid grid)
 		{
@@ -857,7 +885,8 @@ namespace DominoVisualizer
 
         private void ButtonDialogInfoClose_Click(object sender, RoutedEventArgs e)
         {
-            parser.InfoDialogAct();
+            if (parser != null)
+                parser.InfoDialogAct();
             Animation(false, gridDialogInfo);
         }
 
@@ -996,8 +1025,12 @@ namespace DominoVisualizer
 
         private void addGetDataFromBoxBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(addGetDataFromBoxBox.SelectedItem.ToString());
-            addGetDataFromBoxData.SelectedIndex = 0;
+            if (addGetDataFromBoxBox.SelectedItem != null)
+            {
+                addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(addGetDataFromBoxBox.SelectedItem.ToString());
+                addGetDataFromBoxData.SelectedIndex = 0;
+                addGetDataFromBoxData.Items.Refresh();
+            }
         }
 
         private void ButtonDialogWrksp_Click(object sender, RoutedEventArgs e)
@@ -1006,6 +1039,22 @@ namespace DominoVisualizer
 
             if (tag == "1")
             {
+                if (wrkspDat.Text == "" || !wrkspDat.Text.EndsWith("\\"))
+                {
+                    OpenInfoDialog("Workspace", "Wrong DAT FAT path.");
+                    return;
+                }
+                if (wrkspGraph.Text == "")
+                {
+                    OpenInfoDialog("Workspace", "Graph name must not be empty.");
+                    return;
+                }
+                if (wrkspName.Text == "")
+                {
+                    OpenInfoDialog("Workspace", "Workspace name must not be empty.");
+                    return;
+                }
+
                 selDialogType = OpenType.Create;
                 Animation(true, gridDialogSelGame);
             }
@@ -1013,10 +1062,74 @@ namespace DominoVisualizer
             Animation(false, gridDialogWorkspace);
         }
 
-        private void SetWorkspaceName(string workspace, string graph)
+        bool allowChangeGraphs = false;
+
+        private void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, bool forceReload)
         {
+            allowChangeGraphs = false;
             mainWorkspaceName.Content = workspace;
-            mainGraphName.Content = graph;
+            //mainGraphName.Content = graph;
+            mainGraphs.ItemsSource = graphs;
+            mainGraphs.SelectedIndex = selGraph;
+            mainGraphs.Items.Refresh();
+            allowChangeGraphs = true;
+
+            if (forceReload)
+                ChangeGraph();
+        }
+
+        private void ChangeGraph()
+        {
+            string f = parser.CurrentFile;
+            CloseWorkspace(gridLoading, () =>
+            {
+                Timer aTimer = new Timer(1000);
+                aTimer.Enabled = true;
+                aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                {
+                    aTimer.Stop();
+                    Dispatcher.Invoke(() =>
+                    {
+                        string graph = ((DominoGraph)mainGraphs.SelectedItem).UniqueID;
+                        OpenFile(OpenType.SwapGraph, graph, f);
+                    });
+                };
+            });
+        }
+
+        private void mainGraphs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (allowChangeGraphs)
+            {
+                ChangeGraph();
+            }
+        }
+
+        private void ButtonAddGraph_Click(object sender, RoutedEventArgs e)
+        {
+            Animation(true, gridDialogAddGraph);
+        }
+
+        private void ButtonDialogAddGraph_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "1")
+            {
+                var a = parser.AddGraph(addGraphName.Text);
+                if (a != "")
+                {
+                    OpenInfoDialog("Add graph", a);
+                    return;
+                }
+            }
+
+            Animation(false, gridDialogAddGraph);
+        }
+
+        private void ButtonMainGraphDel_Click(object sender, RoutedEventArgs e)
+        {
+            parser.DeleteGraph(((DominoGraph)mainGraphs.SelectedItem).UniqueID);
         }
 
         /*private void ExportPicture(object sender, RoutedEventArgs e)

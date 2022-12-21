@@ -10,9 +10,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -27,9 +24,9 @@ using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
 {
-	internal class DominoParser
-	{
-		/* TODO
+    internal class DominoParser
+    {
+        /* TODO
 		 * -param lua file open							ok / maybe
 		 * -all delete ask dialog						ok
 		 * -styles comboboxes							ok
@@ -61,7 +58,7 @@ namespace DominoVisualizer
 		 * -edit exec box - add row resets data			ok
 		 * -box - return data list - variable			ok
 		 * -swap box - vars rename						ok
-		 * -future - custom boxes
+		 * -future - custom boxes                       ok
 		 * -auto add dynint - check numbering - 1		ok
 		 * -add box - order list						ok
 		 * -swap error - lines not move, can't save		ok
@@ -73,40 +70,45 @@ namespace DominoVisualizer
 		 * -add execbox default selected				ok
 		 * -own execbox color
 		 * -duplicate - instances						ok
+		 * -load all box names from graphs
+		 * -check if box exists in other graphs
 		 */
 
-		string workspaceName = "";
-		string graphName = "";
-		bool isDefault = false;
+        string workspaceName = "";
+        int selGraph = 0;
+        List<DominoGraph> dominoGraphs = new();
+        string datPath = "";
 
         Dictionary<string, DominoBox> dominoBoxes = new();
-		Dictionary<string, DominoConnector> dominoConnectors = new();
+        Dictionary<string, DominoConnector> dominoConnectors = new();
         SortedDictionary<string, DominoBoxMetadata> regBoxes = new();
-		SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
+        SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
         Dictionary<ulong, string> regBoxesCRC64 = new();
-		List<DominoDict> globalVariables = new();
-		Dictionary<string, string> lastBoxesAssign = new();
-		List<DominoDict> dominoResources = new();
-		List<DominoComment> dominoComments = new();
-		List<DominoBorder> dominoBorders = new();
-        DominoBoxMetadata thisMetadata = new();
+        List<DominoDict> globalVariables = new();
+        Dictionary<string, string> lastBoxesAssign = new();
+        List<DominoDict> dominoResources = new();
+        List<DominoComment> dominoComments = new();
+        List<DominoBorder> dominoBorders = new();
+        //DominoBoxMetadata thisMetadata = new();
 
-		byte[] fileBytes = null;
-		string runPath = "";
+        byte[] fileBytes = null;
+        string runPath = "";
 
-		string game = "";
-		string file = "";
-		MemoryStream luaFile = null;
-		StreamReader reader = null;
-		PanAndZoomCanvas canvas;
+        string game = "";
+        string file = "";
+        MemoryStream luaFile = null;
+        StreamReader reader = null;
+        PanAndZoomCanvas canvas;
 
-		DominoBox tempBox = null;
-		List<string> processedBoxes = new();
-		string errFiles = "Can't find / open these files:" + Environment.NewLine + Environment.NewLine;
-		bool errFilesB = false;
-		bool wasEdited = false;
+        DominoBox tempBox = null;
+        List<string> processedBoxes = new();
+        string errFiles = "Can't find / open these files:" + Environment.NewLine + Environment.NewLine;
+        bool errFilesB = false;
+        bool wasEdited = false;
 
         //Random r = new();
+
+        public string CurrentFile { get { return file; } }
 
         public DominoParser(PanAndZoomCanvas canvas, string game)
         {
@@ -120,90 +122,108 @@ namespace DominoVisualizer
         }
 
         public DominoParser(string dominoPath, PanAndZoomCanvas canvas)
-		{
-			file = dominoPath;
-			this.canvas = canvas;
-			
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        {
+            file = dominoPath;
+            this.canvas = canvas;
+
+            runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             AddColors();
         }
 
-		public DominoParser(string dominoPath, PanAndZoomCanvas canvas, string game)
-		{
-			file = dominoPath;
-			this.canvas = canvas;
-			this.game = game;
+        public DominoParser(string dominoPath, PanAndZoomCanvas canvas, string game)
+        {
+            file = dominoPath;
+            this.canvas = canvas;
+            this.game = game;
 
-			luaFile = new MemoryStream(File.ReadAllBytes(file));
-			
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            luaFile = new MemoryStream(File.ReadAllBytes(file));
+
+            runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             ParseAllBoxes();
-			AddColors();
+            AddColors();
         }
 
         public DominoParser(string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
-		{
-			file = dominoSearchFolder;
-			this.canvas = canvas;
-			this.game = game;
+        {
+            file = dominoSearchFolder;
+            this.canvas = canvas;
+            this.game = game;
 
             luaFile = new MemoryStream(File.ReadAllBytes(dominoPath));
 
-			File.Delete(dominoPath);
-			
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            File.Delete(dominoPath);
 
-			ParseAllBoxes();
-			AddColors();
+            runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            ParseAllBoxes();
+            AddColors();
         }
 
-		public void Create(string workspace, string graph)
+        public void Create(string workspace, string graph, string dat)
         {
             workspaceName = workspace;
-            graphName = graph;
-			isDefault = true;
+            datPath = dat;
+
+            DominoGraph g = new();
+            g.Name = graph;
+            g.IsDefault = true;
+            dominoGraphs.Add(g);
+
+            SetWorkspaceNameAndGraphs();
 
             Draw();
         }
 
-        public string Parse()
-		{
-			uint luaType = luaFile.ReadValueU32();
-			if (luaType != 0x4341554C)
-			{
-				return "Unknown LUA version. Can't open the file.";
-			}
+        public (bool, string) Parse()
+        {
+            DominoGraph g = new();
+            g.Name = "Default";
+            g.IsDefault = true;
+            dominoGraphs.Add(g);
 
-			uint luaLen = luaFile.ReadValueU32();
-			byte[] luaBytesLuaq = luaFile.ReadBytes((int)luaLen);
-			//byte[] luaBytesLuac = luaFile.ReadBytes((int)(luaFile.Length - luaLen - (sizeof(int) * 2)));
+            string[] fileName = Path.GetFileNameWithoutExtension(file).Replace("_", " ").Split('.');
+            workspaceName = fileName[0];
+            g.Name = fileName.Length > 1 ? fileName[1] : fileName[0];
 
-			// read xml and get input connectors
-			string dmla = ImportDominoMetadata();
-			if (dmla != "")
-				return dmla;
+            SetWorkspaceNameAndGraphs();
 
-			luaFile.Close();
+            uint luaType = luaFile.ReadValueU32();
+            if (luaType != 0x4341554C)
+            {
+                return (true, "Unknown LUA version. Can't open the file.");
+            }
 
-			string[] fileName = Path.GetFileNameWithoutExtension(file).Replace("_", " ").Split('.');
-			if (fileName.Length > 0)
-			{
-				workspaceName = fileName[0];
-				graphName = fileName[1];
-			}
+            uint luaLen = luaFile.ReadValueU32();
+            byte[] luaBytesLuaq = luaFile.ReadBytes((int)luaLen);
+            //byte[] luaBytesLuac = luaFile.ReadBytes((int)(luaFile.Length - luaLen - (sizeof(int) * 2)));
 
-            setWorkspaceName(workspaceName, graphName);
+            // read xml and get input connectors
+            dominoGraphs[selGraph].Metadata = ImportDominoMetadata();
+            if (dominoGraphs[selGraph].Metadata.IsSystem)
+                return (true, "System Domino box can't be opened.");
+
+            int ctrlPosY = 0;
+            foreach (var ctrl in dominoGraphs[selGraph].Metadata.ControlsIn)
+            {
+                DominoConnector inConn = new();
+                inConn.ID = ctrl.Name;
+                inConn.DrawY = ctrlPosY;
+                dominoConnectors.Add(inConn.ID, inConn);
+                ctrlPosY += 300;
+            }
+
+            luaFile.Close();
 
             var stream = new MemoryStream();
 
             MemoryStream luaMS = new(luaBytesLuaq);
-			luaMS.ReadByte();
+            luaMS.ReadByte();
             uint luaqKey = luaMS.ReadValueU32();
-			if (luaqKey == 0x5161754C)
+            if (luaqKey == 0x5161754C)
             {
-				luaMS.Seek(0, SeekOrigin.Begin);
+                luaMS.Seek(0, SeekOrigin.Begin);
 
                 var header = new BHeader(luaMS);
                 LFunction lMain = header.Function.Parse(luaMS, header);
@@ -217,74 +237,74 @@ namespace DominoVisualizer
 
                 fileBytes = stream.ToArray();
             }
-			else
+            else
             {
                 luaMS.Seek(0, SeekOrigin.Begin);
 
                 fileBytes = luaMS.ToArray();
 
-				stream = new MemoryStream(fileBytes);
+                stream = new MemoryStream(fileBytes);
             }
 
-			//File.WriteAllBytes("a.lua", fileBytes);return;
+            //File.WriteAllBytes("a.lua", fileBytes);return;
 
-			stream.Seek(0, SeekOrigin.Begin);
+            stream.Seek(0, SeekOrigin.Begin);
 
-			reader = new StreamReader(stream, System.Text.Encoding.UTF8);
+            reader = new StreamReader(stream, System.Text.Encoding.UTF8);
 
-			string l;
-			bool allowNewBoxes = false;
-			bool externalBoxDef = false;
-			bool isRealBox = false;
-			bool isExtFuncs = false;
-			string func = "";
-			while ((l = reader.ReadLine()) != null)
-			{
-				l = l.Trim();
+            string l;
+            bool allowNewBoxes = false;
+            bool externalBoxDef = false;
+            bool isRealBox = false;
+            bool isExtFuncs = false;
+            string func = "";
+            while ((l = reader.ReadLine()) != null)
+            {
+                l = l.Trim();
 
-				if (l.StartsWith("cboxRes:RegisterBox("))
-				{
-					LoadReqBoxes(l);
-				}
+                if (l.StartsWith("cboxRes:RegisterBox("))
+                {
+                    LoadReqBoxes(l);
+                }
 
-				if (l.StartsWith("cboxRes:LoadResource("))
-				{
-					string[] pp = l.Replace("cboxRes:LoadResource(", "").Replace(")", "").Replace("\"", "").Split(',');
+                if (l.StartsWith("cboxRes:LoadResource("))
+                {
+                    string[] pp = l.Replace("cboxRes:LoadResource(", "").Replace(")", "").Replace("\"", "").Split(',');
 
-					string file = pp[0].Trim();
-					string type = pp[1].Trim();
+                    string file = pp[0].Trim();
+                    string type = pp[1].Trim();
 
                     dominoResources.Add(new() { Name = file, Value = type });
-				}
+                }
 
-				/*if (l.Contains("l0:GetDataOutValue(") && !l.StartsWith("[") && externalBoxDef)
+                /*if (l.Contains("l0:GetDataOutValue(") && !l.StartsWith("[") && externalBoxDef)
                 {
                 }
                 else*/
-				if (l.StartsWith("self.") && !externalBoxDef && !l.Contains("l0:GetDataOutValue(") && !isExtFuncs)
-				{
-					DominoDict rgv()
-					{
-						string[] var = l.Replace("self.", "").TrimEnd(',').Split("=");
+                if (l.StartsWith("self.") && !externalBoxDef && !l.Contains("l0:GetDataOutValue(") && !isExtFuncs)
+                {
+                    DominoDict rgv()
+                    {
+                        string[] var = l.Replace("self.", "").TrimEnd(',').Split("=");
 
-						if (l.EndsWith("= {"))
-						{
-							List<DominoDict> vals = new();
-							while ((l = reader.ReadLine().Trim()) != "}")
-							{
-								vals.Add(rgv());
-							}
-							return new() { Name = var[0].Trim(), ValueArray = vals };
-						}
-						else
-						{
-							return new() { Name = var[0].Trim(), Value = var[1].Trim() };
-						}
-					}
+                        if (l.EndsWith("= {"))
+                        {
+                            List<DominoDict> vals = new();
+                            while ((l = reader.ReadLine().Trim()) != "}")
+                            {
+                                vals.Add(rgv());
+                            }
+                            return new() { Name = var[0].Trim(), ValueArray = vals };
+                        }
+                        else
+                        {
+                            return new() { Name = var[0].Trim(), Value = var[1].Trim() };
+                        }
+                    }
 
-					globalVariables.Add(rgv());
+                    globalVariables.Add(rgv());
 
-					/*
+                    /*
 					string[] var = l.Replace("self.", "").Split("=");
 
 					if (l.EndsWith("= {"))
@@ -301,138 +321,138 @@ namespace DominoVisualizer
 					{
 						globalVariables.Add(new() { Name = var[0].Trim(), Value = var[1].Trim() });
 					}*/
-				}
-
-				if (l.StartsWith("self[") && (l.Contains("cbox:CreateBox(") || l.Contains("cbox:CreateBox_PathID(")))
-				{
-					if (tempBox != null)
-					{
-						dominoBoxes.Add(tempBox.ID, tempBox);
-					}
-
-					Regex regex = new Regex(@"self\[(.*?)\]");
-					var v = regex.Match(l);
-					string tempBoxID = "self[" + v.Groups[1].ToString() + "]";
-
-					regex = new Regex(@"(cbox:CreateBox\(|cbox:CreateBox_PathID\()""(.*?)""\)");
-					v = regex.Match(l);
-					string tempBoxName = v.Groups[2].ToString();
-
-					if (l.Contains("cbox:CreateBox_PathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
-					{
-						tempBoxName = regBoxesCRC64[ulong.Parse(tempBoxName)];
-					}
-
-					tempBox = new();
-					tempBox.ID = tempBoxID;
-					tempBox.Name = tempBoxName;
-				}
-
-				if (l == "end" && tempBox != null)
-				{
-					dominoBoxes.Add(tempBox.ID, tempBox);
-					tempBox = null;
-				}
-
-				if (tempBox != null)
-				{
-					if (l.StartsWith("l0:SetConnections(") && !l.EndsWith(")"))
-					{
-						while ((l = reader.ReadLine().Trim()) != "})")
-						{
-							ParseConnectionsArray(l, null);
-						}
-					}
-				}
-
-				if (l.StartsWith("function export:en_"))
-				{
-					func = l.Replace("function export:", "").Replace("()", "");
-					string[] funcParts = func.Split("_");
-					func = funcParts[0] + "_" + funcParts[1];
-					allowNewBoxes = true;
-				}
-
-				if (l.StartsWith("function export:ex_"))
-				{
-					allowNewBoxes = false;
-					isExtFuncs = true;
                 }
 
-				if ((l.StartsWith("l0 = Boxes[GetPathID(") || l.StartsWith("l0 = Boxes[")) && allowNewBoxes && tempBox == null)
-				{
-					string[] funcParts = func.Split("_");
-					func = funcParts[0] + "_" + funcParts[1];
+                if (l.StartsWith("self[") && (l.Contains("cbox:CreateBox(") || l.Contains("cbox:CreateBox_PathID(")))
+                {
+                    if (tempBox != null)
+                    {
+                        dominoBoxes.Add(tempBox.ID, tempBox);
+                    }
 
-					if (dominoBoxes.ContainsKey(func))
-					{
-						externalBoxDef = true;
-					}
-					else
-					{
-						var regex = new Regex(@"Boxes\[(.*?)\]");
-						var v = regex.Match(l);
-						string tempBoxName = v.Groups[1].ToString();
-						tempBoxName = tempBoxName.Replace("\"", "");
+                    Regex regex = new Regex(@"self\[(.*?)\]");
+                    var v = regex.Match(l);
+                    string tempBoxID = "self[" + v.Groups[1].ToString() + "]";
 
-						if (!l.Contains("GetPathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
-						{
-							tempBoxName = regBoxesCRC64[ulong.Parse(tempBoxName)];
-						}
-						else
-							tempBoxName = tempBoxName.Replace("GetPathID(", "").Replace(")", "");
+                    regex = new Regex(@"(cbox:CreateBox\(|cbox:CreateBox_PathID\()""(.*?)""\)");
+                    v = regex.Match(l);
+                    string tempBoxName = v.Groups[2].ToString();
 
-						tempBox = new();
-						tempBox.ID = func; //newBoxID.ToString();
-						tempBox.Name = tempBoxName;
-					}
-				}
-				else if (l.StartsWith("l0 = self[") && allowNewBoxes)
-				{
-					if (dominoBoxes.ContainsKey(l.Replace("l0 = ", "")))
-					{
-						func = l.Replace("l0 = ", "");
-						externalBoxDef = true;
-					}
-				}
+                    if (l.Contains("cbox:CreateBox_PathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
+                    {
+                        tempBoxName = regBoxesCRC64[ulong.Parse(tempBoxName)];
+                    }
 
-				if (l.Contains(":SetParentGraph(self._cbox)") && tempBox != null && allowNewBoxes)
-				{
-					isRealBox = true;
+                    tempBox = new();
+                    tempBox.ID = tempBoxID;
+                    tempBox.Name = tempBoxName;
                 }
 
-				if (l.StartsWith("params = {") && tempBox != null && allowNewBoxes)
-				{
-					if (isRealBox)
-						dominoBoxes.Add(tempBox.ID, tempBox);
-
-					tempBox = null;
-					func = "";
-					isRealBox = false;
+                if (l == "end" && tempBox != null)
+                {
+                    dominoBoxes.Add(tempBox.ID, tempBox);
+                    tempBox = null;
                 }
-			}
 
-			reader.Close();
-			stream.Dispose();
+                if (tempBox != null)
+                {
+                    if (l.StartsWith("l0:SetConnections(") && !l.EndsWith(")"))
+                    {
+                        while ((l = reader.ReadLine().Trim()) != "})")
+                        {
+                            ParseConnectionsArray(l, null);
+                        }
+                    }
+                }
 
-			foreach (DominoConnector inCtrl in dominoConnectors.Values)
-			{
-				if (thisMetadata.ControlsIn.Where(a => a.Name == inCtrl.ID).Any())
-				{
-					ProcessExecBoxes(inCtrl.ID);
-				}
-			}
+                if (l.StartsWith("function export:en_"))
+                {
+                    func = l.Replace("function export:", "").Replace("()", "");
+                    string[] funcParts = func.Split("_");
+                    func = funcParts[0] + "_" + funcParts[1];
+                    allowNewBoxes = true;
+                }
 
-			regBoxesCRC64.Clear();
+                if (l.StartsWith("function export:ex_"))
+                {
+                    allowNewBoxes = false;
+                    isExtFuncs = true;
+                }
 
-			Draw();
+                if ((l.StartsWith("l0 = Boxes[GetPathID(") || l.StartsWith("l0 = Boxes[")) && allowNewBoxes && tempBox == null)
+                {
+                    string[] funcParts = func.Split("_");
+                    func = funcParts[0] + "_" + funcParts[1];
 
-			if (errFilesB)
-				return errFiles;
+                    if (dominoBoxes.ContainsKey(func))
+                    {
+                        externalBoxDef = true;
+                    }
+                    else
+                    {
+                        var regex = new Regex(@"Boxes\[(.*?)\]");
+                        var v = regex.Match(l);
+                        string tempBoxName = v.Groups[1].ToString();
+                        tempBoxName = tempBoxName.Replace("\"", "");
 
-			return "";
+                        if (!l.Contains("GetPathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
+                        {
+                            tempBoxName = regBoxesCRC64[ulong.Parse(tempBoxName)];
+                        }
+                        else
+                            tempBoxName = tempBoxName.Replace("GetPathID(", "").Replace(")", "");
 
-			/*stream.Position = 0;
+                        tempBox = new();
+                        tempBox.ID = func; //newBoxID.ToString();
+                        tempBox.Name = tempBoxName;
+                    }
+                }
+                else if (l.StartsWith("l0 = self[") && allowNewBoxes)
+                {
+                    if (dominoBoxes.ContainsKey(l.Replace("l0 = ", "")))
+                    {
+                        func = l.Replace("l0 = ", "");
+                        externalBoxDef = true;
+                    }
+                }
+
+                if (l.Contains(":SetParentGraph(self._cbox)") && tempBox != null && allowNewBoxes)
+                {
+                    isRealBox = true;
+                }
+
+                if (l.StartsWith("params = {") && tempBox != null && allowNewBoxes)
+                {
+                    if (isRealBox)
+                        dominoBoxes.Add(tempBox.ID, tempBox);
+
+                    tempBox = null;
+                    func = "";
+                    isRealBox = false;
+                }
+            }
+
+            reader.Close();
+            stream.Dispose();
+
+            foreach (DominoConnector inCtrl in dominoConnectors.Values)
+            {
+                if (dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == inCtrl.ID).Any())
+                {
+                    ProcessExecBoxes(inCtrl.ID);
+                }
+            }
+
+            regBoxesCRC64.Clear();
+
+            Draw();
+
+            if (errFilesB)
+                return (false, errFiles);
+
+            return (false, "");
+
+            /*stream.Position = 0;
 			reader.DiscardBufferedData();
 
 			//Dictionary<string, string> externalCalls = new();
@@ -523,7 +543,7 @@ namespace DominoVisualizer
 				}
 			}*/
 
-			/*stream.Position = 0;
+            /*stream.Position = 0;
 			reader.DiscardBufferedData();
 
 			while ((l = reader.ReadLine()) != null && false)
@@ -625,53 +645,53 @@ namespace DominoVisualizer
                     }*
 				}
 			}*/
-		}
+        }
 
-		private void LoadReqBoxes(string line)
-		{
-			string f = line.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "");
-			regBoxesCRC64.Add(CRC64.Hash(f.ToLower().Replace("/", "\\")), f);
+        private void LoadReqBoxes(string line)
+        {
+            string f = line.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "");
+            regBoxesCRC64.Add(CRC64.Hash(f.ToLower().Replace("/", "\\")), f);
 
-			// parse nebo conv - ziskat xml
-			//string ff = runPath + "\\lib" + f.ToLower().Replace("domino", "").Replace("/", "\\");
-			string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace("/", "\\");
-			string ff3 = file.Replace(Path.GetFileName(file), "") + Path.GetFileName(f);
+            // parse nebo conv - ziskat xml
+            //string ff = runPath + "\\lib" + f.ToLower().Replace("domino", "").Replace("/", "\\");
+            string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace("/", "\\");
+            string ff3 = file.Replace(Path.GetFileName(file), "") + Path.GetFileName(f);
 
-			Stream fs = new MemoryStream();
+            Stream fs = new MemoryStream();
 
-			if (!File.Exists(ff2) && !File.Exists(ff3))
-			{
-				string zipFileStr = "";
-				if (game == "fc5") zipFileStr = "FC5";
-				if (game == "fcnd") zipFileStr = "FCND";
-				if (game == "fc6") zipFileStr = "FC6";
+            if (!File.Exists(ff2) && !File.Exists(ff3))
+            {
+                string zipFileStr = "";
+                if (game == "fc5") zipFileStr = "FC5";
+                if (game == "fcnd") zipFileStr = "FCND";
+                if (game == "fc6") zipFileStr = "FC6";
 
-				ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib" + zipFileStr + ".zip");
-				ZipArchiveEntry zipFile = zip.Entries.Where(a => a.FullName.Equals(f.ToLower())).FirstOrDefault();
-				if (zipFile != null)
-				{
-					Stream tmpStream = zipFile.Open();
-					tmpStream.CopyTo(fs);
-				}
-			}
-			else if (File.Exists(ff2)) fs = File.Open(ff2, FileMode.Open, FileAccess.Read, FileShare.Read);
-			else if (File.Exists(ff3)) fs = File.Open(ff3, FileMode.Open, FileAccess.Read, FileShare.Read);
+                ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib" + zipFileStr + ".zip");
+                ZipArchiveEntry zipFile = zip.Entries.Where(a => a.FullName.Equals(f.ToLower())).FirstOrDefault();
+                if (zipFile != null)
+                {
+                    Stream tmpStream = zipFile.Open();
+                    tmpStream.CopyTo(fs);
+                }
+            }
+            else if (File.Exists(ff2)) fs = File.Open(ff2, FileMode.Open, FileAccess.Read, FileShare.Read);
+            else if (File.Exists(ff3)) fs = File.Open(ff3, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-			if (fs.Length > 0)
-			{
-				var m = ParseLuaBoxFile(fs);
+            if (fs.Length > 0)
+            {
+                var m = ParseLuaBoxFile(fs);
 
-				regBoxes.Add(f, m);
-			}
-			else
-			{
-				errFiles += f + Environment.NewLine;
-				errFilesB = true;
-			}
-		}
+                regBoxes.Add(f, m);
+            }
+            else
+            {
+                errFiles += f + Environment.NewLine;
+                errFilesB = true;
+            }
+        }
 
-		private void ParseAllBoxes()
-		{
+        private void ParseAllBoxes()
+        {
             string zipFileStr = "";
             if (game == "fc5") zipFileStr = "FC5";
             if (game == "fcnd") zipFileStr = "FCND";
@@ -681,18 +701,18 @@ namespace DominoVisualizer
 
             foreach (var l in zip.Entries)
             {
-				if (l.FullName.EndsWith(".lua"))
+                if (l.FullName.EndsWith(".lua"))
                 {
                     MemoryStream fs = new MemoryStream();
 
                     Stream tmpStream = l.Open();
                     tmpStream.CopyTo(fs);
 
-					byte[] byteBuffer = fs.ToArray();
+                    byte[] byteBuffer = fs.ToArray();
                     string byteBufferAsString = System.Text.Encoding.UTF8.GetString(byteBuffer);
                     int offset = byteBufferAsString.IndexOf("DominoMetadata");
 
-					if (offset > 0)
+                    if (offset > 0)
                     {
                         var m = ParseLuaBoxFile(fs);
                         regBoxesAll.Add(l.FullName, m);
@@ -718,9 +738,12 @@ namespace DominoVisualizer
 
             XDocument meta = XDocument.Load(fs);
 
+            m = ImportDominoMetadata(meta.Root);
+
+            /*
             m.IsStateless = meta.Element("DominoMetadata").Attribute("IsStateless").Value == "1";
             m.IsSystem = meta.Element("DominoMetadata").Attribute("IsSystem").Value == "1";
-
+            
             var a = meta.Descendants("ControlIn");
             foreach (var b in a)
                 m.ControlsIn.Add(new(b.Attribute("Name").Value, int.Parse(b.Attribute("AnchorDynType").Value), b.Attribute("HostExecFunc").Value));
@@ -736,146 +759,138 @@ namespace DominoVisualizer
             a = meta.Descendants("DataOut");
             foreach (var b in a)
                 m.DatasOut.Add(new(b.Attribute("Name").Value, int.Parse(b.Attribute("AnchorDynType").Value), b.Attribute("DataTypeID").Value));
-
+            */
             fs.Close();
 
-			return m;
+            return m;
         }
 
-		private XElement ExportDominoMetadata()
-		{
-			XElement rci = new("ControlsIn");
-			XElement rco = new("ControlsOut");
-			XElement rdi = new("DatasIn");
-			XElement rdo = new("DatasOut");
+        private XElement ExportDominoMetadata()
+        {
+            XElement rci = new("ControlsIn");
+            XElement rco = new("ControlsOut");
+            XElement rdi = new("DatasIn");
+            XElement rdo = new("DatasOut");
 
-			foreach (var a in thisMetadata.ControlsIn)
-				rci.Add(new XElement("ControlIn", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("HostExecFunc", a.HostExecFunc)));
+            foreach (var a in dominoGraphs[selGraph].Metadata.ControlsIn)
+                rci.Add(new XElement("ControlIn", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("HostExecFunc", a.HostExecFunc)));
 
-			foreach (var a in thisMetadata.ControlsOut)
-				rco.Add(new XElement("ControlOut", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("IsDelayed", a.IsDelayed ? "1" : "0")));
+            foreach (var a in dominoGraphs[selGraph].Metadata.ControlsOut)
+                rco.Add(new XElement("ControlOut", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("IsDelayed", a.IsDelayed ? "1" : "0")));
 
-			foreach (var a in thisMetadata.DatasIn)
-				rdi.Add(new XElement("DataIn", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("DataTypeID", a.DataTypeID)));
+            foreach (var a in dominoGraphs[selGraph].Metadata.DatasIn)
+                rdi.Add(new XElement("DataIn", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("DataTypeID", a.DataTypeID)));
 
-			foreach (var a in thisMetadata.DatasOut)
-				rdo.Add(new XElement("DataIn", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("DataTypeID", a.DataTypeID)));
+            foreach (var a in dominoGraphs[selGraph].Metadata.DatasOut)
+                rdo.Add(new XElement("DataOut", new XAttribute("Name", a.Name), new XAttribute("AnchorDynType", a.AnchorDynType), new XAttribute("DataTypeID", a.DataTypeID)));
 
-			XElement root = new("DominoMetadata", new XAttribute("IsStateless", thisMetadata.IsStateless ? "1" : "0"), new XAttribute("IsSystem", thisMetadata.IsSystem ? "1" : "0"));
-			root.Add(rci);
-			root.Add(rco);
-			root.Add(rdi);
-			root.Add(rdo);
+            XElement root = new("DominoMetadata", new XAttribute("IsStateless", dominoGraphs[selGraph].Metadata.IsStateless ? "1" : "0"), new XAttribute("IsSystem", dominoGraphs[selGraph].Metadata.IsSystem ? "1" : "0"));
+            root.Add(rci);
+            root.Add(rco);
+            root.Add(rdi);
+            root.Add(rdo);
 
-			return root;
-		}
+            return root;
+        }
 
-		private string ImportDominoMetadata(XElement elDM = null)
-		{
-			XElement root = null;
+        private DominoBoxMetadata ImportDominoMetadata(XElement elDM = null)
+        {
+            XElement root;
 
-			if (elDM == null)
-			{
-				XDocument mainMetadata = XDocument.Load(luaFile);
-				root = mainMetadata.Element("DominoMetadata");
-			}
-			else
-				root = elDM;
+            DominoBoxMetadata meta = new();
 
-			bool rElSys = root.Attribute("IsSystem").Value == "1";
-			if (rElSys)
-			{
-				return "System Domino box can't be opened.";
-			}
+            if (elDM == null)
+            {
+                XDocument mainMetadata = XDocument.Load(luaFile);
+                root = mainMetadata.Element("DominoMetadata");
+            }
+            else
+                root = elDM;
 
-			var ctrlsIn = root.Descendants("ControlIn");
-			int ctrlPosY = 0;
-			foreach (var ctrl in ctrlsIn)
-			{
-				DominoConnector inConn = new();
-				inConn.ID = ctrl.Attribute("Name").Value;
-				inConn.DrawY = ctrlPosY;
-				dominoConnectors.Add(inConn.ID, inConn);
-				ctrlPosY += 300;
+            meta.IsStateless = root.Attribute("IsStateless").Value == "1";
+            meta.IsSystem = root.Attribute("IsSystem").Value == "1";
+            
+            var ctrlsIn = root.Descendants("ControlIn");
+            foreach (var ctrl in ctrlsIn)
+            {
+                meta.ControlsIn.Add(new(ctrl.Attribute("Name").Value, int.Parse(ctrl.Attribute("AnchorDynType").Value), ctrl.Attribute("HostExecFunc").Value));
+            }
+            var ctrlsOut = root.Descendants("ControlOut");
+            foreach (var ctrl in ctrlsOut)
+            {
+                meta.ControlsOut.Add(new(ctrl.Attribute("Name").Value, int.Parse(ctrl.Attribute("AnchorDynType").Value), ctrl.Attribute("IsDelayed").Value == "1"));
+            }
+            var datasIn = root.Descendants("DataIn");
+            foreach (var data in datasIn)
+            {
+                meta.DatasIn.Add(new(data.Attribute("Name").Value, int.Parse(data.Attribute("AnchorDynType").Value), data.Attribute("DataTypeID").Value));
+            }
+            var datasOut = root.Descendants("DataOut");
+            foreach (var data in datasOut)
+            {
+                meta.DatasOut.Add(new(data.Attribute("Name").Value, int.Parse(data.Attribute("AnchorDynType").Value), data.Attribute("DataTypeID").Value));
+            }
 
-				thisMetadata.ControlsIn.Add(new(ctrl.Attribute("Name").Value, int.Parse(ctrl.Attribute("AnchorDynType").Value), ctrl.Attribute("HostExecFunc").Value));
-			}
-			var ctrlsOut = root.Descendants("ControlOut");
-			foreach (var ctrl in ctrlsOut)
-			{
-				thisMetadata.ControlsOut.Add(new(ctrl.Attribute("Name").Value, int.Parse(ctrl.Attribute("AnchorDynType").Value), ctrl.Attribute("IsDelayed").Value == "1"));
-			}
-			var datasIn = root.Descendants("DataIn");
-			foreach (var data in datasIn)
-			{
-				thisMetadata.DatasIn.Add(new(data.Attribute("Name").Value, int.Parse(data.Attribute("AnchorDynType").Value), data.Attribute("DataTypeID").Value));
-			}
-			var datasOut = root.Descendants("DataOut");
-			foreach (var data in datasOut)
-			{
-				thisMetadata.DatasOut.Add(new(data.Attribute("Name").Value, int.Parse(data.Attribute("AnchorDynType").Value), data.Attribute("DataTypeID").Value));
-			}
+            return meta;
+        }
 
-			return "";
-		}
+        private void ProcessExecBoxes(string connName)
+        {
+            var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
 
-		private void ProcessExecBoxes(string connName)
-		{
-			var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
+            string l = "";
 
-			string l = "";
+            while (l != "function export:" + connName + "()" && l != null)
+            {
+                l = readerParams.ReadLine();
+            }
 
-			while (l != "function export:" + connName + "()" && l != null)
-			{
-				l = readerParams.ReadLine();
-			}
+            if (readerParams.EndOfStream) return;
 
-			if (readerParams.EndOfStream) return;
+            DominoConnector conn = dominoConnectors[connName];
 
-			DominoConnector conn = dominoConnectors[connName];
+            List<DominoDict> tempParams = new();
+            string boxID = "";
+            string paramsFunc = "";
 
-			List<DominoDict> tempParams = new();
-			string boxID = "";
-			string paramsFunc = "";
+            while ((l = readerParams.ReadLine().Trim()) != "end")
+            {
+                if (l.StartsWith("self:"))
+                {
+                    paramsFunc = l.Replace("self:", "").Replace("()", "");
 
-			while ((l = readerParams.ReadLine().Trim()) != "end")
-			{
-				if (l.StartsWith("self:"))
-				{
-					paramsFunc = l.Replace("self:", "").Replace("()", "");
+                    if (paramsFunc.StartsWith('_')) paramsFunc = paramsFunc[1..];
 
-					if (paramsFunc.StartsWith('_')) paramsFunc = paramsFunc[1..];
+                    if (dominoGraphs[selGraph].Metadata.ControlsOut.Any(a => a.Name == paramsFunc))
+                    {
+                        conn.OutFuncName.Add(paramsFunc);
+                    }
 
-					if (thisMetadata.ControlsOut.Any(a => a.Name == paramsFunc))
-					{
-						conn.OutFuncName.Add(paramsFunc);
-					}
+                    paramsFunc = "";
+                }
 
-					paramsFunc = "";
-				}
+                if (l.StartsWith("self:ex_"))
+                {
+                    paramsFunc = l.Replace("self:", "").Replace("()", "");
 
-				if (l.StartsWith("self:ex_"))
-				{
-					paramsFunc = l.Replace("self:", "").Replace("()", "");
+                    //externalCalls.Add(paramsFunc, connName);
+                    GetExternalFuncData(paramsFunc, connName);
+                }
 
-					//externalCalls.Add(paramsFunc, connName);
-					GetExternalFuncData(paramsFunc, connName);
-				}
+                if (l.StartsWith("params = self:"))
+                {
+                    paramsFunc = l.Replace("params = self:", "").Replace("()", "");
 
-				if (l.StartsWith("params = self:"))
-				{
-					paramsFunc = l.Replace("params = self:", "").Replace("()", "");
+                    tempParams = GetParamsFuncData(paramsFunc);
+                }
 
-					tempParams = GetParamsFuncData(paramsFunc);
-				}
+                if (l.StartsWith("l0 = "))
+                {
+                    string boxCall = l.Replace("l0 = ", "");
 
-				if (l.StartsWith("l0 = "))
-				{
-					string boxCall = l.Replace("l0 = ", "");
-
-					if (boxCall.StartsWith("Boxes"))
-					{
-						boxID = paramsFunc; //newBoxIDAssigned[paramsFunc].ToString();
+                    if (boxCall.StartsWith("Boxes"))
+                    {
+                        boxID = paramsFunc; //newBoxIDAssigned[paramsFunc].ToString();
 
                         if (lastBoxesAssign.ContainsKey(boxCall))
                             lastBoxesAssign[boxCall] = boxID;
@@ -884,47 +899,47 @@ namespace DominoVisualizer
                     }
 
                     if (boxCall.StartsWith("self["))
-					{
-						boxID = boxCall; //.Replace("self[", "").Replace("]", "");
+                    {
+                        boxID = boxCall; //.Replace("self[", "").Replace("]", "");
                     }
                 }
 
-				if (l.StartsWith("l0:Exec(") || l.StartsWith("l0:ExecDynInt("))
-				{
-					string[] execParams = l.Replace("l0:Exec(", "").Replace("l0:ExecDynInt(", "").Replace(")", "").Split(",");
+                if (l.StartsWith("l0:Exec(") || l.StartsWith("l0:ExecDynInt("))
+                {
+                    string[] execParams = l.Replace("l0:Exec(", "").Replace("l0:ExecDynInt(", "").Replace(")", "").Split(",");
 
-					ExecBox execBox = new();
-					execBox.Exec = int.Parse(execParams[0]);
-					execBox.Params = tempParams;
-					execBox.Box = dominoBoxes[boxID];
+                    ExecBox execBox = new();
+                    execBox.Exec = int.Parse(execParams[0]);
+                    execBox.Params = tempParams;
+                    execBox.Box = dominoBoxes[boxID];
 
-					if (regBoxes.ContainsKey(execBox.Box.Name))
-						execBox.ExecStr = regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name;
+                    if (regBoxes.ContainsKey(execBox.Box.Name))
+                        execBox.ExecStr = regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name;
 
-					if (l.Contains(":Exec(")) execBox.Type = ExecType.Exec;
-					if (l.Contains(":ExecDynInt("))
-					{
-						execBox.Type = ExecType.ExecDynInt;
-						execBox.DynIntExec = int.Parse(execParams[2]);
-					}
+                    if (l.Contains(":Exec(")) execBox.Type = ExecType.Exec;
+                    if (l.Contains(":ExecDynInt("))
+                    {
+                        execBox.Type = ExecType.ExecDynInt;
+                        execBox.DynIntExec = int.Parse(execParams[2]);
+                    }
 
-					conn.ExecBoxes.Add(execBox);
+                    conn.ExecBoxes.Add(execBox);
 
-					tempParams = new();
-					boxID = "";
-					paramsFunc = "";
-				}
-			}
+                    tempParams = new();
+                    boxID = "";
+                    paramsFunc = "";
+                }
+            }
 
-			readerParams.Close();
+            readerParams.Close();
 
-			// mozna pres isdelayed
+            // mozna pres isdelayed
 
-			// linq order select
+            // linq order select
 
-			// contains exec str , isdelayed=1 , ostatni
+            // contains exec str , isdelayed=1 , ostatni
 
-			/*foreach (var execBox in conn.ExecBoxes)
+            /*foreach (var execBox in conn.ExecBoxes)
 			{
 				if (!execBox.Box.Processed)
 				{
@@ -959,68 +974,68 @@ namespace DominoVisualizer
 			}*/
 
 
-			foreach (var execBox in conn.ExecBoxes)
-			{
-				if (!processedBoxes.Contains(execBox.Box.ID))
-				{
-					processedBoxes.Add(execBox.Box.ID);
+            foreach (var execBox in conn.ExecBoxes)
+            {
+                if (!processedBoxes.Contains(execBox.Box.ID))
+                {
+                    processedBoxes.Add(execBox.Box.ID);
 
-					//var cns = execBox.Box.Connections.OrderBy(a => (a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr) || a.IsDelayed || a.FromBoxConnectIDStr.ToLower().Contains("open") || a.FromBoxConnectIDStr.ToLower().Contains("start")) ? 0 : 1).ToList();
-					var cns = execBox.Box.Connections
-						.OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
-						.ThenByDescending(a => regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed)
-						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
-						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
-						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
-						.ToList();
+                    //var cns = execBox.Box.Connections.OrderBy(a => (a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr) || a.IsDelayed || a.FromBoxConnectIDStr.ToLower().Contains("open") || a.FromBoxConnectIDStr.ToLower().Contains("start")) ? 0 : 1).ToList();
+                    var cns = execBox.Box.Connections
+                        .OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
+                        .ThenByDescending(a => regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed)
+                        .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
+                        .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
+                        .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
+                        .ToList();
 
-					foreach (var connection in cns)
-					{
-						if (connection.ID != null)
-							ProcessExecBoxes(connection.ID);
+                    foreach (var connection in cns)
+                    {
+                        if (connection.ID != null)
+                            ProcessExecBoxes(connection.ID);
 
-						foreach (var subConn in connection.SubConnections)
-							ProcessExecBoxes(subConn.ID);
-					}
-				}
-			}
-		}
+                        foreach (var subConn in connection.SubConnections)
+                            ProcessExecBoxes(subConn.ID);
+                    }
+                }
+            }
+        }
 
-		private void GetExternalFuncData(string funcName, string parentFunc)
-		{
-			var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
+        private void GetExternalFuncData(string funcName, string parentFunc)
+        {
+            var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
 
-			string l = "";
+            string l = "";
 
-			while (l != "function export:" + funcName + "()")
-			{
-				l = readerParams.ReadLine();
-			}
+            while (l != "function export:" + funcName + "()")
+            {
+                l = readerParams.ReadLine();
+            }
 
-			string func = funcName;
-			string[] funcParts = func.Split("_");
-			func = funcParts[0] + "_" + funcParts[1];
+            string func = funcName;
+            string[] funcParts = func.Split("_");
+            func = funcParts[0] + "_" + funcParts[1];
 
-			Dictionary<string, string> assigns = new();
-			while ((l = readerParams.ReadLine().Trim()) != "end")
-			{
-				if (l.StartsWith('l') && l.Contains('=') && !l.Contains(':') && !l.Contains("GetDataOutValue"))
-				{
-					string[] sp = l.Split('=');
-					string vn = sp[0].Trim();
+            Dictionary<string, string> assigns = new();
+            while ((l = readerParams.ReadLine().Trim()) != "end")
+            {
+                if (l.StartsWith('l') && l.Contains('=') && !l.Contains(':') && !l.Contains("GetDataOutValue"))
+                {
+                    string[] sp = l.Split('=');
+                    string vn = sp[0].Trim();
 
-					if (assigns.ContainsKey(vn))
-						assigns[vn] = sp[1].Trim();
-					else
-						assigns.Add(vn, sp[1].Trim());
-				}
+                    if (assigns.ContainsKey(vn))
+                        assigns[vn] = sp[1].Trim();
+                    else
+                        assigns.Add(vn, sp[1].Trim());
+                }
 
-				if (l.Contains("GetDataOutValue"))
-				{
-					string[] sp = l.Split('=');
+                if (l.Contains("GetDataOutValue"))
+                {
+                    string[] sp = l.Split('=');
 
-					string box = sp[1].Trim().Split(':')[0];
-					/*string boxName = assigns[box];
+                    string box = sp[1].Trim().Split(':')[0];
+                    /*string boxName = assigns[box];
 					if (boxName.StartsWith("Boxes["))
 					{
 						if (lastBoxesAssign.ContainsKey(boxName))
@@ -1031,69 +1046,69 @@ namespace DominoVisualizer
 						//boxName = func.Replace("ex_", "en_");
 					}*/
 
-					string var = sp[0].Trim();
-					string varAssign = sp[1].Trim();
+                    string var = sp[0].Trim();
+                    string varAssign = sp[1].Trim();
 
-					foreach (var kvAssigns in assigns)
-					{
-						string t = kvAssigns.Value;
+                    foreach (var kvAssigns in assigns)
+                    {
+                        string t = kvAssigns.Value;
 
-						if (kvAssigns.Value.StartsWith("Boxes["))
-							t = func.Replace("ex_", "en_");
+                        if (kvAssigns.Value.StartsWith("Boxes["))
+                            t = func.Replace("ex_", "en_");
 
-						var = var.Replace(kvAssigns.Key, t);
-						varAssign = varAssign.Replace(kvAssigns.Key, t);
-					}
+                        var = var.Replace(kvAssigns.Key, t);
+                        varAssign = varAssign.Replace(kvAssigns.Key, t);
+                    }
 
-					if (!dominoConnectors[parentFunc].SetVariables.Any(a => a.Name == var))
-						dominoConnectors[parentFunc].SetVariables.Add(new() { Name = var, Value = varAssign } /*+ GetSetVarOutName(varAssign)*/);
-				}
-			}
+                    if (!dominoConnectors[parentFunc].SetVariables.Any(a => a.Name == var))
+                        dominoConnectors[parentFunc].SetVariables.Add(new() { Name = var, Value = varAssign } /*+ GetSetVarOutName(varAssign)*/);
+                }
+            }
 
-			readerParams.Close();
-		}
+            readerParams.Close();
+        }
 
-		private List<DominoDict> GetParamsFuncData(string funcName)
-		{
-			List<DominoDict> prm = new();
+        private List<DominoDict> GetParamsFuncData(string funcName)
+        {
+            List<DominoDict> prm = new();
 
-			var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
+            var readerParams = new StreamReader(new MemoryStream(fileBytes), System.Text.Encoding.UTF8);
 
-			string l = "";
+            string l = "";
 
-			while (l != "function export:" + funcName + "()")
-			{
-				l = readerParams.ReadLine();
-			}
+            while (l != "function export:" + funcName + "()")
+            {
+                l = readerParams.ReadLine();
+            }
 
-			Dictionary<string, string> assigns = new();
-			while ((l = readerParams.ReadLine()) != "end")
-			{
-				l = l.Trim();
+            Dictionary<string, string> assigns = new();
+            while ((l = readerParams.ReadLine()) != "end")
+            {
+                l = l.Trim();
 
-				if (l.StartsWith('l') && l.Contains('=') && !l.Contains(':') && !l.Contains("GetDataOutValue"))
-				{
-					string[] sp = l.Split('=');
-					string vv = sp[0].Trim();
-					string vp = sp[1].Trim();
+                if (l.StartsWith('l') && l.Contains('=') && !l.Contains(':') && !l.Contains("GetDataOutValue"))
+                {
+                    string[] sp = l.Split('=');
+                    string vv = sp[0].Trim();
+                    string vp = sp[1].Trim();
 
-					if (vp.StartsWith("Boxes["))
-					{
-						if (lastBoxesAssign.ContainsKey(vp))
-							vp = lastBoxesAssign[vp].Replace("ex_", "en_");
-					}
+                    if (vp.StartsWith("Boxes["))
+                    {
+                        if (lastBoxesAssign.ContainsKey(vp))
+                            vp = lastBoxesAssign[vp].Replace("ex_", "en_");
+                    }
 
-					if (assigns.ContainsKey(vv))
-						assigns[vv] = vp;
-					else
-						assigns.Add(vv, vp);
-				}
-				else
-				if (l.StartsWith("params = {") && l != "params = {}")
-				{
-					//while (!(l = readerParams.ReadLine().Trim()).StartsWith("}"))
+                    if (assigns.ContainsKey(vv))
+                        assigns[vv] = vp;
+                    else
+                        assigns.Add(vv, vp);
+                }
+                else
+                if (l.StartsWith("params = {") && l != "params = {}")
+                {
+                    //while (!(l = readerParams.ReadLine().Trim()).StartsWith("}"))
 
-					/*if (l.Contains("GetDataOutValue"))
+                    /*if (l.Contains("GetDataOutValue"))
 						foreach (var kvAssigns in assigns)
 						{
 							string t = kvAssigns.Value;
@@ -1105,65 +1120,65 @@ namespace DominoVisualizer
 						}
 					*/
 
-					DominoDict parsePart()
-					{
-						if (l.Contains("GetDataOutValue"))
-							foreach (var kvAssigns in assigns)
-							{
-								l = l.Replace(kvAssigns.Key, kvAssigns.Value);
-							}
+                    DominoDict parsePart()
+                    {
+                        if (l.Contains("GetDataOutValue"))
+                            foreach (var kvAssigns in assigns)
+                            {
+                                l = l.Replace(kvAssigns.Key, kvAssigns.Value);
+                            }
 
-						string num = "";
-						string val;
+                        string num = "";
+                        string val;
 
-						if (l.Contains('='))
-						{
-							string[] cData = l.Split('=');
-							num = cData[0].Replace("[", "").Replace("]", "").Trim();
-							val = cData[1].Trim();
-						}
-						else
-							val = l.Trim();
+                        if (l.Contains('='))
+                        {
+                            string[] cData = l.Split('=');
+                            num = cData[0].Replace("[", "").Replace("]", "").Trim();
+                            val = cData[1].Trim();
+                        }
+                        else
+                            val = l.Trim();
 
-						if (val.EndsWith("{"))
-						{
-							List<DominoDict> tmpPrm = new();
+                        if (val.EndsWith("{"))
+                        {
+                            List<DominoDict> tmpPrm = new();
 
-							bool metEnding = false;
+                            bool metEnding = false;
 
-							while (!metEnding)
-							{
-								l = readerParams.ReadLine().Trim().TrimEnd(',');
+                            while (!metEnding)
+                            {
+                                l = readerParams.ReadLine().Trim().TrimEnd(',');
 
-								/*if (!l.Contains("{}"))
+                                /*if (!l.Contains("{}"))
 								{
 									if (l.Contains('{')) mB++;
 									if (l.StartsWith('}')) mB--;
 									if (l.StartsWith('}') && mB == 0) metEnding = true;
 								}*/
 
-								if (l == "}") metEnding = true;
+                                if (l == "}") metEnding = true;
 
-								if (l != "{" && l != "}")
-									tmpPrm.Add(parsePart());
-							}
+                                if (l != "{" && l != "}")
+                                    tmpPrm.Add(parsePart());
+                            }
 
-							return new() { Name = num, ValueArray = tmpPrm };
-						}
-						else if (val.EndsWith("{}"))
+                            return new() { Name = num, ValueArray = tmpPrm };
+                        }
+                        else if (val.EndsWith("{}"))
                         {
                             return new() { Name = num, ValueArray = new() };
                         }
-						else
-						{
+                        else
+                        {
                             val = val.Replace(",", "");
-							return new() { Name = num, Value = val };
-						}
-					}
+                            return new() { Name = num, Value = val };
+                        }
+                    }
 
-					prm = parsePart().ValueArray;
+                    prm = parsePart().ValueArray;
 
-					/*if (l.Contains("GetDataOutValue"))
+                    /*if (l.Contains("GetDataOutValue"))
 						foreach (var kvAssigns in assigns)
 						{
 							l = l.Replace(kvAssigns.Key, kvAssigns.Value);
@@ -1203,146 +1218,146 @@ namespace DominoVisualizer
 
 						prm.Add(new() { Name = num.ToString(), Value = cData[1] });
 					}*/
-				}
-			}
+                }
+            }
 
-			readerParams.Close();
+            readerParams.Close();
 
-			return prm;
-		}
+            return prm;
+        }
 
-		private string GetSetVarOutName(string inputStr)
-		{
-			if (inputStr.Contains("GetDataOutValue"))
-			{
-				string[] varAssignSp = inputStr.Split(':');
+        private string GetSetVarOutName(string inputStr)
+        {
+            if (inputStr.Contains("GetDataOutValue"))
+            {
+                string[] varAssignSp = inputStr.Split(':');
 
-				if (!dominoBoxes.ContainsKey(varAssignSp[0]))
-					return "";
+                if (!dominoBoxes.ContainsKey(varAssignSp[0]))
+                    return "";
 
-				int dataOutParam = int.Parse(varAssignSp[1].Replace("GetDataOutValue(", "").Replace(")", ""));
-				var boxNameP = dominoBoxes[varAssignSp[0]].Name;
+                int dataOutParam = int.Parse(varAssignSp[1].Replace("GetDataOutValue(", "").Replace(")", ""));
+                var boxNameP = dominoBoxes[varAssignSp[0]].Name;
 
-				if (!regBoxes.ContainsKey(boxNameP))
-					return "";
+                if (!regBoxes.ContainsKey(boxNameP))
+                    return "";
 
-				string varBoxOutData = inputStr + " - " + regBoxes[boxNameP].DatasOut[dataOutParam].Name;
+                string varBoxOutData = inputStr + " - " + regBoxes[boxNameP].DatasOut[dataOutParam].Name;
 
-				return varBoxOutData;
-			}
-			else
-				return inputStr;
-		}
+                return varBoxOutData;
+            }
+            else
+                return inputStr;
+        }
 
-		private string ParamsAsString(DominoDict p, bool export = false, int ind = 1)
-		{
-			string v = "";
+        private string ParamsAsString(DominoDict p, bool export = false, int ind = 1)
+        {
+            string v = "";
 
-			string indd = "";
-			for (int i = 0; i < ind; i++)
-				indd += "  ";
+            string indd = "";
+            for (int i = 0; i < ind; i++)
+                indd += "  ";
 
-			if (p.ValueArray.Any())
-			{
-				v += "{" + (export ? Environment.NewLine + "  " + indd : "");
+            if (p.ValueArray.Any())
+            {
+                v += "{" + (export ? Environment.NewLine + "  " + indd : "");
 
-				bool a = false;
-				foreach (var s in p.ValueArray)
-				{
-					v += (a ? ("," + (export ? Environment.NewLine + "  " + indd : " ")) : "") + (s.Name == "" ? "" : s.Name + " = ");
+                bool a = false;
+                foreach (var s in p.ValueArray)
+                {
+                    v += (a ? ("," + (export ? Environment.NewLine + "  " + indd : " ")) : "") + (s.Name == "" ? "" : s.Name + " = ");
 
-					v += ParamsAsString(s, export, ind++);
+                    v += ParamsAsString(s, export, ind++);
 
-					a = true;
-				}
+                    a = true;
+                }
 
-				v += (export ? Environment.NewLine + indd : "") + "}";
-			}
-			else if (p.Value == null && !p.ValueArray.Any())
-			{
-				v = "{}";
-			}
-			else
-			{
-				v = export ? p.Value : GetSetVarOutName(p.Value);
-			}
+                v += (export ? Environment.NewLine + indd : "") + "}";
+            }
+            else if (p.Value == null && !p.ValueArray.Any())
+            {
+                v = "{}";
+            }
+            else
+            {
+                v = export ? p.Value : GetSetVarOutName(p.Value);
+            }
 
-			return v;
-		}
+            return v;
+        }
 
-		private void ParseConnectionsArray(string l, DominoConnector parentConn)
-		{
-			if (l.Contains("[") && l.Contains("=") && !l.Contains("{") && !l.Contains("}"))
-			{
-				string[] cData = l.Split('=');
-				int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
-				cData[1] = cData[1].Replace(",", "").Replace("self.", "").Trim();
+        private void ParseConnectionsArray(string l, DominoConnector parentConn)
+        {
+            if (l.Contains("[") && l.Contains("=") && !l.Contains("{") && !l.Contains("}"))
+            {
+                string[] cData = l.Split('=');
+                int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
+                cData[1] = cData[1].Replace(",", "").Replace("self.", "").Trim();
 
-				DominoConnector conn = new();
-				conn.ID = cData[1];
-				conn.FromBoxConnectID = num;
-				//conn.FromBoxes.Add(tempBox);
+                DominoConnector conn = new();
+                conn.ID = cData[1];
+                conn.FromBoxConnectID = num;
+                //conn.FromBoxes.Add(tempBox);
 
-				if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
-				{
-					conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
-				}
+                if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
+                {
+                    conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
+                }
 
-				if (parentConn == null)
-					tempBox.Connections.Add(conn);
-				else
-					parentConn.SubConnections.Add(conn);
+                if (parentConn == null)
+                    tempBox.Connections.Add(conn);
+                else
+                    parentConn.SubConnections.Add(conn);
 
-				dominoConnectors.Add(conn.ID, conn);
-			}
+                dominoConnectors.Add(conn.ID, conn);
+            }
 
-			else if (l.Contains("[") && l.Contains("=") && l.Contains("{"))
-			{
-				string[] cData = l.Split('=');
-				int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
+            else if (l.Contains("[") && l.Contains("=") && l.Contains("{"))
+            {
+                string[] cData = l.Split('=');
+                int num = int.Parse(cData[0].Replace("[", "").Replace("]", "").Trim());
 
-				DominoConnector conn = new();
-				conn.FromBoxConnectID = num;
-				//conn.FromBoxes.Add(tempBox);
+                DominoConnector conn = new();
+                conn.FromBoxConnectID = num;
+                //conn.FromBoxes.Add(tempBox);
 
-				if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
-				{
-					conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
-				}
+                if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
+                {
+                    conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
+                }
 
-				if (parentConn == null)
-					tempBox.Connections.Add(conn);
-				else
-					parentConn.SubConnections.Add(conn);
+                if (parentConn == null)
+                    tempBox.Connections.Add(conn);
+                else
+                    parentConn.SubConnections.Add(conn);
 
-				while (!(l = reader.ReadLine().Trim()).StartsWith("}") && !l.EndsWith("}"))
-				{
-					ParseConnectionsArray(l, conn);
-				}
-			}
+                while (!(l = reader.ReadLine().Trim()).StartsWith("}") && !l.EndsWith("}"))
+                {
+                    ParseConnectionsArray(l, conn);
+                }
+            }
 
-			else if (l.StartsWith("string = "))
-			{
-				string fncName = l.Replace("string = ", "").Replace(",", "").Replace("\"", "").Trim();
-				parentConn.FromBoxConnectIDStr = fncName;
-			}
+            else if (l.StartsWith("string = "))
+            {
+                string fncName = l.Replace("string = ", "").Replace(",", "").Replace("\"", "").Trim();
+                parentConn.FromBoxConnectIDStr = fncName;
+            }
 
-			// parse name of func
-			else if (l.StartsWith("value = "))
-			{
-				parentConn.ID = l.Replace("value = ", "").Replace(",", "").Replace("self.", "").Trim();
-				dominoConnectors.Add(parentConn.ID, parentConn);
-			}
-		}
+            // parse name of func
+            else if (l.StartsWith("value = "))
+            {
+                parentConn.ID = l.Replace("value = ", "").Replace(",", "").Replace("self.", "").Trim();
+                dominoConnectors.Add(parentConn.ID, parentConn);
+            }
+        }
 
         class LinesVal
         {
-			public LinesVal(string point1, string point2, ArrowLine ui)
-			{
-				Point1 = point1;
-				Point2 = point2;
-				UI = ui;
-			}
+            public LinesVal(string point1, string point2, ArrowLine ui)
+            {
+                Point1 = point1;
+                Point2 = point2;
+                UI = ui;
+            }
 
             public string Point1 { set; get; }
 
@@ -1352,12 +1367,12 @@ namespace DominoVisualizer
         }
 
         List<LinesVal> lines = new();
-		int width = 300;
+        int width = 300;
         int spaceX = 400;
-		private List<Color> linesColors = new();
+        private List<Color> linesColors = new();
 
-		private void AddColors()
-		{
+        private void AddColors()
+        {
             // Colors.Red, Colors.Yellow, Colors.DodgerBlue, Colors.Green, Colors.White, Colors.Orange
             /*var a = typeof(Colors).GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public)
                                 .Select(c => (Color)c.GetValue(null, null))
@@ -1391,20 +1406,20 @@ namespace DominoVisualizer
             linesColors.Add((Color)ColorConverter.ConvertFromString("#4caf50")); // green
             linesColors.Add((Color)ColorConverter.ConvertFromString("#ffeb3b")); // yellow
             linesColors.Add((Color)ColorConverter.ConvertFromString("#e91e63")); // pink
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#9c27b0")); // purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#673ab7")); // deep purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#3f51b5")); // indigo
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#03a9f4")); // light blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#00bcd4")); // cyan
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#009688")); // teal
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#8bc34a")); // light green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#cddc39")); // lime
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc107")); // amber
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9800")); // orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff5722")); // deep orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#795548")); // brown
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#9e9e9e")); // grey
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#607d8b")); // blue grey
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#9c27b0")); // purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#673ab7")); // deep purple
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#3f51b5")); // indigo
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#03a9f4")); // light blue
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#00bcd4")); // cyan
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#009688")); // teal
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#8bc34a")); // light green
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#cddc39")); // lime
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc107")); // amber
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9800")); // orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#ff5722")); // deep orange
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#795548")); // brown
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#9e9e9e")); // grey
+            linesColors.Add((Color)ColorConverter.ConvertFromString("#607d8b")); // blue grey
 
             linesColors.Add((Color)ColorConverter.ConvertFromString("#ef9a9a")); // red
             linesColors.Add((Color)ColorConverter.ConvertFromString("#90caf9")); // blue
@@ -1447,26 +1462,26 @@ namespace DominoVisualizer
             linesColors.Add((Color)ColorConverter.ConvertFromString("#263238")); // blue grey
         }
 
-		private void HandleMoving(string id, double x, double y)
-		{
-			foreach (var line in lines)
-			{
-				if (line.Point1 == id + "-P1" || line.Point1 == id + "-P2")
-				{
-					line.UI.X1 = x + width;
-					line.UI.Y1 = y;
-				}
-				if (line.Point2 == id + "-P2" || line.Point2 == id + "-P1")
-				{
-					line.UI.X2 = x;
-					line.UI.Y2 = y;
-				}
-			}
+        private void HandleMoving(string id, double x, double y)
+        {
+            foreach (var line in lines)
+            {
+                if (line.Point1 == id + "-P1" || line.Point1 == id + "-P2")
+                {
+                    line.UI.X1 = x + width;
+                    line.UI.Y1 = y;
+                }
+                if (line.Point2 == id + "-P2" || line.Point2 == id + "-P1")
+                {
+                    line.UI.X2 = x;
+                    line.UI.Y2 = y;
+                }
+            }
 
-			wasEdited = true;
-		}
+            wasEdited = true;
+        }
 
-		private void HandleZoomed(int zoom)
+        private void HandleZoomed(int zoom)
         {
             foreach (var b in dominoBoxes.Values)
             {
@@ -1492,173 +1507,173 @@ namespace DominoVisualizer
                 b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
         }
 
-		private void HandleMoved()
-		{
-			void setGrid(int x, int y)
-			{
-				if (x < canvas.MinX)
-					canvas.MinX = x;
-					
-				if (x > canvas.MaxX)
-					canvas.MaxX = x;
-					
-				if (y < canvas.MinY)
-					canvas.MinY = y;
-					
-				if (y > canvas.MaxY)
-					canvas.MaxY = y;
+        private void HandleMoved()
+        {
+            void setGrid(int x, int y)
+            {
+                if (x < canvas.MinX)
+                    canvas.MinX = x;
 
-				canvas.MinX = (int)Math.Round(canvas.MinX / 100d, 0) * 100;
-				canvas.MaxX = (int)Math.Round(canvas.MaxX / 100d, 0) * 100;
-				canvas.MinY = (int)Math.Round(canvas.MinY / 100d, 0) * 100;
-				canvas.MaxY = (int)Math.Round(canvas.MaxY / 100d, 0) * 100;
-			}
+                if (x > canvas.MaxX)
+                    canvas.MaxX = x;
 
-			canvas.ResetGridArea();
+                if (y < canvas.MinY)
+                    canvas.MinY = y;
 
-			foreach (var b in dominoBoxes.Values)
-			{
+                if (y > canvas.MaxY)
+                    canvas.MaxY = y;
+
+                canvas.MinX = (int)Math.Round(canvas.MinX / 100d, 0) * 100;
+                canvas.MaxX = (int)Math.Round(canvas.MaxX / 100d, 0) * 100;
+                canvas.MinY = (int)Math.Round(canvas.MinY / 100d, 0) * 100;
+                canvas.MaxY = (int)Math.Round(canvas.MaxY / 100d, 0) * 100;
+            }
+
+            canvas.ResetGridArea();
+
+            foreach (var b in dominoBoxes.Values)
+            {
                 var a = canvas.Transform2(new(Canvas.GetLeft(b.Widget), Canvas.GetTop(b.Widget)));
-				setGrid((int)a.X, (int)a.Y);
-			}
+                setGrid((int)a.X, (int)a.Y);
+            }
 
-			foreach (var b in dominoConnectors.Values)
-			{
+            foreach (var b in dominoConnectors.Values)
+            {
                 var a = canvas.Transform2(new(Canvas.GetLeft(b.Widget), Canvas.GetTop(b.Widget)));
-				setGrid((int)a.X, (int)a.Y);
-			}
+                setGrid((int)a.X, (int)a.Y);
+            }
 
-			canvas.MakeGrid();
-			canvas.RefreshChilds();
-		}
+            canvas.MakeGrid();
+            canvas.RefreshChilds();
+        }
 
-		private void CleanChilds(UIElement except)
-		{
-			foreach (var child in canvas.Children)
-				((UIElement)child).Opacity = 1;
+        private void CleanChilds(UIElement except)
+        {
+            foreach (var child in canvas.Children)
+                ((UIElement)child).Opacity = 1;
 
-			if (except is Widget || except is ArrowLine)
-				foreach (var child in canvas.Children)
-					if (child != except && (child is Widget || child is ArrowLine))
-						((UIElement)child).Opacity = 0.25;
-		}
+            if (except is Widget || except is ArrowLine)
+                foreach (var child in canvas.Children)
+                    if (child != except && (child is Widget || child is ArrowLine))
+                        ((UIElement)child).Opacity = 0.25;
+        }
 
-		private void MarkBox(string boxID)
-		{
-			foreach (var line in lines)
-			{
-				if (
-					(line.Point1 == boxID + "-P1" || line.Point1 == boxID + "-P2") ||
-					(line.Point2 == boxID + "-P2" || line.Point2 == boxID + "-P1")
-					)
-				{
-					line.UI.Opacity = 1;
+        private void MarkBox(string boxID)
+        {
+            foreach (var line in lines)
+            {
+                if (
+                    (line.Point1 == boxID + "-P1" || line.Point1 == boxID + "-P2") ||
+                    (line.Point2 == boxID + "-P2" || line.Point2 == boxID + "-P1")
+                    )
+                {
+                    line.UI.Opacity = 1;
 
-					List<string> lnb = new()
-									{
-										line.Point1.Replace("-P1", ""),
-										line.Point1.Replace("-P2", ""),
-										line.Point2.Replace("-P1", ""),
-										line.Point2.Replace("-P2", "")
-									};
+                    List<string> lnb = new()
+                                    {
+                                        line.Point1.Replace("-P1", ""),
+                                        line.Point1.Replace("-P2", ""),
+                                        line.Point2.Replace("-P1", ""),
+                                        line.Point2.Replace("-P2", "")
+                                    };
 
-					foreach (var child2 in canvas.Children)
-						if (child2 is Widget chW2)
-							if (lnb.Contains(chW2.ID))
-								chW2.Opacity = 1;
-				}
-			}
-		}
+                    foreach (var child2 in canvas.Children)
+                        if (child2 is Widget chW2)
+                            if (lnb.Contains(chW2.ID))
+                                chW2.Opacity = 1;
+                }
+            }
+        }
 
-		private void W_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-		{
-			if (e.ClickCount == 2)
-			{
-				CleanChilds((UIElement)e.Source);
+        private void W_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                CleanChilds((UIElement)e.Source);
 
-				if (e.Source is Widget)
-					foreach (var child in canvas.Children)
-						if (child == (UIElement)e.Source && child is Widget chW)
-							MarkBox(chW.ID);
+                if (e.Source is Widget)
+                    foreach (var child in canvas.Children)
+                        if (child == (UIElement)e.Source && child is Widget chW)
+                            MarkBox(chW.ID);
 
-				if (e.Source is ArrowLine)
-				{
-					foreach (var line in lines)
-					{
-						if (line.UI == e.Source)
-						{
-							List<string> lnb = new()
-							{
-								line.Point1.Replace("-P1", ""),
-								line.Point1.Replace("-P2", ""),
-								line.Point2.Replace("-P1", ""),
-								line.Point2.Replace("-P2", "")
-							};
+                if (e.Source is ArrowLine)
+                {
+                    foreach (var line in lines)
+                    {
+                        if (line.UI == e.Source)
+                        {
+                            List<string> lnb = new()
+                            {
+                                line.Point1.Replace("-P1", ""),
+                                line.Point1.Replace("-P2", ""),
+                                line.Point2.Replace("-P1", ""),
+                                line.Point2.Replace("-P2", "")
+                            };
 
-							foreach (var child in canvas.Children)
-								if (child is Widget chW)
-									if (lnb.Contains(chW.ID))
-										chW.Opacity = 1;
-						}
-					}
-				}
-			}
-		}
+                            foreach (var child in canvas.Children)
+                                if (child is Widget chW)
+                                    if (lnb.Contains(chW.ID))
+                                        chW.Opacity = 1;
+                        }
+                    }
+                }
+            }
+        }
 
-		public string Search(string input)
-		{
-			bool found = false;
+        public string Search(string input)
+        {
+            bool found = false;
 
-			foreach (var child in canvas.Children)
-				if (child is Widget w)
-					if (w.ID == input)
-					{
-						CleanChilds(w);
-						MarkBox(w.ID);
-						found = true;
-					}
+            foreach (var child in canvas.Children)
+                if (child is Widget w)
+                    if (w.ID == input)
+                    {
+                        CleanChilds(w);
+                        MarkBox(w.ID);
+                        found = true;
+                    }
 
-			if (!found)
-				return input + " was not found.";
+            if (!found)
+                return input + " was not found.";
 
-			return "";
-		}
+            return "";
+        }
 
-		private void OnOpenClick(object sender, RoutedEventArgs e)
-		{
+        private void OnOpenClick(object sender, RoutedEventArgs e)
+        {
             string openParam = (string)((Button)sender).Tag;
 
-			AskDialog("Open", "Open the selected Domino script?", () =>
-			{
-				File.WriteAllBytes(runPath + "\\tmp", regBoxes[openParam].LuaBytes);
+            AskDialog("Open", "Open the selected Domino script?", () =>
+            {
+                File.WriteAllBytes(runPath + "\\tmp", regBoxes[openParam].LuaBytes);
 
-				ProcessStartInfo startInfo = new ProcessStartInfo(runPath + "\\DominoVisualizer.exe");
-				startInfo.UseShellExecute = true;
-				startInfo.Arguments = "-fcver=" + game + " -fileFolder=" + file.Replace(Path.GetFileName(file), runPath + "\\tmp") + " -bytes=" + runPath + "\\tmp" + " -fn=" + openParam;
-				Process.Start(startInfo);
-			});
-		}
+                ProcessStartInfo startInfo = new ProcessStartInfo(runPath + "\\DominoVisualizer.exe");
+                startInfo.UseShellExecute = true;
+                startInfo.Arguments = "-fcver=" + game + " -fileFolder=" + file.Replace(Path.GetFileName(file), runPath + "\\tmp") + " -bytes=" + runPath + "\\tmp" + " -fn=" + openParam;
+                Process.Start(startInfo);
+            });
+        }
 
         private Widget wiMetaDataIn = null;
         private Widget wiMetaDataOut = null;
         private Widget wiMetaControlIn = null;
         private Widget wiMetaControlOut = null;
-		private Widget wiGlobalVars = null;
-		private Widget wiResources = null;
+        private Widget wiGlobalVars = null;
+        private Widget wiResources = null;
 
         private void Draw(bool workspace = false)
-		{
-			canvas.Moving += new MovingEventHandler(HandleMoving);
-			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
+        {
+            canvas.Moving += new MovingEventHandler(HandleMoving);
+            canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
             canvas.MouseLeftButtonDown += W_MouseDoubleClick;
-			canvas.Moved += new MovedEventHandler(HandleMoved);
+            canvas.Moved += new MovedEventHandler(HandleMoved);
 
-			List<Point> selectedPoints = new();
-			Dictionary<string, Point> linesPoints = new();
-			List<Tuple<string, string, int>> linesJoin = new();
+            List<Point> selectedPoints = new();
+            Dictionary<string, Point> linesPoints = new();
+            List<Tuple<string, string, int>> linesJoin = new();
 
-			int staticBoxesHeight = 0;
-			int staticBoxesHeightT = 0;
+            int staticBoxesHeight = 0;
+            int staticBoxesHeightT = 0;
 
             // ==============================================================================
 
@@ -1667,15 +1682,15 @@ namespace DominoVisualizer
             wiMetaControlIn.Header.Foreground = Brushes.White;
             wiMetaControlIn.Width = width;
             wiMetaControlIn.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaControlIn.delBtn.Visibility = Visibility.Hidden;
-			wiMetaControlIn.DisableMove = true;
+            wiMetaControlIn.delBtn.Visibility = Visibility.Hidden;
+            wiMetaControlIn.DisableMove = true;
             canvas.Children.Add(wiMetaControlIn);
             Canvas.SetLeft(wiMetaControlIn, 0);
             Canvas.SetTop(wiMetaControlIn, 0);
             Panel.SetZIndex(wiMetaControlIn, 30);
 
             staticBoxesHeightT = 30;
-            foreach (var inControl in thisMetadata.ControlsIn)
+            foreach (var inControl in dominoGraphs[selGraph].Metadata.ControlsIn)
             {
                 DrawMetaControlIn(inControl);
                 staticBoxesHeightT += 50;
@@ -1691,7 +1706,7 @@ namespace DominoVisualizer
             wiMetaControlOut.Header.Foreground = Brushes.White;
             wiMetaControlOut.Width = width;
             wiMetaControlOut.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaControlOut.delBtn.Visibility = Visibility.Hidden;
+            wiMetaControlOut.delBtn.Visibility = Visibility.Hidden;
             wiMetaControlOut.DisableMove = true;
             canvas.Children.Add(wiMetaControlOut);
             Canvas.SetLeft(wiMetaControlOut, spaceX);
@@ -1699,7 +1714,7 @@ namespace DominoVisualizer
             Panel.SetZIndex(wiMetaControlOut, 30);
 
             staticBoxesHeightT = 30;
-            foreach (var inControl in thisMetadata.ControlsOut)
+            foreach (var inControl in dominoGraphs[selGraph].Metadata.ControlsOut)
             {
                 DrawMetaControlOut(inControl);
                 staticBoxesHeightT += 50;
@@ -1719,39 +1734,39 @@ namespace DominoVisualizer
             wiMetaDataIn.DisableMove = true;
             canvas.Children.Add(wiMetaDataIn);
             Canvas.SetLeft(wiMetaDataIn, spaceX * 2);
-			Canvas.SetTop(wiMetaDataIn, 0);
+            Canvas.SetTop(wiMetaDataIn, 0);
             Panel.SetZIndex(wiMetaDataIn, 30);
 
             wiMetaDataIn.list.Children.Add(DrawBtn("Add new", "datain", AddMetadataInfo));
 
             staticBoxesHeightT = 50;
-			foreach (var inData in thisMetadata.DatasIn)
-			{
+            foreach (var inData in dominoGraphs[selGraph].Metadata.DatasIn)
+            {
                 DrawMetaDataIn(inData, true);
-				staticBoxesHeightT += 50;
-			}
-			staticBoxesHeight = Math.Max(staticBoxesHeight, staticBoxesHeightT);
+                staticBoxesHeightT += 50;
+            }
+            staticBoxesHeight = Math.Max(staticBoxesHeight, staticBoxesHeightT);
 
-			// ==============================================================================
+            // ==============================================================================
 
-			wiGlobalVars = new Widget();
-			wiGlobalVars.ID = wiGlobalVars.Header.Text = "Global variables";
-			wiGlobalVars.Header.Foreground = Brushes.White;
-			wiGlobalVars.Width = width;
-			wiGlobalVars.HeaderRectangle.Fill = Brushes.Green;
+            wiGlobalVars = new Widget();
+            wiGlobalVars.ID = wiGlobalVars.Header.Text = "Global variables";
+            wiGlobalVars.Header.Foreground = Brushes.White;
+            wiGlobalVars.Width = width;
+            wiGlobalVars.HeaderRectangle.Fill = Brushes.Green;
             wiGlobalVars.delBtn.Visibility = Visibility.Hidden;
             wiGlobalVars.DisableMove = true;
             canvas.Children.Add(wiGlobalVars);
-			Canvas.SetLeft(wiGlobalVars, spaceX * 3);
-			Canvas.SetTop(wiGlobalVars, 0);
+            Canvas.SetLeft(wiGlobalVars, spaceX * 3);
+            Canvas.SetTop(wiGlobalVars, 0);
             Panel.SetZIndex(wiGlobalVars, 30);
 
             wiGlobalVars.list.Children.Add(DrawBtn("Add new", "globalvar", AddMetadataInfo));
 
-			staticBoxesHeightT = 50;
+            staticBoxesHeightT = 50;
             foreach (var var in globalVariables)
             {
-				DrawGlobalVar(var);
+                DrawGlobalVar(var);
                 staticBoxesHeightT += 40;
             }
             staticBoxesHeight = Math.Max(staticBoxesHeight, staticBoxesHeightT);
@@ -1773,7 +1788,7 @@ namespace DominoVisualizer
             wiMetaDataOut.list.Children.Add(DrawBtn("Add new", "dataout", AddMetadataInfo));
 
             staticBoxesHeightT = 50;
-            foreach (var data in thisMetadata.DatasOut)
+            foreach (var data in dominoGraphs[selGraph].Metadata.DatasOut)
             {
                 DrawMetaDataIn(data, false);
                 staticBoxesHeightT += 50;
@@ -1808,60 +1823,60 @@ namespace DominoVisualizer
 
             staticBoxesHeight = staticBoxesHeight + (300 - (staticBoxesHeight % 300));
 
-			var inConns = dominoConnectors.Values.Where(c => thisMetadata.ControlsIn.Where(a => a.Name == c.ID).Any());
-			foreach (var inConn in inConns)
+            var inConns = dominoConnectors.Values.Where(c => dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == c.ID).Any());
+            foreach (var inConn in inConns)
                 DrawChilds(inConn, 0, staticBoxesHeight + inConn.DrawY);
 
-			foreach (var lineJoin in linesJoin)
-			{
-				if (linesPoints.ContainsKey(lineJoin.Item1) && linesPoints.ContainsKey(lineJoin.Item2))
-				{
-					DrawLine(
-						linesPoints[lineJoin.Item1].X,
-						linesPoints[lineJoin.Item1].Y,
-						linesPoints[lineJoin.Item2].X,
-						linesPoints[lineJoin.Item2].Y,
-						lineJoin.Item1,
-						lineJoin.Item2,
-						lineJoin.Item3
-					);
-				}
-			}
+            foreach (var lineJoin in linesJoin)
+            {
+                if (linesPoints.ContainsKey(lineJoin.Item1) && linesPoints.ContainsKey(lineJoin.Item2))
+                {
+                    DrawLine(
+                        linesPoints[lineJoin.Item1].X,
+                        linesPoints[lineJoin.Item1].Y,
+                        linesPoints[lineJoin.Item2].X,
+                        linesPoints[lineJoin.Item2].Y,
+                        lineJoin.Item1,
+                        lineJoin.Item2,
+                        lineJoin.Item3
+                    );
+                }
+            }
 
-			HandleMoved();
+            HandleMoved();
 
-			// ==============================================================================
+            // ==============================================================================
 
-			Point GetFreePos(double x, double y)
-			{
-				var sameX = selectedPoints.Where(p => p.X == x);
+            Point GetFreePos(double x, double y)
+            {
+                var sameX = selectedPoints.Where(p => p.X == x);
 
-				Point newPoint = new(x, y);
+                Point newPoint = new(x, y);
 
-				if (sameX != null && sameX.Any())
-				{
-					var maxY = sameX.MaxBy(p => p.Y);
+                if (sameX != null && sameX.Any())
+                {
+                    var maxY = sameX.MaxBy(p => p.Y);
 
                     double newY = y;
 
-					while (maxY.Y > newY)
-					{
-						newY += 300;
-					}
+                    while (maxY.Y > newY)
+                    {
+                        newY += 300;
+                    }
 
-					newPoint = new(x, newY);
-				}
+                    newPoint = new(x, newY);
+                }
 
-				selectedPoints.Add(newPoint);
+                selectedPoints.Add(newPoint);
 
-				return newPoint;
-			}
+                return newPoint;
+            }
 
-			void DrawChilds(DominoConnector conn, double currX, double currY)
-			{
-				bool exists = false;
-				//Widget w = null;
-				if (conn.Widget == null)
+            void DrawChilds(DominoConnector conn, double currX, double currY)
+            {
+                bool exists = false;
+                //Widget w = null;
+                if (conn.Widget == null)
                 {
                     if (workspace)
                     {
@@ -1877,30 +1892,30 @@ namespace DominoVisualizer
 
                     DrawConnector(conn, currX, currY, linesJoin, linesPoints);
                 }
-				else
-				{
-					//w = conn.Widget;
-					exists = true;
-				}
+                else
+                {
+                    //w = conn.Widget;
+                    exists = true;
+                }
 
-				if (!workspace)
-					currX += spaceX;
+                if (!workspace)
+                    currX += spaceX;
 
                 double currYBox = currY;
-				int colorBoxSel = 0;
-				foreach (var execBox in conn.ExecBoxes)
-				{
-					if (!exists)
-					{
-						//colorBoxSel = r.Next(0, 16);
+                int colorBoxSel = 0;
+                foreach (var execBox in conn.ExecBoxes)
+                {
+                    if (!exists)
+                    {
+                        //colorBoxSel = r.Next(0, 16);
 
                         DrawExecBoxContainerUI(conn, execBox, linesColors[colorBoxSel]);
 
-						// ===
+                        // ===
 
-						bool execBoxNull = false;
+                        bool execBoxNull = false;
 
-						if (execBox.Box.Widget == null)
+                        if (execBox.Box.Widget == null)
                         {
                             if (workspace)
                             {
@@ -1918,11 +1933,11 @@ namespace DominoVisualizer
 
                             execBoxNull = true;
 
-							foreach (var subConn in execBox.Box.Connections)
-							{
+                            foreach (var subConn in execBox.Box.Connections)
+                            {
                                 DrawBoxConnectors(execBox.Box, subConn, "", linesJoin);
 
-								/*if (subConn.ID != null && subConn.ID != "")
+                                /*if (subConn.ID != null && subConn.ID != "")
 								{
 									StackPanel sp2 = new();
 
@@ -1965,54 +1980,54 @@ namespace DominoVisualizer
 								}
 
 								colorConnSel++;*/
-							}
+                            }
 
-							//currYBox += /*(int)wb.Height +*/ 100;
+                            //currYBox += /*(int)wb.Height +*/ 100;
 
 
-							//var cns = execBox.Box.Connections;
-							var cns = execBox.Box.Connections
-								.OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
-								.ThenByDescending(a => regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed)
-								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
-								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
-								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
-								.ToList();
+                            //var cns = execBox.Box.Connections;
+                            var cns = execBox.Box.Connections
+                                .OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
+                                .ThenByDescending(a => (a.FromBoxConnectID < regBoxes[execBox.Box.Name].ControlsOut.Count ? regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed : false))
+                                .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
+                                .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
+                                .ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
+                                .ToList();
 
-							foreach (var subConn in cns)
-							{
-								if (subConn.ID == null)
-								{
-									foreach (var subSubConn in subConn.SubConnections)
-									{
-										if (subSubConn.ID != null)
+                            foreach (var subConn in cns)
+                            {
+                                if (subConn.ID == null)
+                                {
+                                    foreach (var subSubConn in subConn.SubConnections)
+                                    {
+                                        if (subSubConn.ID != null)
                                             DrawChilds(subSubConn, execBox.Box.DrawX + spaceX, execBox.Box.DrawY + 20);
-										//currY += 300;
-									}
-								}
-								else
-								{
+                                        //currY += 300;
+                                    }
+                                }
+                                else
+                                {
                                     DrawChilds(subConn, execBox.Box.DrawX + spaceX, execBox.Box.DrawY + 20);
-									//currY += 300;
-								}
-							}
-						}
-						/*else
+                                    //currY += 300;
+                                }
+                            }
+                        }
+                        /*else
 						{
 							hadX = execBox.Box.DrawX;
 							hadY = execBox.Box.DrawY;
 						}*/
 
-						if (!linesPoints.ContainsKey(execBox.Box.ID + "-P1"))
-							linesPoints.Add(execBox.Box.ID + "-P1", new(execBox.Box.DrawX, execBox.Box.DrawY));
+                        if (!linesPoints.ContainsKey(execBox.Box.ID + "-P1"))
+                            linesPoints.Add(execBox.Box.ID + "-P1", new(execBox.Box.DrawX, execBox.Box.DrawY));
 
-						if (!linesPoints.ContainsKey(execBox.Box.ID + "-P2"))
-							linesPoints.Add(execBox.Box.ID + "-P2", new(execBox.Box.DrawX + width, execBox.Box.DrawY));
+                        if (!linesPoints.ContainsKey(execBox.Box.ID + "-P2"))
+                            linesPoints.Add(execBox.Box.ID + "-P2", new(execBox.Box.DrawX + width, execBox.Box.DrawY));
 
-						linesJoin.Add(new(conn.ID + "-P1", execBox.Box.ID + "-P1", colorBoxSel));
+                        linesJoin.Add(new(conn.ID + "-P1", execBox.Box.ID + "-P1", colorBoxSel));
 
-						if (execBoxNull)
-							selectedPoints.Add(new(execBox.Box.DrawX, execBox.Box.DrawY + execBox.Box.Height));
+                        if (execBoxNull)
+                            selectedPoints.Add(new(execBox.Box.DrawX, execBox.Box.DrawY + execBox.Box.Height));
 
                         /*if (execBoxNull)
                             if (execBox.Box.Height > 300)
@@ -2025,12 +2040,12 @@ namespace DominoVisualizer
 
                         colorBoxSel++;
                     }
-				}
+                }
 
-				if (!exists)
-					selectedPoints.Add(new(conn.DrawX, conn.DrawY + conn.Height));
+                if (!exists)
+                    selectedPoints.Add(new(conn.DrawX, conn.DrawY + conn.Height));
 
-				/*if (!exists)
+                /*if (!exists)
                     if (conn.Height > 300)
                     {
                         for (int i = 0; i < conn.Height; i += 300)
@@ -2039,7 +2054,7 @@ namespace DominoVisualizer
                         }
                     }*/
 
-				/*if (hadBox)
+                /*if (hadBox)
 					currX += spaceX;
 
 				if (hadX > 0 && hadY > 0)
@@ -2080,50 +2095,51 @@ namespace DominoVisualizer
 							}
 						}
 					}*/
-			}
-		}
+            }
+        }
 
-		private Button DrawBtn(string name, string tag, RoutedEventHandler act)
-		{
+        private Button DrawBtn(string name, string tag, RoutedEventHandler act)
+        {
             Button btn = new Button() { Content = name, Tag = tag, Style = Application.Current.FindResource("BoxBtn") as Style };
             btn.Click += act;
-			return btn;
+            return btn;
         }
 
         private void DrawLine(double x1, double y1, double x2, double y2, string startIndex, string endIndex, int clrIndx)
-		{
-			ArrowLine l = new()
-			{
-				StrokeThickness = 2,
-				Stroke = new SolidColorBrush(clrIndx == -1 ? Color.FromArgb(150, 150, 150, 150) : linesColors[clrIndx]),
-				X1 = x1,
-				Y1 = y1,
-				X2 = x2,
-				Y2 = y2
-			};
-			l.MakeBezier();
-			l.Cursor = Cursors.Hand;
+        {
+            ArrowLine l = new()
+            {
+                StrokeThickness = 2,
+                Stroke = new SolidColorBrush(clrIndx == -1 ? Color.FromArgb(150, 150, 150, 150) : linesColors[clrIndx]),
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2
+            };
+            l.MakeBezier();
+            l.Cursor = Cursors.Hand;
 
-			canvas.Children.Add(l);
+            canvas.Children.Add(l);
             Panel.SetZIndex(l, 40);
 
             lines.Add(new(startIndex, endIndex, l));
-		}
+        }
 
-		private void DrawExecBoxContainerUI(DominoConnector c, ExecBox eb, Color clr)
-		{
-			StackPanel sp = new();
-			DrawExecBoxChildren(c, eb, sp);
-			eb.MainUI = sp;
-			eb.INT_clr = clr;
-			Border b = new() { BorderBrush = new SolidColorBrush(clr), BorderThickness = new(2, 2, 2, 2), Child = sp };
-			c.Widget.list.Children.Add(b);
-			eb.ContainerUI = b;
-		}
-
-		private StackPanel DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
+        private void DrawExecBoxContainerUI(DominoConnector c, ExecBox eb, Color clr)
         {
-            string execStr = "Exec: " + "(" + execBox.Exec.ToString() + ") " + regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name;
+            StackPanel sp = new();
+            DrawExecBoxChildren(c, eb, sp);
+            eb.MainUI = sp;
+            eb.INT_clr = clr;
+            Border b = new() { BorderBrush = new SolidColorBrush(clr), BorderThickness = new(2, 2, 2, 2), Child = sp };
+            c.Widget.list.Children.Add(b);
+            eb.ContainerUI = b;
+        }
+
+        private StackPanel DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
+        {
+            string name = execBox.Exec < regBoxes[execBox.Box.Name].ControlsIn.Count ? regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
+            string execStr = "Exec: " + "(" + execBox.Exec.ToString() + ") " + name;
             if (execBox.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + execBox.DynIntExec.ToString();
 
             Grid gh = new() { Height = 18 };
@@ -2152,8 +2168,10 @@ namespace DominoVisualizer
                     else
                         pv = GetSetVarOutName(param.Value);*/
 
+                    var paramName = int.Parse(param.Name) < regBoxes[execBox.Box.Name].DatasIn.Count ? regBoxes[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
+
                     Grid g = new() { Height = 30 };
-                    g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxes.ContainsKey(execBox.Box.Name) ? regBoxes[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : ""), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+                    g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxes.ContainsKey(execBox.Box.Name) ? paramName : ""), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
                     g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
                     sp.Children.Add(g);
 
@@ -2161,19 +2179,19 @@ namespace DominoVisualizer
                 }
             }
 
-			return sp;
+            return sp;
         }
 
         private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", List<Tuple<string, string, int>> linesJoin = null, bool addLine = true, int selClr = -1)
-		{
+        {
             string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
-			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
+            int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
 
             //colorConnSel = r.Next(0, linesColors.Count);
 
             if (c.ID != null && c.ID != "")
             {
-				c.INT_clr = colorConnSel;
+                c.INT_clr = colorConnSel;
 
                 StackPanel sp2 = new();
 
@@ -2193,9 +2211,9 @@ namespace DominoVisualizer
 
                 box.Height += 20;
 
-				if (linesJoin != null) 
-					linesJoin.Add(new(box.ID + "-P2", c.ID + "-P2", colorConnSel));
-				else if (addLine)
+                if (linesJoin != null)
+                    linesJoin.Add(new(box.ID + "-P2", c.ID + "-P2", colorConnSel));
+                else if (addLine)
                 {
                     var a = canvas.Transform2(new(Canvas.GetLeft(box.Widget), Canvas.GetTop(box.Widget)));
                     var b = canvas.Transform2(new(Canvas.GetLeft(c.Widget), Canvas.GetTop(c.Widget)));
@@ -2218,14 +2236,14 @@ namespace DominoVisualizer
             }
         }
 
-		private void DrawConnector(DominoConnector conn, double currX, double currY, List<Tuple<string, string, int>> linesJoin = null, Dictionary<string, Point> linesPoints = null)
-		{
-            bool isIn = thisMetadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
-			bool isOut = thisMetadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
+        private void DrawConnector(DominoConnector conn, double currX, double currY, List<Tuple<string, string, int>> linesJoin = null, Dictionary<string, Point> linesPoints = null)
+        {
+            bool isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
+            bool isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
 
-			Brush brsh = Brushes.Yellow;
-			if (isIn) brsh = Brushes.Red;
-			if (isOut) brsh = Brushes.Orange;
+            Brush brsh = Brushes.Yellow;
+            if (isIn) brsh = Brushes.Red;
+            if (isOut) brsh = Brushes.Orange;
 
             var w = new Widget();
             w.Header.Text = (isIn ? "ControlIn - " : "") + conn.ID;
@@ -2235,12 +2253,12 @@ namespace DominoVisualizer
             w.ID = conn.ID;
             canvas.Children.Add(w);
 
-			w.delBtn.Tag = conn.ID;
-			w.delBtn.Click += RemoveConector;
+            w.delBtn.Tag = conn.ID;
+            w.delBtn.Click += RemoveConector;
 
-			w.editBtn.Visibility = Visibility.Visible;
-			w.editBtn.Tag = conn.ID;
-			w.editBtn.Click += EditConnectorDialog;
+            w.editBtn.Visibility = Visibility.Visible;
+            w.editBtn.Tag = conn.ID;
+            w.editBtn.Click += EditConnectorDialog;
 
             Canvas.SetLeft(w, currX);
             Canvas.SetTop(w, currY);
@@ -2250,14 +2268,14 @@ namespace DominoVisualizer
             conn.Widget = w;
             conn.Height = 50;
 
-			if (!isOut)
-				w.list.Children.Add(DrawBtn("Add new exec box", conn.ID, AddExecBox));
+            if (!isOut)
+                w.list.Children.Add(DrawBtn("Add new exec box", conn.ID, AddExecBox));
 
             w.list.Children.Add(DrawBtn("Add new set variable", conn.ID, AddConnVar));
 
             foreach (var setVar in conn.SetVariables)
             {
-				DrawConnVariable(conn, setVar);
+                DrawConnVariable(conn, setVar);
                 conn.Height += 34;
             }
 
@@ -2275,15 +2293,15 @@ namespace DominoVisualizer
 
                 conn.Height += 34;
 
-				if (linesJoin != null)
-					linesJoin.Add(new(conn.ID + "-P1", "ControlsOut-P2", -1));
+                if (linesJoin != null)
+                    linesJoin.Add(new(conn.ID + "-P1", "ControlsOut-P2", -1));
             }
 
-			if (linesJoin != null)
-				if (isIn)
+            if (linesJoin != null)
+                if (isIn)
                     linesJoin.Add(new("ControlsIn-P1", conn.ID + "-P2", -1));
 
-			if (linesPoints != null)
+            if (linesPoints != null)
             {
                 if (!linesPoints.ContainsKey(conn.ID + "-P1"))
                     linesPoints.Add(conn.ID + "-P1", new(conn.DrawX + w.Width, currY));
@@ -2293,11 +2311,11 @@ namespace DominoVisualizer
             }
         }
 
-		private void DrawBox(DominoBox box, double currX, double currYBox)
+        private void DrawBox(DominoBox box, double currX, double currYBox)
         {
             Widget wb = new Widget();
             wb.Header.Text = box.ID + " - " + box.Name;
-			wb.Header.Margin = new(0, 0, 40, 0);
+            wb.Header.Margin = new(0, 0, 40, 0);
             //wb.Height = 30;
             wb.Width = width;
             wb.HeaderRectangle.Fill = Brushes.White;
@@ -2307,9 +2325,9 @@ namespace DominoVisualizer
             wb.delBtn.Tag = box.ID;
             wb.delBtn.Click += RemoveBox;
 
-			wb.swapBtn.Visibility = Visibility.Visible;
+            wb.swapBtn.Visibility = Visibility.Visible;
             wb.swapBtn.Tag = box.ID;
-			wb.swapBtn.Click += SwapBox;
+            wb.swapBtn.Click += SwapBox;
 
             Canvas.SetLeft(wb, currX);
             Canvas.SetTop(wb, currYBox);
@@ -2328,15 +2346,15 @@ namespace DominoVisualizer
             wb.list.Children.Add(DrawBtn("Add new output connector", box.ID, AddBoxConnector));
         }
 
-		private void DrawMetaDataIn(DominoBoxMetadataDatasIn inData, bool indt)
-		{
+        private void DrawMetaDataIn(DominoBoxMetadataDatasIn inData, bool indt)
+        {
             StackPanel sp2 = new();
 
             Grid g2 = new() { Height = 18 };
 
             g2.Children.Add(new TextBox() { Text = inData.Name, FontWeight = FontWeights.Bold });
 
-			string tag = (indt ? "datain" : "dataout") + "|" + inData.Name;
+            string tag = (indt ? "datain" : "dataout") + "|" + inData.Name;
 
             Button btn = new Button() { Tag = tag, Style = (Application.Current.FindResource("EditBtn") as Style) };
             btn.Click += EditMetadataInfo;
@@ -2349,16 +2367,16 @@ namespace DominoVisualizer
             sp2.Children.Add(g2);
 
 
-            sp2.Children.Add(new TextBox() { Text = "AnchorDynType: " + inData.AnchorDynType, Margin = new(10, 0, 0,0) });
+            sp2.Children.Add(new TextBox() { Text = "AnchorDynType: " + inData.AnchorDynType, Margin = new(10, 0, 0, 0) });
             sp2.Children.Add(new TextBox() { Text = "DataTypeID: " + inData.DataTypeID, Margin = new(10, 0, 0, 0) });
 
             Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			inData.ContainerUI = b2;
+            inData.ContainerUI = b2;
             if (indt) wiMetaDataIn.list.Children.Add(b2);
             else wiMetaDataOut.list.Children.Add(b2);
         }
 
-		private void DrawMetaControlIn(DominoBoxMetadataControlsIn inCtrl)
+        private void DrawMetaControlIn(DominoBoxMetadataControlsIn inCtrl)
         {
             StackPanel sp2 = new();
 
@@ -2377,11 +2395,11 @@ namespace DominoVisualizer
 
             Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
             inCtrl.ContainerUI = b2;
-			wiMetaControlIn.list.Children.Add(b2);
+            wiMetaControlIn.list.Children.Add(b2);
         }
 
-		private void DrawMetaControlOut(DominoBoxMetadataControlsOut outCtrl)
-		{
+        private void DrawMetaControlOut(DominoBoxMetadataControlsOut outCtrl)
+        {
             StackPanel sp2 = new();
 
             Grid g2 = new() { Height = 18 };
@@ -2399,10 +2417,10 @@ namespace DominoVisualizer
 
             Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
             outCtrl.ContainerUI = b2;
-			wiMetaControlOut.list.Children.Add(b2);
+            wiMetaControlOut.list.Children.Add(b2);
         }
 
-		private void RemoveLine(string a, string b)
+        private void RemoveLine(string a, string b)
         {
             foreach (var i in lines)
                 if (i.Point1 == a && i.Point2 == b)
@@ -2414,9 +2432,9 @@ namespace DominoVisualizer
             lines.RemoveAll(aa => aa.Point1 == a && aa.Point2 == b);
         }
 
-		private void RemoveConector(object sender, RoutedEventArgs e)
+        private void RemoveConector(object sender, RoutedEventArgs e)
         {
-			AskDialog("Remove connector", "Do you want to remove the connector?", () =>
+            AskDialog("Remove connector", "Do you want to remove the connector?", () =>
             {
                 string tag = (string)(sender as Button).Tag;
 
@@ -2431,22 +2449,22 @@ namespace DominoVisualizer
                     //RemoveLine(box.ID + "-P2", tag + "-P2");
                 }
 
-                var ci = thisMetadata.ControlsIn.Where(a => a.Name == conn.ID).SingleOrDefault();
+                var ci = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).SingleOrDefault();
                 if (ci != null)
                 {
                     RemoveLine("ControlsIn-P1", conn.ID + "-P2");
                     wiMetaControlIn.list.Children.Remove(ci.ContainerUI);
-                    thisMetadata.ControlsIn.Remove(ci);
+                    dominoGraphs[selGraph].Metadata.ControlsIn.Remove(ci);
                 }
 
                 foreach (var sof in conn.OutFuncName)
                 {
-                    var co = thisMetadata.ControlsOut.Where(a => a.Name == sof).SingleOrDefault();
+                    var co = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == sof).SingleOrDefault();
                     if (co != null)
                     {
                         RemoveLine(conn.ID + "-P1", "ControlsOut-P2");
                         wiMetaControlOut.list.Children.Remove(co.ContainerUI);
-                        thisMetadata.ControlsOut.Remove(co);
+                        dominoGraphs[selGraph].Metadata.ControlsOut.Remove(co);
                     }
                 }
 
@@ -2455,7 +2473,7 @@ namespace DominoVisualizer
             });
         }
 
-		private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
+        private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
         {
             StackPanel sp2 = new();
 
@@ -2475,14 +2493,14 @@ namespace DominoVisualizer
             sp2.Children.Add(new TextBox() { Text = GetSetVarOutName(setVar.Value), Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
             Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			setVar.ContainerUI = b2;
-			conn.Widget.list.Children.Add(b2);
+            setVar.ContainerUI = b2;
+            conn.Widget.list.Children.Add(b2);
         }
 
-		private void DrawGlobalVar(DominoDict var)
-		{
+        private void DrawGlobalVar(DominoDict var)
+        {
             string pv = ParamsAsString(var);
-			
+
             /*if (var.Value.Length > 1)
                 pv = "{" + string.Join(", ", var.Value) + "}";
             else
@@ -2492,7 +2510,7 @@ namespace DominoVisualizer
 
             Grid g = new() { Height = 18 };
             g.Children.Add(new TextBox() { Text = var.Name, FontWeight = FontWeights.Bold });
-			
+
             Button btn = new Button() { Tag = "globalvar|" + var.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
             btn.Click += EditMetadataInfo;
             g.Children.Add(btn);
@@ -2507,12 +2525,12 @@ namespace DominoVisualizer
 
             Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
             var.ContainerUI = b2;
-			wiGlobalVars.list.Children.Add(b2);
-		}
+            wiGlobalVars.list.Children.Add(b2);
+        }
 
-		private void RemoveBox(object sender, RoutedEventArgs e)
+        private void RemoveBox(object sender, RoutedEventArgs e)
         {
-			AskDialog("Remove box", "Do you want to remove the box?", () =>
+            AskDialog("Remove box", "Do you want to remove the box?", () =>
             {
                 string tag = (string)(sender as Button).Tag;
 
@@ -2548,47 +2566,47 @@ namespace DominoVisualizer
                 canvas.Children.Remove(b.Widget);
                 dominoBoxes.Remove(tag);
 
-				var toRem = regBoxes.Where(r => dominoBoxes.Count(m => m.Value.Name == r.Key) == 0).Select(pair => pair.Key).ToList();
-				foreach (var tr in toRem)
-				{
-    				regBoxes.Remove(tr);
-				}
+                var toRem = regBoxes.Where(r => dominoBoxes.Count(m => m.Value.Name == r.Key) == 0).Select(pair => pair.Key).ToList();
+                foreach (var tr in toRem)
+                {
+                    regBoxes.Remove(tr);
+                }
             });
         }
 
-		private void SwapBox(object sender, RoutedEventArgs e)
+        private void SwapBox(object sender, RoutedEventArgs e)
         {
             string tag = (string)(sender as Button).Tag;
 
-			var b = dominoBoxes[tag];
+            var b = dominoBoxes[tag];
 
             var isStateless = regBoxesAll[b.Name].IsStateless;
             if (!isStateless && b.ID.StartsWith("self["))
-			{
+            {
                 openInfoDialog("Swap box", "Selected box is not stateless and must be defined as global.");
                 return;
             }
 
             string num = b.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
 
-			if (b.ID.StartsWith("self["))
-				b.ID = "en_" + num;
-			else if (b.ID.StartsWith("en_"))
-				b.ID = "self[" + num + "]";
+            if (b.ID.StartsWith("self["))
+                b.ID = "en_" + num;
+            else if (b.ID.StartsWith("en_"))
+                b.ID = "self[" + num + "]";
 
-			b.Widget.Header.Text = b.ID + " - " + b.Name;
-			b.Widget.ID = b.ID;
-			b.Widget.delBtn.Tag = b.ID;
-			b.Widget.swapBtn.Tag = b.ID;
+            b.Widget.Header.Text = b.ID + " - " + b.Name;
+            b.Widget.ID = b.ID;
+            b.Widget.delBtn.Tag = b.ID;
+            b.Widget.swapBtn.Tag = b.ID;
 
             foreach (var btn in b.Widget.list.Children)
-				if (btn is Button)
-				{
-					((Button)btn).Tag = b.ID;
+                if (btn is Button)
+                {
+                    ((Button)btn).Tag = b.ID;
                 }
 
-			dominoBoxes[b.ID] = b;
-			dominoBoxes.Remove(tag);
+            dominoBoxes[b.ID] = b;
+            dominoBoxes.Remove(tag);
 
             for (int i = 0; i < lines.Count; i++)
             {
@@ -2598,60 +2616,60 @@ namespace DominoVisualizer
                 if (lines[i].Point2.StartsWith(tag))
                     lines[i].Point2 = lines[i].Point2.Replace(tag, b.ID);
             }
-			
+
             foreach (var c in dominoConnectors.Values)
             {
                 var eb = c.ExecBoxes.Where(a => a.Box.ID == b.ID).SingleOrDefault();
-				if (eb != null)
+                if (eb != null)
                 {
                     c.Widget.list.Children.Remove(eb.ContainerUI);
-					DrawExecBoxContainerUI(c, eb, eb.INT_clr);
+                    DrawExecBoxContainerUI(c, eb, eb.INT_clr);
                 }
 
-				bool a(DominoDict v)
+                bool a(DominoDict v)
                 {
-					bool changed = false;
+                    bool changed = false;
 
-					if (v.Value != null)
-						if (v.Value.Contains(tag))
-						{
-							v.Value = v.Value.Replace(tag, b.ID);
-							changed = true;
-						}
+                    if (v.Value != null)
+                        if (v.Value.Contains(tag))
+                        {
+                            v.Value = v.Value.Replace(tag, b.ID);
+                            changed = true;
+                        }
 
-					foreach (var sv in v.ValueArray)
-						if (a(sv))
-							changed = true;
+                    foreach (var sv in v.ValueArray)
+                        if (a(sv))
+                            changed = true;
 
-					return changed;
+                    return changed;
                 }
 
-				foreach (var v in c.SetVariables)
-					if (a(v))
-					{
-						c.Widget.list.Children.Remove(v.ContainerUI);
+                foreach (var v in c.SetVariables)
+                    if (a(v))
+                    {
+                        c.Widget.list.Children.Remove(v.ContainerUI);
                         DrawConnVariable(c, v);
-					}
+                    }
 
-				foreach (var ee in c.ExecBoxes)
-				{
-					foreach (var p in ee.Params)
-						if (a(p))
+                foreach (var ee in c.ExecBoxes)
+                {
+                    foreach (var p in ee.Params)
+                        if (a(p))
                         {
                             c.Widget.list.Children.Remove(ee.ContainerUI);
                             DrawExecBoxContainerUI(c, ee, ee.INT_clr);
                         }
-				}
+                }
             }
 
-			wasEdited = true;
+            wasEdited = true;
         }
 
         private void DrawComment(DominoComment c, double currX, double currY)
-		{
+        {
             Grid g = new();
             g.Children.Add(new TextBlock() { Text = c.Name, Foreground = new SolidColorBrush(Colors.White), Margin = new Thickness(0, 0, 50, 0) });
-			
+
             Button btn = new Button() { Tag = "edit|" + c.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style) };
             btn.Click += EditCommentDialog;
             g.Children.Add(btn);
@@ -2663,7 +2681,7 @@ namespace DominoVisualizer
             Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g };
             c.ContainerUI = b2;
 
-			canvas.Children.Add(b2);
+            canvas.Children.Add(b2);
             Canvas.SetLeft(b2, currX);
             Canvas.SetTop(b2, currY);
             Panel.SetZIndex(b2, 40);
@@ -2671,16 +2689,16 @@ namespace DominoVisualizer
 
         private void DrawBorder(DominoBorder b, double currX, double currY, double w, double h, bool? moveChilds)
         {
-			DoubleCollection lineStyle = null;
+            DoubleCollection lineStyle = null;
 
-			if (b.Style == 0) lineStyle = new(new double[] { 1, 1 });           // . . . . dotted line
+            if (b.Style == 0) lineStyle = new(new double[] { 1, 1 });           // . . . . dotted line
             if (b.Style == 1) lineStyle = new(new double[] { 4, 1, 2, 1 });     // - . - . dash-dotted line
             if (b.Style == 2) lineStyle = new(new double[] { 4, 4 });           // --  --  dashed line
             if (b.Style == 3) lineStyle = new(new double[] { 1, 0 });           // ------- solid line
 
-			Grid g = new();
+            Grid g = new();
 
-			Button btn = new Button() { Tag = "edit|" + b.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
+            Button btn = new Button() { Tag = "edit|" + b.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
             btn.Click += EditBorderDialog;
             g.Children.Add(btn);
 
@@ -2693,20 +2711,21 @@ namespace DominoVisualizer
             g.Children.Add(btnDup);
 
             System.Windows.Shapes.Rectangle r = new();
-			r.StrokeDashArray = lineStyle;
-			r.Stroke = new SolidColorBrush(linesColors[b.Color]);
-			r.StrokeThickness = 2;
-			g.Children.Add(r);
+            r.StrokeDashArray = lineStyle;
+            r.Stroke = new SolidColorBrush(linesColors[b.Color]);
+            r.StrokeThickness = 2;
+            g.Children.Add(r);
 
-			BorderD b2 = new() {
-				//BorderBrush = new SolidColorBrush(linesColors[b.Color]),
-				Background = new SolidColorBrush(Colors.Transparent),
-				//BorderThickness = new(2, 2, 2, 2),
-				Height = h,
-				Width = w,
-				EnableMove = true,
-				Child = g,
-				EnableMovingChilds = moveChilds == true
+            BorderD b2 = new()
+            {
+                //BorderBrush = new SolidColorBrush(linesColors[b.Color]),
+                Background = new SolidColorBrush(Colors.Transparent),
+                //BorderThickness = new(2, 2, 2, 2),
+                Height = h,
+                Width = w,
+                EnableMove = true,
+                Child = g,
+                EnableMovingChilds = moveChilds == true
             };
             b.ContainerUI = b2;
 
@@ -2744,11 +2763,11 @@ namespace DominoVisualizer
 
         public delegate void OpenAskDialog(string name, string desc);
         public OpenAskDialog openAskDialog;
-		private Action dialogAskAction;
-		private Action dialogAskActionCancel;
+        private Action dialogAskAction;
+        private Action dialogAskActionCancel;
         private void AskDialog(string name, string desc, Action action, Action actionCancel = null)
-		{
-			dialogAskAction = action;
+        {
+            dialogAskAction = action;
             dialogAskActionCancel = actionCancel;
             openAskDialog(name, desc);
         }
@@ -2758,82 +2777,82 @@ namespace DominoVisualizer
         }
         public void AskDialogActCancel()
         {
-			if (dialogAskActionCancel != null)
-				dialogAskActionCancel();
+            if (dialogAskActionCancel != null)
+                dialogAskActionCancel();
         }
 
-		public delegate void OpenInfoDialog(string name, string val);
-		public OpenInfoDialog openInfoDialog;
+        public delegate void OpenInfoDialog(string name, string val);
+        public OpenInfoDialog openInfoDialog;
 
         public void InfoDialogAct()
-		{
-		}
+        {
+        }
 
         public delegate void OpenEditExecBoxDialog(List<ParamEntry> wndData, List<ExecEntry> execs, int selType, int selExec, int selDynInt);
         public OpenEditExecBoxDialog openEditExecBoxDialog;
-		DominoConnector connEdit = null;
-		ExecBox execBoxEdit = null;
-		List<DominoDict> paramsEdit = new();
-		bool paramsEditSingle = false;
+        DominoConnector connEdit = null;
+        ExecBox execBoxEdit = null;
+        List<DominoDict> paramsEdit = new();
+        bool paramsEditSingle = false;
 
         private void EditExecBox(object sender, RoutedEventArgs e)
-		{
-			string tag = (string)(sender as Button).Tag;
-			string[] ids = tag.Split('|');
+        {
+            string tag = (string)(sender as Button).Tag;
+            string[] ids = tag.Split('|');
 
-			connEdit = dominoConnectors[ids[0]];
-			execBoxEdit = connEdit.ExecBoxes.Where(e => e.Box.ID == ids[1]).Single();
+            connEdit = dominoConnectors[ids[0]];
+            execBoxEdit = connEdit.ExecBoxes.Where(e => e.Box.ID == ids[1]).Single();
 
-			List<ExecEntry> execs = new();
-			var b = regBoxes[execBoxEdit.Box.Name].ControlsIn;
+            List<ExecEntry> execs = new();
+            var b = regBoxes[execBoxEdit.Box.Name].ControlsIn;
             for (int i = 0; i < b.Count; i++)
             {
                 execs.Add(new() { Name = "(" + i.ToString() + ") " + b[i].Name + (b[i].AnchorDynType > 0 ? " - DynInt" : ""), Num = i.ToString() });
             }
 
-			paramsEdit = Helpers.CopyList(execBoxEdit.Params);
+            paramsEdit = Helpers.CopyList(execBoxEdit.Params);
             paramsEditSingle = false;
             openEditExecBoxDialog(EditExecBoxUISetParams(), execs, (int)execBoxEdit.Type, execBoxEdit.Exec, execBoxEdit.DynIntExec);
-		}
+        }
 
-		private List<ParamEntry> EditExecBoxUISetParams()
-		{
-			List<ParamEntry> wndData = new();
+        private List<ParamEntry> EditExecBoxUISetParams()
+        {
+            List<ParamEntry> wndData = new();
 
-			void aa(DominoDict prmVal, string uniqueIDParent, int arrayLeft = 0, string paramName = null, bool isBase = false, int baseID = -1)
-			{
-				if (prmVal != null && prmVal.ValueArray.Count == 0 && prmVal.Value != null)
-				{
-                	wndData.Add(new()
-					{ 
-						ParamName = paramName ?? prmVal.Name, 
-						ParamNameRaw = prmVal.Name, 
-						UniqueID = prmVal.UniqueID, 
-						UniqueIDParent = uniqueIDParent, 
-						ParamValue = prmVal.Value ?? "", 
-						ParamUsed = true, 
-						ParamHasArray = false, 
-						ParamIsBase = isBase,
-						AddArrayVs = Visibility.Visible,
-						AddVs = Visibility.Hidden,
-						RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
+            void aa(DominoDict prmVal, string uniqueIDParent, int arrayLeft = 0, string paramName = null, bool isBase = false, int baseID = -1)
+            {
+                if (prmVal != null && prmVal.ValueArray.Count == 0 && prmVal.Value != null)
+                {
+                    wndData.Add(new()
+                    {
+                        ParamName = paramName ?? prmVal.Name,
+                        ParamNameRaw = prmVal.Name,
+                        UniqueID = prmVal.UniqueID,
+                        UniqueIDParent = uniqueIDParent,
+                        ParamValue = prmVal.Value ?? "",
+                        ParamUsed = true,
+                        ParamHasArray = false,
+                        ParamIsBase = isBase,
+                        AddArrayVs = Visibility.Visible,
+                        AddVs = Visibility.Hidden,
+                        RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
                         ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
                         GetDataVs = Visibility.Visible,
                         NameMargin = new(arrayLeft, 0, 5, 0)
                     });
-				}
-				else if (prmVal != null && prmVal.ValueArray.Count >= 0 && prmVal.Value == null)
-				{
-                	wndData.Add(new() 
-					{ 
-						ParamName = paramName ?? prmVal.Name, 
-						ParamNameRaw = prmVal.Name, 
-						UniqueID = prmVal.UniqueID, 
-						UniqueIDParent = uniqueIDParent,
-						ParamValue = "Array", 
-						ParamUsed = true,
-						ParamHasArray = true,
-						ParamIsBase = isBase,
+                }
+                else if (prmVal != null && prmVal.ValueArray.Count >= 0 && prmVal.Value == null)
+                {
+                    wndData.Add(new()
+                    {
+                        ParamName = paramName ?? prmVal.Name,
+                        ParamNameRaw = prmVal.Name,
+                        UniqueID = prmVal.UniqueID,
+                        UniqueIDParent = uniqueIDParent,
+                        ParamValue = "Array",
+                        ParamUsed = true,
+                        ParamHasArray = true,
+                        ParamIsBase = isBase,
                         AddArrayVs = Visibility.Visible,
                         AddVs = Visibility.Visible,
                         RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
@@ -2841,37 +2860,37 @@ namespace DominoVisualizer
                         GetDataVs = Visibility.Hidden,
                         NameMargin = new(arrayLeft, 0, 5, 0)
                     });
-				
-           	 		for (int i = 0; i < prmVal.ValueArray.Count; i++)
-					{
-						aa(prmVal.ValueArray[i], prmVal.UniqueID, arrayLeft + 10);
-					}
-				}
-				else
-                	wndData.Add(new() 
-					{ 
-						ParamName = paramName ?? prmVal.Name, 
-						ParamNameRaw = baseID != -1 ? baseID.ToString() : prmVal.Name, 
-						UniqueID = prmVal != null ? prmVal.UniqueID : Helpers.RandomString(), 
-						UniqueIDParent = uniqueIDParent, 
-						ParamValue = "",
-						ParamUsed = false, 
-						ParamHasArray = false, 
-						ParamIsBase = isBase,
+
+                    for (int i = 0; i < prmVal.ValueArray.Count; i++)
+                    {
+                        aa(prmVal.ValueArray[i], prmVal.UniqueID, arrayLeft + 10);
+                    }
+                }
+                else
+                    wndData.Add(new()
+                    {
+                        ParamName = paramName ?? prmVal.Name,
+                        ParamNameRaw = baseID != -1 ? baseID.ToString() : prmVal.Name,
+                        UniqueID = prmVal != null ? prmVal.UniqueID : Helpers.RandomString(),
+                        UniqueIDParent = uniqueIDParent,
+                        ParamValue = "",
+                        ParamUsed = false,
+                        ParamHasArray = false,
+                        ParamIsBase = isBase,
                         AddArrayVs = Visibility.Hidden,
                         AddVs = Visibility.Hidden,
                         RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
-						ArrayBulletVs = Visibility.Collapsed,
+                        ArrayBulletVs = Visibility.Collapsed,
                         GetDataVs = Visibility.Visible,
-						NameMargin = new(0,0,0,0)
+                        NameMargin = new(0, 0, 0, 0)
                     });
-			}
+            }
 
-			if (paramsEditSingle)
+            if (paramsEditSingle)
             {
                 aa(paramsEdit[0], "", 0, null, true, 0);
             }
-			else
+            else
             {
                 var a = regBoxes[execBoxEdit.Box.Name].DatasIn;
                 for (int i = 0; i < a.Count; i++)
@@ -2892,17 +2911,17 @@ namespace DominoVisualizer
                 }
             }
 
-			return wndData;
-		}
+            return wndData;
+        }
 
-		private void EditExecBoxUIGetParams(List<ParamEntry> paramsList)
+        private void EditExecBoxUIGetParams(List<ParamEntry> paramsList)
         {
             DominoDict aa(ParamEntry param, string assign)
             {
                 if (param.ParamUsed)
                 {
                     DominoDict p = new();
-					p.UniqueID = param.UniqueID;
+                    p.UniqueID = param.UniqueID;
 
                     if (param.ParamIsBase)
                         p.Name = param.ParamNameRaw;
@@ -2941,24 +2960,24 @@ namespace DominoVisualizer
                     paramsEdit.Add(ax);
             }
 
-			/*if (paramsEditSingle)
+            /*if (paramsEditSingle)
 				paramsEdit.Add(aa(paramsList[0], ""));*/
         }
 
         public List<ParamEntry> EditExecBoxParamsAddRow(List<ParamEntry> paramsList, string uniqueID, bool makeArray)
         {
-			EditExecBoxUIGetParams(paramsList);
+            EditExecBoxUIGetParams(paramsList);
 
             void a(List<DominoDict> aa)
             {
                 foreach (var c in aa)
-				{
-					if (c.UniqueID == uniqueID)
-					{
-						//if (makeArray) c.Value = null;
+                {
+                    if (c.UniqueID == uniqueID)
+                    {
+                        //if (makeArray) c.Value = null;
                         //c.ValueArray.Add(new() { Name = "New Param", Value = "A Value" });
 
-						if (makeArray)
+                        if (makeArray)
                         {
                             if (c.Value != null)
                             {
@@ -2970,11 +2989,11 @@ namespace DominoVisualizer
                                 c.ValueArray.Clear();
                             }
                         }
-						else
+                        else
                         {
                             c.ValueArray.Add(new() { Name = "NewParam", Value = "\"A Value\"" });
                         }
-					}
+                    }
 
                     if (c.ValueArray.Count > 0)
                         a(c.ValueArray);
@@ -2987,42 +3006,42 @@ namespace DominoVisualizer
 
         public List<ParamEntry> EditExecBoxParamsRemoveRow(string uniqueID)
         {
-			void a(List<DominoDict> aa)
+            void a(List<DominoDict> aa)
             {
                 aa.RemoveAll(a => a.UniqueID == uniqueID);
 
-				foreach (var c in aa)
-					if (c.ValueArray.Count > 0)
-						a(c.ValueArray);
+                foreach (var c in aa)
+                    if (c.ValueArray.Count > 0)
+                        a(c.ValueArray);
             }
-			a(paramsEdit);
+            a(paramsEdit);
 
-			return EditExecBoxUISetParams();
+            return EditExecBoxUISetParams();
         }
 
         public string EditExecBoxSave(List<ParamEntry> paramsList, int editExecBoxType, int editExecBoxExec, string editExecBoxDynInt)
         {
-			var tt = (ExecType)editExecBoxType;
+            var tt = (ExecType)editExecBoxType;
 
-			if (tt == ExecType.Exec)
-			{
-				var ctrlMeta = regBoxesAll[execBoxEdit.Box.Name].ControlsIn[editExecBoxExec].AnchorDynType > 0;
-				if (ctrlMeta)
-					return "Selected exec is dynamic, so you must select type 'Exec Dyn Int' and set Dyn Int value.";
-			}
-			if (tt == ExecType.ExecDynInt)
-			{
-				var ctrlMeta = regBoxesAll[execBoxEdit.Box.Name].ControlsIn[editExecBoxExec].AnchorDynType == 0;
-				if (ctrlMeta)
-					return "Selected exec is not dynamic, so you must select type 'Exec'.";
-			}
+            if (tt == ExecType.Exec)
+            {
+                var ctrlMeta = regBoxesAll[execBoxEdit.Box.Name].ControlsIn[editExecBoxExec].AnchorDynType > 0;
+                if (ctrlMeta)
+                    return "Selected exec is dynamic, so you must select type 'Exec Dyn Int' and set Dyn Int value.";
+            }
+            if (tt == ExecType.ExecDynInt)
+            {
+                var ctrlMeta = regBoxesAll[execBoxEdit.Box.Name].ControlsIn[editExecBoxExec].AnchorDynType == 0;
+                if (ctrlMeta)
+                    return "Selected exec is not dynamic, so you must select type 'Exec'.";
+            }
 
-			execBoxEdit.Type = tt;
-			execBoxEdit.Exec = editExecBoxExec;
-			execBoxEdit.DynIntExec = int.Parse(editExecBoxDynInt);
+            execBoxEdit.Type = tt;
+            execBoxEdit.Exec = editExecBoxExec;
+            execBoxEdit.DynIntExec = int.Parse(editExecBoxDynInt);
 
             EditExecBoxUIGetParams(paramsList);
-			execBoxEdit.Params = paramsEdit;
+            execBoxEdit.Params = paramsEdit;
 
             execBoxEdit.MainUI.Children.Clear();
             DrawExecBoxChildren(connEdit, execBoxEdit, execBoxEdit.MainUI);
@@ -3041,12 +3060,12 @@ namespace DominoVisualizer
             }
 
             wasEdited = true;
-			return "";
+            return "";
         }
 
         private void RemoveExecBox(object sender, RoutedEventArgs e)
-		{
-			AskDialog("Remove exec box", "Do you want to remove the exec box?", () =>
+        {
+            AskDialog("Remove exec box", "Do you want to remove the exec box?", () =>
             {
                 string tag = (string)(sender as Button).Tag;
                 string[] ids = tag.Split('|');
@@ -3066,85 +3085,85 @@ namespace DominoVisualizer
         public OpenAddExecBoxDialog openAddExecBoxDialog;
 
         private void AddExecBox(object sender, RoutedEventArgs e)
-		{
-			string tag = (string)(sender as Button).Tag;
+        {
+            string tag = (string)(sender as Button).Tag;
 
-			connEdit = dominoConnectors[tag];
+            connEdit = dominoConnectors[tag];
 
-			List<ExecEntry> boxes = new();
-			foreach (var b in dominoBoxes)
-			{
-				boxes.Add(new() { Name = b.Value.ID });
-			}
+            List<ExecEntry> boxes = new();
+            foreach (var b in dominoBoxes)
+            {
+                boxes.Add(new() { Name = b.Value.ID });
+            }
 
-			boxes = boxes.OrderBy(a => a.Name).ToList();
+            boxes = boxes.OrderBy(a => a.Name).ToList();
 
-			openAddExecBoxDialog(boxes);
-		}
+            openAddExecBoxDialog(boxes);
+        }
 
         public void AddExecBoxCreate(string selBox)
         {
             //canvas.ResetZoom();
 
-			List<DominoDict> ep = new();
-			foreach (var c in dominoConnectors.Values)
-			{
-				foreach (var ceb in c.ExecBoxes)
-				{
-					if (ceb.Box.ID == selBox)
-					{
-						ep = ceb.Params;
+            List<DominoDict> ep = new();
+            foreach (var c in dominoConnectors.Values)
+            {
+                foreach (var ceb in c.ExecBoxes)
+                {
+                    if (ceb.Box.ID == selBox)
+                    {
+                        ep = ceb.Params;
                     }
-				}
-			}
+                }
+            }
 
             ExecBox eb = new();
-			eb.Box = dominoBoxes.Values.Where(a => a.ID == selBox).Single();
-			eb.Exec = 0;
-			eb.DynIntExec = 0;
-			eb.Params = ep;
-			
-			var ctrlMeta = regBoxesAll[eb.Box.Name].ControlsIn[0].AnchorDynType > 0;
-			if (ctrlMeta)
-			{
-				eb.Type = ExecType.ExecDynInt;
+            eb.Box = dominoBoxes.Values.Where(a => a.ID == selBox).Single();
+            eb.Exec = 0;
+            eb.DynIntExec = 0;
+            eb.Params = ep;
 
-				int cc = 0;
-				foreach (var aa in dominoConnectors.Values)
-					foreach (var bb in aa.ExecBoxes)
-						if (bb.Box.ID == eb.Box.ID)
-							cc++;
-				
-				eb.DynIntExec = cc;
-			}
-			else
-				eb.Type = ExecType.Exec;
+            var ctrlMeta = regBoxesAll[eb.Box.Name].ControlsIn[0].AnchorDynType > 0;
+            if (ctrlMeta)
+            {
+                eb.Type = ExecType.ExecDynInt;
+
+                int cc = 0;
+                foreach (var aa in dominoConnectors.Values)
+                    foreach (var bb in aa.ExecBoxes)
+                        if (bb.Box.ID == eb.Box.ID)
+                            cc++;
+
+                eb.DynIntExec = cc;
+            }
+            else
+                eb.Type = ExecType.Exec;
 
             connEdit.ExecBoxes.Add(eb);
-            
-			var clr = connEdit.Widget.list.Children.Count;
 
-			DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);
+            var clr = connEdit.Widget.list.Children.Count;
 
-			var a = canvas.Transform2(new(Canvas.GetLeft(connEdit.Widget), Canvas.GetTop(connEdit.Widget)));
-			var b = canvas.Transform2(new(Canvas.GetLeft(eb.Box.Widget), Canvas.GetTop(eb.Box.Widget)));
+            DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);
 
-			DrawLine(
+            var a = canvas.Transform2(new(Canvas.GetLeft(connEdit.Widget), Canvas.GetTop(connEdit.Widget)));
+            var b = canvas.Transform2(new(Canvas.GetLeft(eb.Box.Widget), Canvas.GetTop(eb.Box.Widget)));
+
+            DrawLine(
                 a.X + width,
                 a.Y,
                 b.X,
                 b.Y,
-				connEdit.ID + "-P1",
-				eb.Box.ID + "-P1",
-				clr
-			);
+                connEdit.ID + "-P1",
+                eb.Box.ID + "-P1",
+                clr
+            );
 
-			canvas.RefreshChilds();
+            canvas.RefreshChilds();
 
             wasEdited = true;
         }
 
-		private void RemoveBoxConnS(DominoBox box, List<DominoConnector> c, string connID)
+        private void RemoveBoxConnS(DominoBox box, List<DominoConnector> c, string connID)
         {
             var conn = c.Where(a => a.ID == connID).SingleOrDefault();
             if (conn != null)
@@ -3162,9 +3181,9 @@ namespace DominoVisualizer
             c.RemoveAll(a => a.ID == null && !a.SubConnections.Any());
         }
 
-		private void RemoveBoxConn(object sender, RoutedEventArgs e)
-		{
-			AskDialog("Remove connection", "Do you want to remove the connection?", () =>
+        private void RemoveBoxConn(object sender, RoutedEventArgs e)
+        {
+            AskDialog("Remove connection", "Do you want to remove the connection?", () =>
             {
                 string tag = (string)(sender as Button).Tag;
                 string[] ids = tag.Split('|');
@@ -3176,7 +3195,7 @@ namespace DominoVisualizer
 
                 wasEdited = true;
             });
-		}
+        }
 
         public delegate void OpenAddBoxConnectorDialog(List<ExecEntry> boxFuncs, List<ExecEntry> connectors);
         public OpenAddBoxConnectorDialog openAddBoxConnectorDialog;
@@ -3192,36 +3211,36 @@ namespace DominoVisualizer
 
             void aa(DominoConnector conn, int num, string name, string parentName, string prntUniqID = "")
             {
-				string n = parentName + "(" + num.ToString() + ") " + name;
+                string n = parentName + "(" + num.ToString() + ") " + name;
 
-				DominoConnector bc = conn;
+                DominoConnector bc = conn;
 
-				if (bc == null)
-					bc = boxEdit.Connections.Where(b => b.FromBoxConnectID == num).SingleOrDefault();
+                if (bc == null)
+                    bc = boxEdit.Connections.Where(b => b.FromBoxConnectID == num).SingleOrDefault();
 
                 if (bc != null)
                 {
-					if (bc.SubConnections.Any())
-						n += " (Array)";
+                    if (bc.SubConnections.Any())
+                        n += " (Array)";
 
                     if (bc.SubConnections.Any())
                         boxFuncs.Add(new() { Name = n, Num = bc.UniqueID });
 
                     foreach (var sb in bc.SubConnections)
-						aa(sb, sb.FromBoxConnectID, sb.FromBoxConnectIDStr, n + " > ");
+                        aa(sb, sb.FromBoxConnectID, sb.FromBoxConnectIDStr, n + " > ");
                 }
                 else
                     boxFuncs.Add(new() { Name = n, Num = prntUniqID });
             }
 
-			var a = regBoxes[boxEdit.Name].ControlsOut;
+            var a = regBoxes[boxEdit.Name].ControlsOut;
             for (int i = 0; i < a.Count; i++)
             {
                 aa(null, i, a[i].Name, "", a[i].UniqueID);
             }
 
             List<ExecEntry> connectors = new();
-			connectors.Add(new() { Name = "<<<Create new connector>>>" });
+            connectors.Add(new() { Name = "<<<Create new connector>>>" });
             foreach (var b in dominoConnectors.Where(a => a.Value.FromBoxConnectID == -1))
             {
                 connectors.Add(new() { Name = b.Value.ID });
@@ -3232,31 +3251,31 @@ namespace DominoVisualizer
 
         public void AddBoxConnectorCreate(string selBoxFnc, string selConn, bool? addAsArray, string arrayKey)
         {
-			//canvas.ResetZoom();
+            //canvas.ResetZoom();
 
-			string acname = "";
-			DominoConnector connSel(string name)
-			{
-				if (selConn == "<<<Create new connector>>>")
+            string acname = "";
+            DominoConnector connSel(string name)
+            {
+                if (selConn == "<<<Create new connector>>>")
                 {
                     name = boxEdit.ID.Replace("self[", "").Replace("]", "").Replace("en_", "") + name;
 
                     string checkCName(int inc = -1)
-					{
-						var a = inc >= 0 ? "_" + inc.ToString() : "";
-						if (dominoConnectors.ContainsKey("f_" + name + a))
-							return checkCName(inc + 1);
-						else
-							return name + a;
-					}
-					name = checkCName();
+                    {
+                        var a = inc >= 0 ? "_" + inc.ToString() : "";
+                        if (dominoConnectors.ContainsKey("f_" + name + a))
+                            return checkCName(inc + 1);
+                        else
+                            return name + a;
+                    }
+                    name = checkCName();
 
                     AddConnectorCreate(500, 500, name, false, false, "");
-					return dominoConnectors["f_" + name];
+                    return dominoConnectors["f_" + name];
                 }
-				else
-					return dominoConnectors[selConn];
-			}
+                else
+                    return dominoConnectors[selConn];
+            }
 
             bool added = false;
 
@@ -3271,7 +3290,7 @@ namespace DominoVisualizer
                     o.FromBoxConnectID = index;
                     o.FromBoxConnectIDStr = name;
 
-					DominoConnector c = connSel(acname + "_" + name + (arrayKey != "" ? "_" : "") + arrayKey);
+                    DominoConnector c = connSel(acname + "_" + name + (arrayKey != "" ? "_" : "") + arrayKey);
                     c.FromBoxConnectID = 0;
                     c.FromBoxConnectIDStr = arrayKey;
                     o.SubConnections.Add(c);
@@ -3281,7 +3300,7 @@ namespace DominoVisualizer
                 }
                 else
                 {
-					var a = name == "" ? arrayKey : name;
+                    var a = name == "" ? arrayKey : name;
                     o = connSel(acname + (a != "" ? "_" : "") + a);
                     o.FromBoxConnectID = index;
                     o.FromBoxConnectIDStr = a;
@@ -3290,33 +3309,33 @@ namespace DominoVisualizer
                     added = true;
                 }
 
-				return o;
+                return o;
             }
 
-			void subs(List<DominoConnector> list, string p = "")
+            void subs(List<DominoConnector> list, string p = "")
             {
                 foreach (var ss in list)
                 {
-					string n = "(" + ss.FromBoxConnectID.ToString() + ") " + ss.FromBoxConnectIDStr + " > ";
+                    string n = "(" + ss.FromBoxConnectID.ToString() + ") " + ss.FromBoxConnectIDStr + " > ";
 
                     if (ss.UniqueID == selBoxFnc)
                     {
                         acname += "_" + ss.FromBoxConnectIDStr;
                         ss.SubConnections.Add(add(getFreeNum(ss.SubConnections), "", p + n));
-						return;
+                        return;
                     }
 
-					subs(ss.SubConnections, n);
+                    subs(ss.SubConnections, n);
                 }
             }
 
-			int getFreeNum(List<DominoConnector> list)
-			{
-				for (int i = 0; i < list.Count; i++)
-				{
-					var a = list.Any(a => a.FromBoxConnectID == i);
-					if (!a)
-						return i;
+            int getFreeNum(List<DominoConnector> list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var a = list.Any(a => a.FromBoxConnectID == i);
+                    if (!a)
+                        return i;
                 }
                 return list.Count;
             }
@@ -3324,19 +3343,19 @@ namespace DominoVisualizer
             var a = regBoxes[boxEdit.Name].ControlsOut;
             for (int i = 0; i < a.Count; i++)
             {
-				var ec = boxEdit.Connections.Where(a => a.UniqueID == selBoxFnc && a.FromBoxConnectID == i).SingleOrDefault();
-				if (a[i].UniqueID == selBoxFnc && ec == null)
-				{
+                var ec = boxEdit.Connections.Where(a => a.UniqueID == selBoxFnc && a.FromBoxConnectID == i).SingleOrDefault();
+                if (a[i].UniqueID == selBoxFnc && ec == null)
+                {
                     boxEdit.Connections.Add(add(i, a[i].Name)); //add new root
                 }
-				if (ec != null)
+                if (ec != null)
                 {
                     acname += "_" + ec.FromBoxConnectIDStr;
                     ec.SubConnections.Add(add(getFreeNum(ec.SubConnections), "", "(" + ec.FromBoxConnectID.ToString() + ") " + ec.FromBoxConnectIDStr + " > ")); //add to existing root array
                 }
             }
 
-			if (!added)
+            if (!added)
                 subs(boxEdit.Connections); //add to any subconnections
 
             canvas.RefreshChilds();
@@ -3347,20 +3366,20 @@ namespace DominoVisualizer
 
         public string AddConnectorCreate(int widthA, int height, string name, bool? isIn, bool? isOut, string outName)
         {
-			name = name.Replace(" ", "");
+            name = name.Replace(" ", "");
             outName = outName.Replace(" ", "");
 
             if (name == "")
                 return "You must set a name.";
 
-			if (isIn == false)
-				name = "f_" + name;
+            if (isIn == false)
+                name = "f_" + name;
 
-			if (isOut == true)
-				isIn = false;
+            if (isOut == true)
+                isIn = false;
 
-			if (isOut == true && outName == "")
-				return "Control out name is empty.";
+            if (isOut == true && outName == "")
+                return "Control out name is empty.";
 
             var e = dominoConnectors.Any(a => a.Value.ID == name);
             if (e)
@@ -3377,15 +3396,15 @@ namespace DominoVisualizer
             if (isIn == true)
             {
                 var m = new DominoBoxMetadataControlsIn(name, 0, "");
-                thisMetadata.ControlsIn.Add(m);
+                dominoGraphs[selGraph].Metadata.ControlsIn.Add(m);
                 DrawMetaControlIn(m);
             }
             if (isOut == true)
             {
                 var m = new DominoBoxMetadataControlsOut(outName, 0, false);
-                thisMetadata.ControlsOut.Add(m);
+                dominoGraphs[selGraph].Metadata.ControlsOut.Add(m);
                 DrawMetaControlOut(m);
-				c.OutFuncName.Add(outName);
+                c.OutFuncName.Add(outName);
             }
 
             Point pnt = new(widthA / 2, height / 2);
@@ -3401,7 +3420,7 @@ namespace DominoVisualizer
             }
             if (isOut == true)
             {
-                DrawLine(pnt.X + width, pnt.Y, spaceX + width, 0, name + "-P1", "ControlsOut-P2", -1);
+                DrawLine(pnt.X + width, pnt.Y, spaceX, 0, name + "-P1", "ControlsOut-P2", -1);
             }
 
             canvas.RefreshChilds();
@@ -3413,13 +3432,13 @@ namespace DominoVisualizer
 
         public delegate void OpenEditConnectorDialog(string name);
         public OpenEditConnectorDialog openEditConnectorDialog;
-		DominoConnector editConnector = null;
+        DominoConnector editConnector = null;
 
         private void EditConnectorDialog(object sender, RoutedEventArgs e)
-		{
+        {
             string tag = (string)(sender as Button).Tag;
 
-			editConnector = dominoConnectors[tag];
+            editConnector = dominoConnectors[tag];
 
             openEditConnectorDialog(editConnector.ID[2..]);
         }
@@ -3435,24 +3454,24 @@ namespace DominoVisualizer
             bool findBox(List<DominoConnector> c)
             {
                 var conn = c.Where(a => a.ID == editConnector.ID).SingleOrDefault();
-				if (conn != null)
-					return true;
+                if (conn != null)
+                    return true;
 
-				foreach (var cc in c)
-					if (findBox(cc.SubConnections))
-						return true;
+                foreach (var cc in c)
+                    if (findBox(cc.SubConnections))
+                        return true;
 
-				return false;
+                return false;
             }
 
-			var b = dominoBoxes.Values.Where(a => findBox(a.Connections)).SingleOrDefault();
-			if (b != null)
+            var b = dominoBoxes.Values.Where(a => findBox(a.Connections)).SingleOrDefault();
+            if (b != null)
             {
                 b.Widget.list.Children.Remove(editConnector.ContainerUI);
             }
 
             editConnector.ID = name;
-			editConnector.Widget.Header.Text = name;
+            editConnector.Widget.Header.Text = name;
             editConnector.Widget.delBtn.Tag = b.ID;
             editConnector.Widget.swapBtn.Tag = b.ID;
 
@@ -3465,73 +3484,73 @@ namespace DominoVisualizer
             string findParentName(string currName, List<DominoConnector> c)
             {
                 var conn = c.Where(a => a.ID == editConnector.ID).SingleOrDefault();
-				if (conn != null)
-					return currName;
+                if (conn != null)
+                    return currName;
 
                 foreach (var cc in c)
-				{
-					var a = findParentName(currName + "(" + cc.FromBoxConnectID.ToString() + ") " + cc.FromBoxConnectIDStr + " > ", cc.SubConnections);
-					if (a != "")
-						return a;
+                {
+                    var a = findParentName(currName + "(" + cc.FromBoxConnectID.ToString() + ") " + cc.FromBoxConnectIDStr + " > ", cc.SubConnections);
+                    if (a != "")
+                        return a;
                 }
 
                 return "";
             }
 
             if (b != null)
-			{
+            {
                 DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), null, false, editConnector.INT_clr);
             }
 
             wasEdited = true;
 
             return "";
-		}
+        }
 
 
         public List<ExecEntry> AddBoxNames()
-		{
-			List<ExecEntry> boxNames = new();
+        {
+            List<ExecEntry> boxNames = new();
 
             foreach (var rb in regBoxesAll)
-				boxNames.Add(new() { Name = rb.Key });
+                boxNames.Add(new() { Name = rb.Key });
 
-			return boxNames;
-		}
+            return boxNames;
+        }
 
         public string AddBoxCreate(int width, int height, bool global, string name)
         {
             string newID = dominoBoxes.Count.ToString();
 
             for (int i = 0; i < dominoBoxes.Count; i++)
-			{
+            {
                 //var a = dominoBoxes.Any(a => (global && a.Key == "self[" + i.ToString() + "]") || (!global && a.Key == "en_" + i.ToString()));
                 var a = dominoBoxes.Any(a => a.Key == "self[" + i.ToString() + "]" || a.Key == "en_" + i.ToString());
                 if (!a)
                     newID = i.ToString();
-			}
+            }
 
-			var isStateless = regBoxesAll[name].IsStateless;
-			if (!isStateless && !global)
-				return "Selected box is not stateless and must be defined as global.";
+            var isStateless = regBoxesAll[name].IsStateless;
+            if (!isStateless && !global)
+                return "Selected box is not stateless and must be defined as global.";
 
-			if (global)
-				newID = "self[" + newID + "]";
+            if (global)
+                newID = "self[" + newID + "]";
             else
                 newID = "en_" + newID;
 
             //canvas.ResetZoom();
 
-			if (!regBoxes.ContainsKey(name))
-			{
-				var meta = regBoxesAll[name];
-				regBoxes.Add(name, meta);
-			}
+            if (!regBoxes.ContainsKey(name))
+            {
+                var meta = regBoxesAll[name];
+                regBoxes.Add(name, meta);
+            }
 
-			DominoBox b = new();
-			b.ID = newID;
-			b.Name = name;
-			dominoBoxes.Add(b.ID, b);
+            DominoBox b = new();
+            b.ID = newID;
+            b.Name = name;
+            dominoBoxes.Add(b.ID, b);
 
             Point pnt = new(width / 2, height / 2);
             pnt = canvas.Transform3(pnt);
@@ -3545,23 +3564,23 @@ namespace DominoVisualizer
         }
 
 
-		private void RemoveMetadataInfo(object sender, RoutedEventArgs e)
+        private void RemoveMetadataInfo(object sender, RoutedEventArgs e)
         {
-			AskDialog("Remove metadata", "Do you want to remove the metadata?", () =>
+            AskDialog("Remove metadata", "Do you want to remove the metadata?", () =>
             {
                 string[] tag = ((string)((Button)sender).Tag).Split('|');
 
                 if (tag[0] == "datain")
                 {
-                    var m = thisMetadata.DatasIn.Where(a => a.Name == tag[1]).Single();
+                    var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == tag[1]).Single();
                     wiMetaDataIn.list.Children.Remove(m.ContainerUI);
-                    thisMetadata.DatasIn.RemoveAll(a => a.Name == tag[1]);
+                    dominoGraphs[selGraph].Metadata.DatasIn.RemoveAll(a => a.Name == tag[1]);
                 }
                 if (tag[0] == "dataout")
                 {
-                    var m = thisMetadata.DatasOut.Where(a => a.Name == tag[1]).Single();
+                    var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == tag[1]).Single();
                     wiMetaDataOut.list.Children.Remove(m.ContainerUI);
-                    thisMetadata.DatasOut.RemoveAll(a => a.Name == tag[1]);
+                    dominoGraphs[selGraph].Metadata.DatasOut.RemoveAll(a => a.Name == tag[1]);
                 }
                 if (tag[0] == "globalvar")
                 {
@@ -3592,29 +3611,29 @@ namespace DominoVisualizer
             });
         }
 
-		private void AddMetadataInfo(object sender, RoutedEventArgs e)
+        private void AddMetadataInfo(object sender, RoutedEventArgs e)
         {
             string tag = (string)((Button)sender).Tag;
-			
+
             if (tag == "datain")
             {
-				var m = new DominoBoxMetadataDatasIn("New Data In", 0, "string");
-                thisMetadata.DatasIn.Add(m);
-				DrawMetaDataIn(m, true);
+                var m = new DominoBoxMetadataDatasIn("New Data In", 0, "string");
+                dominoGraphs[selGraph].Metadata.DatasIn.Add(m);
+                DrawMetaDataIn(m, true);
             }
             if (tag == "dataout")
             {
-				var m = new DominoBoxMetadataDatasOut("New Data Out", 0, "string");
-                thisMetadata.DatasOut.Add(m);
-				DrawMetaDataIn(m, false);
+                var m = new DominoBoxMetadataDatasOut("New Data Out", 0, "string");
+                dominoGraphs[selGraph].Metadata.DatasOut.Add(m);
+                DrawMetaDataIn(m, false);
             }
             if (tag == "globalvar")
             {
-				var m = new DominoDict();
-				m.Name = "NewGlobalVariable";
-				m.Value = "\"A value\"";
+                var m = new DominoDict();
+                m.Name = "NewGlobalVariable";
+                m.Value = "\"A value\"";
                 globalVariables.Add(m);
-				DrawGlobalVar(m);
+                DrawGlobalVar(m);
             }
             /*if (tag == "controlin")
             {
@@ -3634,7 +3653,7 @@ namespace DominoVisualizer
 
         public delegate void OpenEditDataDialog(string name, string desc, string metaName, string anchorDynType, string dataTypeID, string hostExecFunc, bool? isDelayed, List<ParamEntry> dataList);
         public OpenEditDataDialog openEditDataDialog;
-		string[] editMetadataDialogData;
+        string[] editMetadataDialogData;
 
         private void EditMetadataInfo(object sender, RoutedEventArgs e)
         {
@@ -3643,68 +3662,68 @@ namespace DominoVisualizer
 
             if (tag[0] == "datain")
             {
-				var m = thisMetadata.DatasIn.Where(a => a.Name == tag[1]).Single();
+                var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == tag[1]).Single();
                 openEditDataDialog("Edit data in", "Edit the input data of this Domino:", m.Name, m.AnchorDynType.ToString(), m.DataTypeID, null, null, null);
             }
             if (tag[0] == "dataout")
             {
-                var m = thisMetadata.DatasOut.Where(a => a.Name == tag[1]).Single();
+                var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == tag[1]).Single();
                 openEditDataDialog("Edit data out", "Edit the output data of this Domino:", m.Name, m.AnchorDynType.ToString(), m.DataTypeID, null, null, null);
             }
             if (tag[0] == "controlin")
             {
-                var m = thisMetadata.ControlsIn.Where(a => a.Name == tag[1]).Single();
+                var m = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == tag[1]).Single();
                 openEditDataDialog("Edit controls in", "Edit the input controls of this Domino:", null, m.AnchorDynType.ToString(), null, m.HostExecFunc, null, null);
             }
             if (tag[0] == "controlout")
             {
-                var m = thisMetadata.ControlsOut.Where(a => a.Name == tag[1]).Single();
+                var m = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == tag[1]).Single();
                 openEditDataDialog("Edit controls out", "Edit the output controls of this Domino:", null, m.AnchorDynType.ToString(), null, null, m.IsDelayed, null);
             }
             if (tag[0] == "globalvar")
             {
                 var m = globalVariables.Where(a => a.UniqueID == tag[1]).Single();
-				
-				paramsEdit = Helpers.CopyList(new() { m });
-				paramsEditSingle = true;
+
+                paramsEdit = Helpers.CopyList(new() { m });
+                paramsEditSingle = true;
                 openEditDataDialog("Edit global variables", "Edit global variable:", m.Name, null, null, null, null, EditExecBoxUISetParams());
             }
         }
 
-		public void EditMetadataInfoCreate(string name, string anchorDynType, string dataTypeID, string hostExecFunc, bool? isDelayed, List<ParamEntry> paramsList)
+        public void EditMetadataInfoCreate(string name, string anchorDynType, string dataTypeID, string hostExecFunc, bool? isDelayed, List<ParamEntry> paramsList)
         {
             if (editMetadataDialogData[0] == "datain")
             {
-                var m = thisMetadata.DatasIn.Where(a => a.Name == editMetadataDialogData[1]).Single();
-				m.Name = name;
-				m.AnchorDynType = int.Parse(anchorDynType);
-				m.DataTypeID = dataTypeID;
+                var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == editMetadataDialogData[1]).Single();
+                m.Name = name;
+                m.AnchorDynType = int.Parse(anchorDynType);
+                m.DataTypeID = dataTypeID;
 
-				wiMetaDataIn.list.Children.Remove(m.ContainerUI);
-				DrawMetaDataIn(m, true);
+                wiMetaDataIn.list.Children.Remove(m.ContainerUI);
+                DrawMetaDataIn(m, true);
             }
             if (editMetadataDialogData[0] == "dataout")
             {
-                var m = thisMetadata.DatasOut.Where(a => a.Name == editMetadataDialogData[1]).Single();
-				m.Name = name;
-				m.AnchorDynType = int.Parse(anchorDynType);
-				m.DataTypeID = dataTypeID;
+                var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == editMetadataDialogData[1]).Single();
+                m.Name = name;
+                m.AnchorDynType = int.Parse(anchorDynType);
+                m.DataTypeID = dataTypeID;
 
                 wiMetaDataOut.list.Children.Remove(m.ContainerUI);
                 DrawMetaDataIn(m, false);
             }
             if (editMetadataDialogData[0] == "controlin")
             {
-                var m = thisMetadata.ControlsIn.Where(a => a.Name == editMetadataDialogData[1]).Single();
-				m.AnchorDynType = int.Parse(anchorDynType);
-				m.HostExecFunc = hostExecFunc;
+                var m = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == editMetadataDialogData[1]).Single();
+                m.AnchorDynType = int.Parse(anchorDynType);
+                m.HostExecFunc = hostExecFunc;
 
                 wiMetaControlIn.list.Children.Remove(m.ContainerUI);
                 DrawMetaControlIn(m);
             }
             if (editMetadataDialogData[0] == "controlout")
             {
-                var m = thisMetadata.ControlsOut.Where(a => a.Name == editMetadataDialogData[1]).Single();
+                var m = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == editMetadataDialogData[1]).Single();
                 m.AnchorDynType = int.Parse(anchorDynType);
                 m.IsDelayed = isDelayed == true;
 
@@ -3721,10 +3740,10 @@ namespace DominoVisualizer
 
                 EditExecBoxUIGetParams(paramsList);
                 //m = paramsEdit[0]; // loose instance
-				m.Name = name;
-				m.Value = paramsEdit[0].Value;
-				m.ValueArray = paramsEdit[0].ValueArray;
-				m.UniqueID = paramsEdit[0].UniqueID;
+                m.Name = name;
+                m.Value = paramsEdit[0].Value;
+                m.ValueArray = paramsEdit[0].ValueArray;
+                m.UniqueID = paramsEdit[0].UniqueID;
 
                 DrawGlobalVar(m);
             }
@@ -3732,9 +3751,9 @@ namespace DominoVisualizer
             wasEdited = true;
         }
 
-		private void RemoveConnVar(object sender, RoutedEventArgs e)
+        private void RemoveConnVar(object sender, RoutedEventArgs e)
         {
-			AskDialog("Remove variable", "Do you want to remove the variable?", () =>
+            AskDialog("Remove variable", "Do you want to remove the variable?", () =>
             {
                 string[] tags = ((string)((Button)sender).Tag).Split('|');
 
@@ -3750,7 +3769,7 @@ namespace DominoVisualizer
 
         public delegate void OpenEditConnVarDialog(string name, string val);
         public OpenEditConnVarDialog openEditConnVarDialog;
-		string[] editConnVar;
+        string[] editConnVar;
 
         private void EditConnVar(object sender, RoutedEventArgs e)
         {
@@ -3769,12 +3788,12 @@ namespace DominoVisualizer
             //val = val.Replace(" ", "");
 
             var c = dominoConnectors[editConnVar[0]];
-			var v = c.SetVariables.Where(a => a.UniqueID == editConnVar[1]).Single();
+            var v = c.SetVariables.Where(a => a.UniqueID == editConnVar[1]).Single();
 
-			v.Name = name;
-			v.Value = val;
+            v.Name = name;
+            v.Value = val;
 
-			c.Widget.list.Children.Remove(v.ContainerUI);
+            c.Widget.list.Children.Remove(v.ContainerUI);
             DrawConnVariable(c, v);
 
             wasEdited = true;
@@ -3783,26 +3802,26 @@ namespace DominoVisualizer
         private void AddConnVar(object sender, RoutedEventArgs e)
         {
             var c = dominoConnectors[(string)((Button)sender).Tag];
-			var v = new DominoDict() { Name = "NewVariable", Value = "\"A value\"" };
+            var v = new DominoDict() { Name = "NewVariable", Value = "\"A value\"" };
             c.SetVariables.Add(v);
-			DrawConnVariable(c, v);
+            DrawConnVariable(c, v);
 
             wasEdited = true;
         }
 
-		public void AddComment(int width, int height)
-		{
+        public void AddComment(int width, int height)
+        {
             //canvas.ResetZoom();
 
-			var c = new DominoComment();
-			c.Name = "A comment";
-			c.Color = 0;
+            var c = new DominoComment();
+            c.Name = "A comment";
+            c.Color = 0;
 
             Point pnt = new(width / 2, height / 2);
             pnt = canvas.Transform3(pnt);
 
-			DrawComment(c, (int)pnt.X, (int)pnt.Y);
-			dominoComments.Add(c);
+            DrawComment(c, (int)pnt.X, (int)pnt.Y);
+            dominoComments.Add(c);
 
             canvas.RefreshChilds();
 
@@ -3811,24 +3830,24 @@ namespace DominoVisualizer
 
         public delegate void OpenAddCommentDialog(string name, int selClr, List<ColorEntry> colors);
         public OpenAddCommentDialog openAddCommentDialog;
-		private DominoComment editComment = null;
+        private DominoComment editComment = null;
 
-		public void EditCommentDialog(object sender, RoutedEventArgs e)
-		{
+        public void EditCommentDialog(object sender, RoutedEventArgs e)
+        {
             string[] tags = ((string)((Button)sender).Tag).Split('|');
 
-			editComment = dominoComments.Where(a => a.UniqueID == tags[1]).Single();
-			
-			if (tags[0] == "edit")
-            {
-				List<ColorEntry> colors = new();
+            editComment = dominoComments.Where(a => a.UniqueID == tags[1]).Single();
 
-				foreach (var c in linesColors)
-					colors.Add(new() { Color = new(c) });
+            if (tags[0] == "edit")
+            {
+                List<ColorEntry> colors = new();
+
+                foreach (var c in linesColors)
+                    colors.Add(new() { Color = new(c) });
 
                 openAddCommentDialog(editComment.Name, editComment.Color, colors);
-			}
-			if (tags[0] == "delete")
+            }
+            if (tags[0] == "delete")
             {
                 AskDialog("Remove comment", "Do you want to remove the comment?", () =>
                 {
@@ -3837,35 +3856,35 @@ namespace DominoVisualizer
 
                     wasEdited = true;
                 });
-			}
-		}
+            }
+        }
 
-		public void EditCommentDialogAct(string name, int selClr)
-		{
+        public void EditCommentDialogAct(string name, int selClr)
+        {
             //canvas.ResetZoom();
 
-			editComment.Name = name;
-			editComment.Color = selClr;
+            editComment.Name = name;
+            editComment.Color = selClr;
 
-			var x = Canvas.GetLeft(editComment.ContainerUI);
-			var y = Canvas.GetTop(editComment.ContainerUI);
+            var x = Canvas.GetLeft(editComment.ContainerUI);
+            var y = Canvas.GetTop(editComment.ContainerUI);
 
-			canvas.Children.Remove(editComment.ContainerUI);
-			
-			DrawComment(editComment, x, y);
+            canvas.Children.Remove(editComment.ContainerUI);
+
+            DrawComment(editComment, x, y);
 
             canvas.RefreshChilds();
 
             wasEdited = true;
         }
 
-		public void AddBorder(int width, int height)
+        public void AddBorder(int width, int height)
         {
             //canvas.ResetZoom();
 
             var b = new DominoBorder();
             b.Color = 0;
-			b.Style = 0;
+            b.Style = 0;
 
             Point pnt = new(width / 2, height / 2);
             pnt = canvas.Transform3(pnt);
@@ -3909,7 +3928,7 @@ namespace DominoVisualizer
             }
         }
 
-		public void EditBorderDialogAct(int selClr, int selStyle, bool? moveChilds)
+        public void EditBorderDialogAct(int selClr, int selStyle, bool? moveChilds)
         {
             //canvas.ResetZoom();
 
@@ -3918,8 +3937,8 @@ namespace DominoVisualizer
 
             var x = Canvas.GetLeft(editBorder.ContainerUI);
             var y = Canvas.GetTop(editBorder.ContainerUI);
-			var w = editBorder.ContainerUI.Width;
-			var h = editBorder.ContainerUI.Height;
+            var w = editBorder.ContainerUI.Width;
+            var h = editBorder.ContainerUI.Height;
 
             canvas.Children.Remove(editBorder.ContainerUI);
 
@@ -3934,7 +3953,7 @@ namespace DominoVisualizer
         {
             var b = new DominoDict();
             b.Name = "NewResource";
-			b.Value = "Type";
+            b.Value = "Type";
 
             DrawResource(b);
             dominoResources.Add(b);
@@ -3968,12 +3987,12 @@ namespace DominoVisualizer
 
             if (tags[0] == "edit")
             {
-				int s = resourcesTypes.FindIndex(a => a == editResource.Value);
+                int s = resourcesTypes.FindIndex(a => a == editResource.Value);
                 openEditResourceDialog(editResource.Name, s == -1 ? 0 : s, resourcesTypes);
             }
             if (tags[0] == "delete")
             {
-				AskDialog("Remove resource", "Do you want to remove the resource?", () =>
+                AskDialog("Remove resource", "Do you want to remove the resource?", () =>
                 {
                     wiResources.list.Children.Remove(editResource.ContainerUI);
                     dominoResources.Remove(editResource);
@@ -3997,20 +4016,20 @@ namespace DominoVisualizer
 
 
 
-		public delegate void OpenGetDataFromBoxDialog(List<string> boxes);
-		public OpenGetDataFromBoxDialog openGetDataFromBoxDialog;
-		public Action<string> getDataFromBoxAction;
+        public delegate void OpenGetDataFromBoxDialog(List<string> boxes);
+        public OpenGetDataFromBoxDialog openGetDataFromBoxDialog;
+        public Action<string> getDataFromBoxAction;
 
         public void GetDataFromBox(Action<string> action)
         {
-			getDataFromBoxAction = action;
+            getDataFromBoxAction = action;
 
             List<string> boxes = new();
             foreach (var b in dominoBoxes.Values)
             {
                 var m = regBoxes[b.Name].DatasOut.Any();
-				if (m)
-					boxes.Add(b.ID);
+                if (m)
+                    boxes.Add(b.ID);
             }
 
             boxes.Sort();
@@ -4018,29 +4037,29 @@ namespace DominoVisualizer
             openGetDataFromBoxDialog(boxes);
         }
 
-		public List<ExecEntry> GetDataFromBoxDatas(string selBox)
-		{
-			var b = dominoBoxes[selBox];
-			var m = regBoxes[b.Name].DatasOut;
+        public List<ExecEntry> GetDataFromBoxDatas(string selBox)
+        {
+            var b = dominoBoxes[selBox];
+            var m = regBoxes[b.Name].DatasOut;
 
-			List<ExecEntry> entries = new();
-			for (int i = 0; i < m.Count; i++)
+            List<ExecEntry> entries = new();
+            for (int i = 0; i < m.Count; i++)
                 entries.Add(new() { Name = m[i].Name, Num = i.ToString() });
 
-			return entries;
-		}
+            return entries;
+        }
 
-		public void GetDataFromBoxCreate(string selBox, string selData)
-		{
-			var d = selBox + $":GetDataOutValue({selData})";
-			getDataFromBoxAction(d);
+        public void GetDataFromBoxCreate(string selBox, string selData)
+        {
+            var d = selBox + $":GetDataOutValue({selData})";
+            getDataFromBoxAction(d);
         }
 
 
 
-		private void DuplicateBorder(object sender, RoutedEventArgs e)
+        private void DuplicateBorder(object sender, RoutedEventArgs e)
         {
-			AskDialog("Duplicate border", $"This will duplicate selected border with all its boxes and connectors.{Environment.NewLine}Also make sure there is free space under the border, because the border will appear under this one.{Environment.NewLine}Continue?", () =>
+            AskDialog("Duplicate border", $"This will duplicate selected border with all its boxes and connectors.{Environment.NewLine}Also make sure there is free space under the border, because the border will appear under this one.{Environment.NewLine}Continue?", () =>
             {
                 string tag = (string)((Button)sender).Tag;
 
@@ -4073,13 +4092,13 @@ namespace DominoVisualizer
                         cy < pos.Y + add.Y
                         )
                     {
-						DominoComment newComm = new();
-						newComm.Name = c.Name;
-						newComm.Color = c.Color;
+                        DominoComment newComm = new();
+                        newComm.Name = c.Name;
+                        newComm.Color = c.Color;
 
-						DrawComment(newComm, cx, cy + newPosY);
+                        DrawComment(newComm, cx, cy + newPosY);
 
-						newComments.Add(newComm);
+                        newComments.Add(newComm);
                     }
                 }
 
@@ -4131,10 +4150,10 @@ namespace DominoVisualizer
                         string oldID = origBox.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
                         string newID = a.Key.Replace("self[", "").Replace("]", "").Replace("en_", "");
 
-						string newConnID = null;
+                        string newConnID = null;
 
-						if (orig.ID != null)
-							newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
+                        if (orig.ID != null)
+                            newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
 
                         DominoConnector newConn = new();
                         newConn.ID = newConnID;
@@ -4146,7 +4165,7 @@ namespace DominoVisualizer
                         foreach (var sc in orig.SubConnections)
                             newConn.SubConnections.Add(addConn(sc));
 
-						if (orig.ID != null)
+                        if (orig.ID != null)
                         {
                             newConnectors.Add(newConnID, newConn);
 
@@ -4212,21 +4231,81 @@ namespace DominoVisualizer
                 foreach (var c in newConnectors)
                     dominoConnectors.Add(c.Key, c.Value);
 
-				wasEdited = true;
+                wasEdited = true;
 
                 canvas.RefreshChilds();
             });
-		}
+        }
 
 
 
 
-		public delegate void SetWorkspaceName(string workspace, string graph);
-		public SetWorkspaceName setWorkspaceName;
+        public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, bool forceReload);
+        public SetWorkspaceName setWorkspaceName;
+
+        private void SetWorkspaceNameAndGraphs(bool forceReload = false)
+        {
+            setWorkspaceName(workspaceName, dominoGraphs, selGraph, forceReload);
+        }
+
+        public string AddGraph(string name)
+        {
+            if (dominoGraphs.Any(a => a.Name == name))
+                return "Graph with this name already exists. Please select another.";
+
+            DominoGraph g = new();
+            g.Name = name;
+            g.IsDefault = false;
+            dominoGraphs.Add(g);
+
+            SetWorkspaceNameAndGraphs();
+
+            wasEdited = true;
+
+            return "";
+        }
+
+        public void DeleteGraph(string graphID)
+        {
+            AskDialog("Delete graph", "Delete this graph? You can't undo this action. Workspace will be saved.", () =>
+            {
+                var g = dominoGraphs.Where(a => a.UniqueID == graphID).Single();
+                if (g.IsDefault)
+                {
+                    openInfoDialog("Delete graph", "You can't delete default graph.");
+                    return;
+                }
+
+                // todo check if box exists in other graphs
+
+                Save(null, true);
+
+                dominoGraphs.RemoveAll(a => a.UniqueID == graphID);
+
+                var dg = dominoGraphs.Where(a => a.IsDefault).Single();
+
+                selGraph = dominoGraphs.FindIndex(a => a.UniqueID == dg.UniqueID);
+                SetWorkspaceNameAndGraphs(true);
+            });
+        }
+
+        private string BuildGraphName(DominoGraph graph)
+        {
+            return workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+        }
+
+        private void AddGraphBox(DominoGraph graph)
+        {
+            string boxName = datPath + BuildGraphName(graph);
+            boxName = boxName.Replace("\\", "/").ToLower();
+
+            regBoxes.Add(boxName, graph.Metadata);
+            regBoxesAll.Add(boxName, graph.Metadata);
+        }
 
         public void CheckEdited(Action afterAction)
-		{
-			if (wasEdited)
+        {
+            if (wasEdited)
             {
                 AskDialog("Unsaved changes", "There are some unsaved changes. Do you want to save before exit?", () =>
                 {
@@ -4242,7 +4321,7 @@ namespace DominoVisualizer
                 afterAction();
         }
 
-		private string CheckConnBox()
+        private string CheckConnBox()
         {
             List<string> execBoxes = new();
             foreach (var c in dominoConnectors.Values)
@@ -4264,7 +4343,7 @@ namespace DominoVisualizer
                     return "There is a box which isn't connected to any exec from a connector - " + b;
                 }
             }
-			return "";
+            return "";
         }
 
         public string Export()
@@ -4273,11 +4352,11 @@ namespace DominoVisualizer
             if (acb != "")
                 return acb;
 
-			string exportPath = "";
-			string fileName = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graphName.Replace(" ", "_").ToLowerInvariant() + ".lua";
+            string exportPath = "";
+            string fileName = BuildGraphName(dominoGraphs[selGraph]);
 
             if (file == "" || file.EndsWith(".lua"))
-			{
+            {
                 System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
                 {
                     Description = "Select output folder.",
@@ -4300,126 +4379,126 @@ namespace DominoVisualizer
 				else
 					return "";*/
             }
-			else
-				exportPath = file.Replace(Path.GetFileName(file), "") + fileName;
+            else
+                exportPath = file.Replace(Path.GetFileName(file), "") + fileName;
 
             string nl = Environment.NewLine;
 
-			var luaData = new MemoryStream();
-			var streamWriter = new StreamWriter(luaData);
+            var luaData = new MemoryStream();
+            var streamWriter = new StreamWriter(luaData);
 
-			streamWriter.WriteLine("");
-			streamWriter.WriteLine("--Created with " + MainWindow.appName);
-			streamWriter.WriteLine("--  Domino script: " + Path.GetFileName(file));
-			streamWriter.WriteLine("--  Workspace:     " + workspaceName);
-            streamWriter.WriteLine("--  Graph:         " + graphName);
             streamWriter.WriteLine("");
-			streamWriter.WriteLine("export = {}");
-			streamWriter.WriteLine("function export:LuaDependencies()");
-			streamWriter.WriteLine("  local luaDepTable = {}");
-			streamWriter.WriteLine("  return luaDepTable");
-			streamWriter.WriteLine("end");
-			streamWriter.WriteLine("function export:Create(cboxRes)");
-			streamWriter.WriteLine("  --if cboxRes:ShouldLoadResources() == true then");
+            streamWriter.WriteLine("--Created with " + MainWindow.appName);
+            streamWriter.WriteLine("--  Domino script: " + Path.GetFileName(file));
+            streamWriter.WriteLine("--  Workspace:     " + workspaceName);
+            streamWriter.WriteLine("--  Graph:         " + dominoGraphs[selGraph].Name);
+            streamWriter.WriteLine("");
+            streamWriter.WriteLine("export = {}");
+            streamWriter.WriteLine("function export:LuaDependencies()");
+            streamWriter.WriteLine("  local luaDepTable = {}");
+            streamWriter.WriteLine("  return luaDepTable");
+            streamWriter.WriteLine("end");
+            streamWriter.WriteLine("function export:Create(cboxRes)");
+            streamWriter.WriteLine("  --if cboxRes:ShouldLoadResources() == true then");
 
-			foreach (var b in regBoxes)
-				streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{b.Key}\")");
+            foreach (var b in regBoxes)
+                streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{b.Key}\")");
 
             dominoResources = dominoResources.OrderBy(a => a.Name).ToList();
             foreach (var res in dominoResources)
-				streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
+                streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
 
-			streamWriter.WriteLine("  --end");
-			streamWriter.WriteLine("end");
+            streamWriter.WriteLine("  --end");
+            streamWriter.WriteLine("end");
 
-			if (game != "fc6")
-			{
-				streamWriter.WriteLine("function export:RegisterCppMetadata()");
+            if (game != "fc6")
+            {
+                streamWriter.WriteLine("function export:RegisterCppMetadata()");
 
-				foreach (var regBox in regBoxes)
-				{
-					streamWriter.WriteLine($"  metadataTable[GetPathID(\"{regBox.Key}\")] = {{");
-					streamWriter.WriteLine($"    stateless = {(regBox.Value.IsStateless ? "true" : "false")},");
-					
-					streamWriter.Write($"    controlIn = {{");
-					if (regBox.Value.ControlsIn.Any())
-					{
-						streamWriter.WriteLine("");
-						int cm = 0;
-						foreach (var m in regBox.Value.ControlsIn)
-						{
-							streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.ControlsIn.Count() ? "," : "")}");
-							cm++;
-						}
-						streamWriter.WriteLine("    },");
-					}
-					else
-						streamWriter.WriteLine("},");
-					streamWriter.WriteLine($"    controlInCount = {regBox.Value.ControlsIn.Count()},");
+                foreach (var regBox in regBoxes)
+                {
+                    streamWriter.WriteLine($"  metadataTable[GetPathID(\"{regBox.Key}\")] = {{");
+                    streamWriter.WriteLine($"    stateless = {(regBox.Value.IsStateless ? "true" : "false")},");
 
-					streamWriter.Write($"    controlOut = {{");
-					if (regBox.Value.ControlsOut.Any())
-					{
-						streamWriter.WriteLine("");
-						int cm = 0;
-						foreach (var m in regBox.Value.ControlsOut)
-						{
-							streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}, delayed = {(m.IsDelayed ? "true" : "false")}}}{(cm != regBox.Value.ControlsOut.Count() ? "," : "")}");
-							cm++;
-						}
-						streamWriter.WriteLine("    },");
-					}
-					else
-						streamWriter.WriteLine("},");
-					streamWriter.WriteLine($"    controlOutCount = {regBox.Value.ControlsOut.Count()},");
+                    streamWriter.Write($"    controlIn = {{");
+                    if (regBox.Value.ControlsIn.Any())
+                    {
+                        streamWriter.WriteLine("");
+                        int cm = 0;
+                        foreach (var m in regBox.Value.ControlsIn)
+                        {
+                            streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.ControlsIn.Count() ? "," : "")}");
+                            cm++;
+                        }
+                        streamWriter.WriteLine("    },");
+                    }
+                    else
+                        streamWriter.WriteLine("},");
+                    streamWriter.WriteLine($"    controlInCount = {regBox.Value.ControlsIn.Count()},");
 
-					streamWriter.Write($"    dataIn = {{");
-					if (regBox.Value.DatasIn.Any())
-					{
-						streamWriter.WriteLine("");
-						int cm = 0;
-						foreach (var m in regBox.Value.DatasIn)
-						{
-							streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\", type = \"{m.DataTypeID}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.DatasIn.Count() ? "," : "")}");
-							cm++;
-						}
-						streamWriter.WriteLine("    },");
-					}
-					else
-						streamWriter.WriteLine("},");
-					streamWriter.WriteLine($"    dataInCount = {regBox.Value.DatasIn.Count()},");
+                    streamWriter.Write($"    controlOut = {{");
+                    if (regBox.Value.ControlsOut.Any())
+                    {
+                        streamWriter.WriteLine("");
+                        int cm = 0;
+                        foreach (var m in regBox.Value.ControlsOut)
+                        {
+                            streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}, delayed = {(m.IsDelayed ? "true" : "false")}}}{(cm != regBox.Value.ControlsOut.Count() ? "," : "")}");
+                            cm++;
+                        }
+                        streamWriter.WriteLine("    },");
+                    }
+                    else
+                        streamWriter.WriteLine("},");
+                    streamWriter.WriteLine($"    controlOutCount = {regBox.Value.ControlsOut.Count()},");
 
-					streamWriter.Write($"    dataOut = {{");
-					if (regBox.Value.DatasOut.Any())
-					{
-						streamWriter.WriteLine("");
-						int cm = 0;
-						foreach (var m in regBox.Value.DatasOut)
-						{
-							streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\", type = \"{m.DataTypeID}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.DatasOut.Count() ? "," : "")}");
-							cm++;
-						}
-						streamWriter.WriteLine("    },");
-					}
-					else
-						streamWriter.WriteLine("},");
-					streamWriter.WriteLine($"    dataOutCount = {regBox.Value.DatasOut.Count()},");
+                    streamWriter.Write($"    dataIn = {{");
+                    if (regBox.Value.DatasIn.Any())
+                    {
+                        streamWriter.WriteLine("");
+                        int cm = 0;
+                        foreach (var m in regBox.Value.DatasIn)
+                        {
+                            streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\", type = \"{m.DataTypeID}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.DatasIn.Count() ? "," : "")}");
+                            cm++;
+                        }
+                        streamWriter.WriteLine("    },");
+                    }
+                    else
+                        streamWriter.WriteLine("},");
+                    streamWriter.WriteLine($"    dataInCount = {regBox.Value.DatasIn.Count()},");
 
-					streamWriter.WriteLine("  }");
-				}
+                    streamWriter.Write($"    dataOut = {{");
+                    if (regBox.Value.DatasOut.Any())
+                    {
+                        streamWriter.WriteLine("");
+                        int cm = 0;
+                        foreach (var m in regBox.Value.DatasOut)
+                        {
+                            streamWriter.WriteLine($"      [{cm}] = {{name = \"{m.Name}\", type = \"{m.DataTypeID}\"{(m.AnchorDynType > 0 ? ", dynamicType = " + m.AnchorDynType.ToString() : "")}}}{(cm != regBox.Value.DatasOut.Count() ? "," : "")}");
+                            cm++;
+                        }
+                        streamWriter.WriteLine("    },");
+                    }
+                    else
+                        streamWriter.WriteLine("},");
+                    streamWriter.WriteLine($"    dataOutCount = {regBox.Value.DatasOut.Count()},");
 
-				streamWriter.WriteLine("end");
-			}
+                    streamWriter.WriteLine("  }");
+                }
 
-			streamWriter.WriteLine("function export:Init(cbox)");
-			streamWriter.WriteLine("  local l0");
+                streamWriter.WriteLine("end");
+            }
 
-			foreach (var var in globalVariables)
-			{
-				var vs = ParamsAsString(var, true);
-				streamWriter.WriteLine($"  self.{var.Name} = {vs}");
+            streamWriter.WriteLine("function export:Init(cbox)");
+            streamWriter.WriteLine("  local l0");
 
-				/*if (var.ValueArray.Count > 0)
+            foreach (var var in globalVariables)
+            {
+                var vs = ParamsAsString(var, true);
+                streamWriter.WriteLine($"  self.{var.Name} = {vs}");
+
+                /*if (var.ValueArray.Count > 0)
 				{
 					string v = "";
 					foreach (var a in var.ValueArray)
@@ -4429,224 +4508,224 @@ namespace DominoVisualizer
 				}
 				else
 					streamWriter.WriteLine($"  self.{var.Name} = {var.Value}");*/
-			}
+            }
 
-			foreach (var box in dominoBoxes)
-			{
-				if (box.Value.ID.StartsWith("self["))
-				{
-					if (game == "fc6")
-						streamWriter.WriteLine($"  {box.Value.ID} = cbox:CreateBox_PathID(\"{CRC64.Hash(box.Value.Name.ToLower().Replace("/", "\\"))}\")");
-					else
-						streamWriter.WriteLine($"  {box.Value.ID} = cbox:CreateBox(\"{box.Value.Name}\")");
-					
-					streamWriter.WriteLine($"  l0 = {box.Value.ID}");
-					streamWriter.WriteLine($"  l0:SetParentGraph(self._cbox)");
-					streamWriter.WriteLine(ExportConns(box.Value));
-				}
-			}
+            foreach (var box in dominoBoxes)
+            {
+                if (box.Value.ID.StartsWith("self["))
+                {
+                    if (game == "fc6")
+                        streamWriter.WriteLine($"  {box.Value.ID} = cbox:CreateBox_PathID(\"{CRC64.Hash(box.Value.Name.ToLower().Replace("/", "\\"))}\")");
+                    else
+                        streamWriter.WriteLine($"  {box.Value.ID} = cbox:CreateBox(\"{box.Value.Name}\")");
 
-			streamWriter.WriteLine("end");
+                    streamWriter.WriteLine($"  l0 = {box.Value.ID}");
+                    streamWriter.WriteLine($"  l0:SetParentGraph(self._cbox)");
+                    streamWriter.WriteLine(ExportConns(box.Value));
+                }
+            }
 
-			List<string> outFncs = new();
+            streamWriter.WriteLine("end");
 
-			foreach (var conn in dominoConnectors)
-			{
-				streamWriter.WriteLine($"function export:{conn.Value.ID}()");
+            List<string> outFncs = new();
 
-				if (conn.Value.ExecBoxes.Any())
-				{
-					bool hasPa = conn.Value.ExecBoxes.Any(a => a.Params.Any() || a.Box.ID.StartsWith("en_"));
-					streamWriter.WriteLine($"  local {(hasPa ? "params, " : "")}l0");
-				}
-				//else
+            foreach (var conn in dominoConnectors)
+            {
+                streamWriter.WriteLine($"function export:{conn.Value.ID}()");
 
-				if (conn.Value.SetVariables.Count > 0)
-					streamWriter.WriteLine($"  self:{conn.Value.ID.Replace("f_", "ex_")}()");
+                if (conn.Value.ExecBoxes.Any())
+                {
+                    bool hasPa = conn.Value.ExecBoxes.Any(a => a.Params.Any() || a.Box.ID.StartsWith("en_"));
+                    streamWriter.WriteLine($"  local {(hasPa ? "params, " : "")}l0");
+                }
+                //else
 
-				foreach (var exec in conn.Value.ExecBoxes)
-				{
-					//if (conn.Value.SetVariables.Count > 0)
-					//	streamWriter.WriteLine($"  self:{conn.Value.ID.Replace("f_", "ex_")}()");
+                if (conn.Value.SetVariables.Count > 0)
+                    streamWriter.WriteLine($"  self:{conn.Value.ID.Replace("f_", "ex_")}()");
 
-					bool wasLocalBox = false;
+                foreach (var exec in conn.Value.ExecBoxes)
+                {
+                    //if (conn.Value.SetVariables.Count > 0)
+                    //	streamWriter.WriteLine($"  self:{conn.Value.ID.Replace("f_", "ex_")}()");
 
-					if (exec.Params.Count > 0 || exec.Box.ID.StartsWith("en_"))
-					{
-						if (exec.Box.ID.StartsWith("en_"))
-							streamWriter.WriteLine($"  params = self:{exec.Box.ID}()");
-						else
-							streamWriter.WriteLine($"  params = self:en_{exec.Box.ID.Replace("self[", "").Replace("]", "")}()");
-					}
+                    bool wasLocalBox = false;
 
-					if (exec.Box.ID.StartsWith("en_"))
-					{
-						wasLocalBox = true;
-						if (game == "fc6")
-							streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(exec.Box.Name.ToLower().Replace("/", "\\"))}\"]");
-						else
-							streamWriter.WriteLine($"  l0 = Boxes[GetPathID(\"{exec.Box.Name}\")]");
-					}
-					else
-						streamWriter.WriteLine($"  l0 = {exec.Box.ID}");
+                    if (exec.Params.Count > 0 || exec.Box.ID.StartsWith("en_"))
+                    {
+                        if (exec.Box.ID.StartsWith("en_"))
+                            streamWriter.WriteLine($"  params = self:{exec.Box.ID}()");
+                        else
+                            streamWriter.WriteLine($"  params = self:en_{exec.Box.ID.Replace("self[", "").Replace("]", "")}()");
+                    }
 
-					streamWriter.WriteLine($"  l0:Exec{(exec.Type == ExecType.ExecDynInt ? "DynInt" : "")}({exec.Exec}, {(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}{(exec.Type == ExecType.ExecDynInt ? ", " + exec.DynIntExec : "")})");
+                    if (exec.Box.ID.StartsWith("en_"))
+                    {
+                        wasLocalBox = true;
+                        if (game == "fc6")
+                            streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(exec.Box.Name.ToLower().Replace("/", "\\"))}\"]");
+                        else
+                            streamWriter.WriteLine($"  l0 = Boxes[GetPathID(\"{exec.Box.Name}\")]");
+                    }
+                    else
+                        streamWriter.WriteLine($"  l0 = {exec.Box.ID}");
 
-					if (wasLocalBox)
-						streamWriter.WriteLine($"  l0:SetParentGraph(nil)");
-				}
+                    streamWriter.WriteLine($"  l0:Exec{(exec.Type == ExecType.ExecDynInt ? "DynInt" : "")}({exec.Exec}, {(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}{(exec.Type == ExecType.ExecDynInt ? ", " + exec.DynIntExec : "")})");
 
-				foreach (var otf in conn.Value.OutFuncName)
-				{
-					streamWriter.WriteLine($"  self:{otf}()");
+                    if (wasLocalBox)
+                        streamWriter.WriteLine($"  l0:SetParentGraph(nil)");
+                }
 
-					if (!outFncs.Contains(otf))
-						outFncs.Add(otf);
-				}
+                foreach (var otf in conn.Value.OutFuncName)
+                {
+                    streamWriter.WriteLine($"  self:{otf}()");
 
-				streamWriter.WriteLine("end");
-			}
+                    if (!outFncs.Contains(otf))
+                        outFncs.Add(otf);
+                }
 
-			List<string> alreadyProccessed = new();
-			foreach (var conn in dominoConnectors)
-			{
-				foreach (var exec in conn.Value.ExecBoxes)
-				{
-					if ((exec.Params.Count > 0 || exec.Box.ID.StartsWith("en_")) && !alreadyProccessed.Contains(exec.Box.ID))
-					{
-						bool wasLocalBox = false;
-						string fN = "";
+                streamWriter.WriteLine("end");
+            }
 
-						if (exec.Box.ID.StartsWith("en_"))
-						{
-							wasLocalBox = true;
-							fN = exec.Box.ID;
-						}
-						else
-							fN = "en_" + exec.Box.ID.Replace("self[", "").Replace("]", "");
+            List<string> alreadyProccessed = new();
+            foreach (var conn in dominoConnectors)
+            {
+                foreach (var exec in conn.Value.ExecBoxes)
+                {
+                    if ((exec.Params.Count > 0 || exec.Box.ID.StartsWith("en_")) && !alreadyProccessed.Contains(exec.Box.ID))
+                    {
+                        bool wasLocalBox = false;
+                        string fN = "";
 
-						streamWriter.WriteLine($"function export:{fN}()");
+                        if (exec.Box.ID.StartsWith("en_"))
+                        {
+                            wasLocalBox = true;
+                            fN = exec.Box.ID;
+                        }
+                        else
+                            fN = "en_" + exec.Box.ID.Replace("self[", "").Replace("]", "");
 
-						Dictionary<string, string> tmpVaBAs = new();
-						int tmpIdx = 0;
+                        streamWriter.WriteLine($"function export:{fN}()");
 
-						string processParamsOutVal(List<DominoDict> listParams)
-						{
-							string outData = "";
+                        Dictionary<string, string> tmpVaBAs = new();
+                        int tmpIdx = 0;
 
-							if (listParams.Any())
-							{
-								foreach (var ppm in listParams)
-								{
-									if (ppm.Value != null && ppm.Value.Contains("GetDataOutValue"))
-									{
-										string bN = ppm.Value.Split(':')[0];
-										tmpVaBAs.Add(bN, "l" + tmpIdx.ToString());
+                        string processParamsOutVal(List<DominoDict> listParams)
+                        {
+                            string outData = "";
 
-										if (dominoBoxes.ContainsKey(bN) && bN.StartsWith("en_"))
-										{
-											if (game == "fc6")
-												bN = "Boxes[\"" + CRC64.Hash(dominoBoxes[bN].Name.ToLower().Replace("/", "\\")) + "\"]";
-											else
-												bN = "Boxes[GetPathID(\"" + dominoBoxes[bN].Name + "\")]";
-										}
+                            if (listParams.Any())
+                            {
+                                foreach (var ppm in listParams)
+                                {
+                                    if (ppm.Value != null && ppm.Value.Contains("GetDataOutValue"))
+                                    {
+                                        string bN = ppm.Value.Split(':')[0];
+                                        tmpVaBAs.Add(bN, "l" + tmpIdx.ToString());
+
+                                        if (dominoBoxes.ContainsKey(bN) && bN.StartsWith("en_"))
+                                        {
+                                            if (game == "fc6")
+                                                bN = "Boxes[\"" + CRC64.Hash(dominoBoxes[bN].Name.ToLower().Replace("/", "\\")) + "\"]";
+                                            else
+                                                bN = "Boxes[GetPathID(\"" + dominoBoxes[bN].Name + "\")]";
+                                        }
 
                                         outData += $"  l{tmpIdx} = {bN}{Environment.NewLine}";
-										tmpIdx++;
-									}
+                                        tmpIdx++;
+                                    }
 
-									outData += processParamsOutVal(ppm.ValueArray);
-								}
-							}
+                                    outData += processParamsOutVal(ppm.ValueArray);
+                                }
+                            }
 
-							return outData;
-						}
+                            return outData;
+                        }
 
-						var varSetBoxes = processParamsOutVal(exec.Params);
+                        var varSetBoxes = processParamsOutVal(exec.Params);
 
-						string locDefs = "";
-						for (int i = 0; i < tmpIdx + (wasLocalBox && tmpIdx == 0 ? 1 : 0); i++)
-							locDefs += ", l" + i.ToString();
-						streamWriter.WriteLine($"  local params{locDefs}");
+                        string locDefs = "";
+                        for (int i = 0; i < tmpIdx + (wasLocalBox && tmpIdx == 0 ? 1 : 0); i++)
+                            locDefs += ", l" + i.ToString();
+                        streamWriter.WriteLine($"  local params{locDefs}");
 
-						if (wasLocalBox)
-						{
-							if (game == "fc6")
-								streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(exec.Box.Name.ToLower().Replace("/", "\\"))}\"]");
-							else
-								streamWriter.WriteLine($"  l0 = Boxes[GetPathID(\"{exec.Box.Name}\")]");
-							
-							streamWriter.WriteLine("  l0:SetParentGraph(self._cbox)");
-							streamWriter.WriteLine(ExportConns(exec.Box));
-						}
+                        if (wasLocalBox)
+                        {
+                            if (game == "fc6")
+                                streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(exec.Box.Name.ToLower().Replace("/", "\\"))}\"]");
+                            else
+                                streamWriter.WriteLine($"  l0 = Boxes[GetPathID(\"{exec.Box.Name}\")]");
 
-						streamWriter.Write(varSetBoxes);
+                            streamWriter.WriteLine("  l0:SetParentGraph(self._cbox)");
+                            streamWriter.WriteLine(ExportConns(exec.Box));
+                        }
 
-						string a(string param)
-						{
-							if (param.Contains("GetDataOutValue"))
-							{
-								string bN = param.Split(':')[0];
-								if (tmpVaBAs.ContainsKey(bN))
-									return param.Replace(bN, tmpVaBAs[bN]);
-							}
+                        streamWriter.Write(varSetBoxes);
 
-							return param;
-						}
+                        string a(string param)
+                        {
+                            if (param.Contains("GetDataOutValue"))
+                            {
+                                string bN = param.Split(':')[0];
+                                if (tmpVaBAs.ContainsKey(bN))
+                                    return param.Replace(bN, tmpVaBAs[bN]);
+                            }
 
-						void writeParams(List<DominoDict> listParams, int indent, bool root = false)
-						{
-							string indentSpaces = "";
-							for (int i = 0; i < indent; i++)
-								indentSpaces += "  ";
+                            return param;
+                        }
 
-							if (root)
-								streamWriter.Write(indentSpaces + "params = {");
+                        void writeParams(List<DominoDict> listParams, int indent, bool root = false)
+                        {
+                            string indentSpaces = "";
+                            for (int i = 0; i < indent; i++)
+                                indentSpaces += "  ";
 
-							if (listParams.Any())
-							{
-								indentSpaces += "  ";
-								streamWriter.WriteLine("");
+                            if (root)
+                                streamWriter.Write(indentSpaces + "params = {");
 
-								int cnt = 0;
-								foreach (var ppm in listParams)
-								{
-									string cc = cnt != listParams.Count - 1 ? "," : "";
+                            if (listParams.Any())
+                            {
+                                indentSpaces += "  ";
+                                streamWriter.WriteLine("");
 
-									if (ppm.Name != "")
+                                int cnt = 0;
+                                foreach (var ppm in listParams)
+                                {
+                                    string cc = cnt != listParams.Count - 1 ? "," : "";
+
+                                    if (ppm.Name != "")
                                     {
                                         bool dIsNum = int.TryParse(ppm.Name, out _);
                                         streamWriter.Write($"{indentSpaces}{(dIsNum ? "[" : "")}{ppm.Name}{(dIsNum ? "]" : "")} = ");
                                     }
-									else if (ppm.Name == "")
+                                    else if (ppm.Name == "")
                                         streamWriter.Write($"{indentSpaces}");
 
                                     if (ppm.Value != null)
-										streamWriter.WriteLine($"{a(ppm.Value)}{cc}");
+                                        streamWriter.WriteLine($"{a(ppm.Value)}{cc}");
 
-									if (ppm.ValueArray.Any())
-									{
-										streamWriter.Write("{");
+                                    if (ppm.ValueArray.Any())
+                                    {
+                                        streamWriter.Write("{");
 
-										writeParams(ppm.ValueArray, indent + 1);
+                                        writeParams(ppm.ValueArray, indent + 1);
 
-										streamWriter.WriteLine(indentSpaces + "}" + cc);
-									}
+                                        streamWriter.WriteLine(indentSpaces + "}" + cc);
+                                    }
 
-									if (!ppm.ValueArray.Any() && ppm.Value == null)
+                                    if (!ppm.ValueArray.Any() && ppm.Value == null)
                                         streamWriter.WriteLine("{}" + cc);
 
                                     cnt++;
-								}
-							}
+                                }
+                            }
 
-							if (root)
-								streamWriter.WriteLine((listParams.Any() ? "  " : "") + "}");
-						}
+                            if (root)
+                                streamWriter.WriteLine((listParams.Any() ? "  " : "") + "}");
+                        }
 
-						writeParams(exec.Params, 1, true);
+                        writeParams(exec.Params, 1, true);
 
-						/*
+                        /*
 						if (exec.Params.Any())
 						{
 							streamWriter.WriteLine("  params = {");
@@ -4672,531 +4751,583 @@ namespace DominoVisualizer
 							streamWriter.WriteLine("  params = {}");
 						*/
 
-						streamWriter.WriteLine("  return params");
-						streamWriter.WriteLine("end");
+                        streamWriter.WriteLine("  return params");
+                        streamWriter.WriteLine("end");
 
-						alreadyProccessed.Add(exec.Box.ID);
-					}
-				}
-			}
+                        alreadyProccessed.Add(exec.Box.ID);
+                    }
+                }
+            }
 
-			foreach (var conn in dominoConnectors)
-			{
-				if (conn.Value.SetVariables.Count > 0)
-				{
-					streamWriter.WriteLine($"function export:{conn.Value.ID.Replace("f_", "ex_")}()");
+            foreach (var conn in dominoConnectors)
+            {
+                if (conn.Value.SetVariables.Count > 0)
+                {
+                    streamWriter.WriteLine($"function export:{conn.Value.ID.Replace("f_", "ex_")}()");
 
-					Dictionary<string, string> tmpVars = new();
-					List<string> tmpVarsSets = new();
-					int vi = 0;
+                    Dictionary<string, string> tmpVars = new();
+                    List<string> tmpVarsSets = new();
+                    int vi = 0;
 
-					foreach (var svar in conn.Value.SetVariables)
-					{
-						if (svar.Name.Contains(':'))
-						{
-							tmpVars.Add(svar.Name.Split(':')[0], "l" + vi.ToString());
-							vi++;
-						}
+                    foreach (var svar in conn.Value.SetVariables)
+                    {
+                        if (svar.Name.Contains(':'))
+                        {
+                            tmpVars.Add(svar.Name.Split(':')[0], "l" + vi.ToString());
+                            vi++;
+                        }
 
-						if (svar.Value.Contains(':'))
-						{
-							var a = tmpVars.TryAdd(svar.Value.Split(':')[0], "l" + vi.ToString());
-							if (a) vi++;
-						}
-					}
+                        if (svar.Value.Contains(':'))
+                        {
+                            var a = tmpVars.TryAdd(svar.Value.Split(':')[0], "l" + vi.ToString());
+                            if (a) vi++;
+                        }
+                    }
 
-					foreach (var svar in conn.Value.SetVariables)
-					{
-						string dSet = svar.Name + " = " + svar.Value;
+                    foreach (var svar in conn.Value.SetVariables)
+                    {
+                        string dSet = svar.Name + " = " + svar.Value;
 
-						foreach (var tmpVar in tmpVars)
-							dSet = dSet.Replace(tmpVar.Key, tmpVar.Value);
+                        foreach (var tmpVar in tmpVars)
+                            dSet = dSet.Replace(tmpVar.Key, tmpVar.Value);
 
-						tmpVarsSets.Add(dSet);
-					}
+                        tmpVarsSets.Add(dSet);
+                    }
 
-					string outVDef = "";
+                    string outVDef = "";
 
-					foreach (var tmpVar in tmpVars)
-						outVDef += (outVDef != "" ? ", " : "") + tmpVar.Value;
+                    foreach (var tmpVar in tmpVars)
+                        outVDef += (outVDef != "" ? ", " : "") + tmpVar.Value;
 
-					if (outVDef != "")
-						streamWriter.WriteLine("  local " + outVDef);
+                    if (outVDef != "")
+                        streamWriter.WriteLine("  local " + outVDef);
 
-					foreach (var tmpVar in tmpVars)
-					{
-						string bb = tmpVar.Key;
+                    foreach (var tmpVar in tmpVars)
+                    {
+                        string bb = tmpVar.Key;
 
-						if (dominoBoxes.ContainsKey(tmpVar.Key) && tmpVar.Key.StartsWith("en_"))
-						{
-							if (game == "fc6")
-								bb = "Boxes[\"" + CRC64.Hash(dominoBoxes[tmpVar.Key].Name.ToLower().Replace("/", "\\")) + "\"]";
-							else
-								bb = "Boxes[GetPathID(\"" + dominoBoxes[tmpVar.Key].Name + "\")]";
-						}
+                        if (dominoBoxes.ContainsKey(tmpVar.Key) && tmpVar.Key.StartsWith("en_"))
+                        {
+                            if (game == "fc6")
+                                bb = "Boxes[\"" + CRC64.Hash(dominoBoxes[tmpVar.Key].Name.ToLower().Replace("/", "\\")) + "\"]";
+                            else
+                                bb = "Boxes[GetPathID(\"" + dominoBoxes[tmpVar.Key].Name + "\")]";
+                        }
 
-						streamWriter.WriteLine($"  {tmpVar.Value} = {bb}");
-					}
+                        streamWriter.WriteLine($"  {tmpVar.Value} = {bb}");
+                    }
 
-					foreach (var tmpVarSet in tmpVarsSets)
-						streamWriter.WriteLine($"  {tmpVarSet}");
+                    foreach (var tmpVarSet in tmpVarsSets)
+                        streamWriter.WriteLine($"  {tmpVarSet}");
 
-					streamWriter.WriteLine("end");
-				}
-			}
+                    streamWriter.WriteLine("end");
+                }
+            }
 
-			foreach (var otf in outFncs)
-			{
-				streamWriter.WriteLine($"function export:{otf}()");
-				streamWriter.WriteLine("end");
-			}
+            foreach (var otf in outFncs)
+            {
+                streamWriter.WriteLine($"function export:{otf}()");
+                streamWriter.WriteLine("end");
+            }
 
-			streamWriter.WriteLine("_compilerVersion = 60");
-			streamWriter.Close();
+            streamWriter.WriteLine("_compilerVersion = 60");
+            streamWriter.Close();
 
-			XDocument doc = new();
-			doc.Declaration = null;
-			doc.Add(ExportDominoMetadata());
+            XDocument doc = new();
+            doc.Declaration = null;
+            doc.Add(ExportDominoMetadata());
 
-			var docData = new MemoryStream();
-			XmlWriterSettings xws = new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true, IndentChars = "\t", Encoding = Encoding.ASCII };
-			using (XmlWriter xw = XmlWriter.Create(docData, xws))
-				doc.Save(xw);
+            var docData = new MemoryStream();
+            XmlWriterSettings xws = new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true, IndentChars = "\t", Encoding = Encoding.ASCII };
+            using (XmlWriter xw = XmlWriter.Create(docData, xws))
+                doc.Save(xw);
 
-			byte[] lua = luaData.ToArray();
-			byte[] meta = docData.ToArray();
+            byte[] lua = luaData.ToArray();
+            byte[] meta = docData.ToArray();
 
-			var fileStream = File.Create(exportPath);
-			fileStream.Write(BitConverter.GetBytes(0x4341554c), 0, 4);
-			fileStream.Write(BitConverter.GetBytes(lua.Length), 0, sizeof(int));
-			fileStream.WriteBytes(lua);
-			fileStream.WriteBytes(meta);
-			fileStream.Close();
+            var fileStream = File.Create(exportPath);
+            fileStream.Write(BitConverter.GetBytes(0x4341554c), 0, 4);
+            fileStream.Write(BitConverter.GetBytes(lua.Length), 0, sizeof(int));
+            fileStream.WriteBytes(lua);
+            fileStream.WriteBytes(meta);
+            fileStream.Close();
 
-			return "";
-		}
+            return "";
+        }
 
-		private string ExportConns(DominoBox box)
-		{
-			string nl = Environment.NewLine;
+        private string ExportConns(DominoBox box)
+        {
+            string nl = Environment.NewLine;
 
-			bool SetDynAnchorCountAdd = false;
+            bool SetDynAnchorCountAdd = false;
 
-			string SetDynAnchorCount = "  l0:SetDynAnchorCount({" + nl;
-			var execs = dominoConnectors.Values.SelectMany(a => a.ExecBoxes.Where(b => b.Box.ID == box.ID));
-			var medi = execs.Where(a => a.Type == ExecType.ExecDynInt).GroupBy(x => x.Exec)
-				.Select(x => new
-				{
-					Count = x.Count(),
-					Exec = x.Key,
-				}).OrderByDescending(x => x.Count).ToList();
+            string SetDynAnchorCount = "  l0:SetDynAnchorCount({" + nl;
+            var execs = dominoConnectors.Values.SelectMany(a => a.ExecBoxes.Where(b => b.Box.ID == box.ID));
+            var medi = execs.Where(a => a.Type == ExecType.ExecDynInt).GroupBy(x => x.Exec)
+                .Select(x => new
+                {
+                    Count = x.Count(),
+                    Exec = x.Key,
+                }).OrderByDescending(x => x.Count).ToList();
 
-			if (medi.Any())
-			{
-				SetDynAnchorCountAdd = true;
+            if (medi.Any())
+            {
+                SetDynAnchorCountAdd = true;
 
-				SetDynAnchorCount += "    controlIn = {" + nl;
+                SetDynAnchorCount += "    controlIn = {" + nl;
 
-				for (int i = 0; i < medi.Count; i++)
-					SetDynAnchorCount += $"      [{medi[i].Exec}] = {medi[i].Count}{(i != (medi.Count - 1) ? "," : "")}{nl}";
+                for (int i = 0; i < medi.Count; i++)
+                    SetDynAnchorCount += $"      [{medi[i].Exec}] = {medi[i].Count}{(i != (medi.Count - 1) ? "," : "")}{nl}";
 
-				SetDynAnchorCount += "    }," + nl;
-			}
-			else
-				SetDynAnchorCount += "    controlIn = {}," + nl;
+                SetDynAnchorCount += "    }," + nl;
+            }
+            else
+                SetDynAnchorCount += "    controlIn = {}," + nl;
 
-			string SetConnections = "";
-			if (box.Connections.Count == 0)
-				SetConnections += "  l0:SetConnections({})";
-			else
-			{
-				SetConnections += "  l0:SetConnections({" + nl;
+            string SetConnections = "";
+            if (box.Connections.Count == 0)
+                SetConnections += "  l0:SetConnections({})";
+            else
+            {
+                SetConnections += "  l0:SetConnections({" + nl;
 
-				List<string> dynac = new();
+                List<string> dynac = new();
 
-				for (int i = 0; i < box.Connections.Count; i++)
-				{
-					var c = box.Connections[i];
+                for (int i = 0; i < box.Connections.Count; i++)
+                {
+                    var c = box.Connections[i];
 
-					if (c.SubConnections.Count > 0)
-					{
-						SetConnections += $"    [{c.FromBoxConnectID}] = {{{nl}";
-						SetConnections += $"      connections = {{{nl}";
+                    if (c.SubConnections.Count > 0)
+                    {
+                        SetConnections += $"    [{c.FromBoxConnectID}] = {{{nl}";
+                        SetConnections += $"      connections = {{{nl}";
 
-						for (int j = 0; j < c.SubConnections.Count; j++)
-						{
-							if (c.SubConnections[j].FromBoxConnectIDStr != "")
-							{
+                        for (int j = 0; j < c.SubConnections.Count; j++)
+                        {
+                            if (c.SubConnections[j].FromBoxConnectIDStr != "")
+                            {
                                 SetConnections += $"        [{c.SubConnections[j].FromBoxConnectID}] = {{{nl}";
                                 SetConnections += $"          string = \"{c.SubConnections[j].FromBoxConnectIDStr}\",{nl}";
                                 SetConnections += $"          value = self.{c.SubConnections[j].ID}{nl}";
                                 SetConnections += $"        }}{(j != (c.SubConnections.Count - 1) ? "," : "")}{nl}";
                             }
                             else
-								SetConnections += $"        [{c.SubConnections[j].FromBoxConnectID}] = self.{c.SubConnections[j].ID}{(j != (c.SubConnections.Count - 1) ? "," : "")}{nl}";
+                                SetConnections += $"        [{c.SubConnections[j].FromBoxConnectID}] = self.{c.SubConnections[j].ID}{(j != (c.SubConnections.Count - 1) ? "," : "")}{nl}";
                         }
 
                         SetConnections += $"      }},{nl}";
-						SetConnections += $"      count = {c.SubConnections.Count}{nl}";
-						SetConnections += $"    }}{(i != (box.Connections.Count - 1) ? "," : "")}{nl}";
+                        SetConnections += $"      count = {c.SubConnections.Count}{nl}";
+                        SetConnections += $"    }}{(i != (box.Connections.Count - 1) ? "," : "")}{nl}";
 
-						dynac.Add($"      [{c.FromBoxConnectID}] = {c.SubConnections.Count}{nl}");
-					}
-					else
-						SetConnections += $"    [{c.FromBoxConnectID}] = self.{c.ID}{(i != (box.Connections.Count - 1) ? "," : "")}{nl}";
-				}
+                        dynac.Add($"      [{c.FromBoxConnectID}] = {c.SubConnections.Count}{nl}");
+                    }
+                    else
+                        SetConnections += $"    [{c.FromBoxConnectID}] = self.{c.ID}{(i != (box.Connections.Count - 1) ? "," : "")}{nl}";
+                }
 
-				if (dynac.Any())
-				{
-					SetDynAnchorCountAdd = true;
+                if (dynac.Any())
+                {
+                    SetDynAnchorCountAdd = true;
 
-					SetDynAnchorCount += "    controlOut = {" + nl;
+                    SetDynAnchorCount += "    controlOut = {" + nl;
 
-					for (int i = 0; i < dynac.Count; i++)
-						SetDynAnchorCount += $"{dynac[i]}{(i != (dynac.Count - 1) ? "," : "")}";
+                    for (int i = 0; i < dynac.Count; i++)
+                        SetDynAnchorCount += $"{dynac[i]}{(i != (dynac.Count - 1) ? "," : "")}";
 
-					SetDynAnchorCount += "    }," + nl;
-				}
-				else
-					SetDynAnchorCount += "    controlOut = {}," + nl;
+                    SetDynAnchorCount += "    }," + nl;
+                }
+                else
+                    SetDynAnchorCount += "    controlOut = {}," + nl;
 
-				SetConnections += "  })";
-			}
+                SetConnections += "  })";
+            }
 
-			var vrs = execs.SelectMany(a => a.Params.Where(b => b.ValueArray.Any(c => c.Name.Contains("count"))));
-			if (vrs.Any())
-			{
-				SetDynAnchorCountAdd = true;
+            var vrs = execs.SelectMany(a => a.Params.Where(b => b.ValueArray.Any(c => c.Name.Contains("count"))));
+            if (vrs.Any())
+            {
+                SetDynAnchorCountAdd = true;
 
-				SetDynAnchorCount += "    dataIn = {" + nl;
+                SetDynAnchorCount += "    dataIn = {" + nl;
 
-				for (int i = 0; i < vrs.Count(); i++)
-					foreach (var scd in vrs.ElementAt(i).ValueArray)
-						if (scd.Name == "count")
-							SetDynAnchorCount += $"      [{vrs.ElementAt(i).Name}] = {scd.Value}{(i != (vrs.Count() - 1) ? "," : "")}{nl}";
+                for (int i = 0; i < vrs.Count(); i++)
+                    foreach (var scd in vrs.ElementAt(i).ValueArray)
+                        if (scd.Name == "count")
+                            SetDynAnchorCount += $"      [{vrs.ElementAt(i).Name}] = {scd.Value}{(i != (vrs.Count() - 1) ? "," : "")}{nl}";
 
-				SetDynAnchorCount += "    }," + nl;
-			}
-			else
-				SetDynAnchorCount += "    dataIn = {}," + nl;
+                SetDynAnchorCount += "    }," + nl;
+            }
+            else
+                SetDynAnchorCount += "    dataIn = {}," + nl;
 
-			SetDynAnchorCount += "    dataOut = {}" + nl;
+            SetDynAnchorCount += "    dataOut = {}" + nl;
 
-			SetDynAnchorCount += "  })" + nl;
+            SetDynAnchorCount += "  })" + nl;
 
-			string output = "";
+            string output = "";
 
-			if (SetDynAnchorCountAdd)
-				output += SetDynAnchorCount;
+            if (SetDynAnchorCountAdd)
+                output += SetDynAnchorCount;
 
-			output += SetConnections;
+            output += SetConnections;
 
-			return output;
-		}
+            return output;
+        }
 
-		public string Save(Window wnd = null)
+        public string Save(Window wnd = null, bool afterDelete = false)
         {
-			var acb = CheckConnBox();
-			if (acb != "")
-				return acb;
+            var acb = CheckConnBox();
+            if (acb != "")
+                return acb;
 
-			if (file == "" || file.EndsWith(".lua"))
-			{
-				SaveFileDialog sfd = new();
+            if (file == "" || file.EndsWith(".lua"))
+            {
+                SaveFileDialog sfd = new();
                 sfd.Title = "Save Domino Workspace";
                 sfd.Filter = "Domino Workspace|*.domino.xml";
-				if (sfd.ShowDialog() == true)
-				{
-					file = sfd.FileName;
-				}
-				else
-					return "";
-			}
+                if (sfd.ShowDialog() == true)
+                {
+                    file = sfd.FileName;
+                }
+                else
+                    return "";
+            }
 
-			if (wnd != null)
-				wnd.Title = MainWindow.appName + " - " + file;
+            if (wnd != null)
+                wnd.Title = MainWindow.appName + " - " + file;
 
-			//canvas.ResetZoom();
-			wasEdited = false;
+            //canvas.ResetZoom();
+            wasEdited = false;
 
             static XElement saveConn(DominoConnector c)
-			{
-				XElement xcnt = new("Connector");
-				xcnt.Add(new XAttribute("FromBoxConnectID", c.FromBoxConnectID.ToString()));
-				xcnt.Add(new XAttribute("FromBoxConnectIDStr", c.FromBoxConnectIDStr.ToString()));
+            {
+                XElement xcnt = new("Connector");
+                xcnt.Add(new XAttribute("FromBoxConnectID", c.FromBoxConnectID.ToString()));
+                xcnt.Add(new XAttribute("FromBoxConnectIDStr", c.FromBoxConnectIDStr.ToString()));
 
-				if (c.SubConnections.Any())
-				{
-					XElement xsc = new("SubConnections");
+                if (c.SubConnections.Any())
+                {
+                    XElement xsc = new("SubConnections");
 
-					foreach (var sc in c.SubConnections)
-						if (sc.ID != null || sc.SubConnections.Any())
+                    foreach (var sc in c.SubConnections)
+                        if (sc.ID != null || sc.SubConnections.Any())
+                            xsc.Add(saveConn(sc));
+
+                    xcnt.Add(xsc);
+                }
+                else
+                {
+                    xcnt.Add(new XAttribute("ID", c.ID));
+                }
+
+                return xcnt;
+            }
+
+            XElement writeParams(List<DominoDict> prms, string pn, string vn)
+            {
+                if (prms.Any())
+                {
+                    XElement xprms = new(pn);
+
+                    foreach (var prm in prms)
+                    {
+                        XElement xPrm = new(vn, new XAttribute("Name", prm.Name));
+
+                        if (prm.Value != null)
+                            xPrm.Add(new XAttribute("Value", prm.Value));
+
+                        xPrm.Add(writeParams(prm.ValueArray, pn, vn));
+
+                        xprms.Add(xPrm);
+                    }
+
+                    return xprms;
+                }
+
+                return null;
+            }
+
+            XElement xGraph = new("Graph");
+            if (!afterDelete)
+            {
+                xGraph.Add(new XAttribute("Name", dominoGraphs[selGraph].Name));
+                xGraph.Add(new XAttribute("UniqueID", dominoGraphs[selGraph].UniqueID));
+                xGraph.Add(new XAttribute("IsDefault", dominoGraphs[selGraph].IsDefault ? "true" : "false"));
+
+                xGraph.Add(ExportDominoMetadata());
+
+                XElement xResources = new("Resources");
+                foreach (var c in dominoResources)
+                    xResources.Add(new XElement("Resource", new XAttribute("File", c.Name), new XAttribute("Type", c.Value)));
+                xGraph.Add(xResources);
+
+                xGraph.Add(writeParams(globalVariables, "Variables", "Variable"));
+
+                XElement xComments = new("Comments");
+                foreach (var c in dominoComments)
+                {
+                    var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
+                    xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
+                }
+                xGraph.Add(xComments);
+
+                XElement xBorders = new("Borders");
+                foreach (var b in dominoBorders)
+                {
+                    var a = canvas.Transform2(new(Canvas.GetLeft(b.ContainerUI), Canvas.GetTop(b.ContainerUI)));
+                    xBorders.Add(new XElement("Border",
+                        new XAttribute("Style", b.Style),
+                        new XAttribute("Color", b.Color),
+                        new XAttribute("EnableMovingChilds", b.ContainerUI.EnableMovingChilds ? "true" : "false"),
+                        new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("DrawW", b.ContainerUI.Width.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
+                        ));
+                }
+                xGraph.Add(xBorders);
+
+                XElement xBoxes = new("Boxes");
+                foreach (var c in dominoBoxes)
+                {
+                    var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
+
+                    XElement xBox = new("Box");
+                    xBox.Add(new XAttribute("ID", c.Value.ID));
+                    xBox.Add(new XAttribute("Name", c.Value.Name));
+                    xBox.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
+                    xBox.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
+
+                    if (c.Value.Connections.Any())
+                    {
+                        XElement xsc = new("Connections");
+
+                        foreach (var sc in c.Value.Connections)
+                        {
+                            xsc.Add(saveConn(sc));
+                        }
+
+                        xBox.Add(xsc);
+                    }
+
+                    xBoxes.Add(xBox);
+                }
+                xGraph.Add(xBoxes);
+
+                XElement xConns = new("Connectors");
+                foreach (var c in dominoConnectors)
+                {
+                    var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
+
+                    XElement xc = new("Connector");
+                    xc.Add(new XAttribute("ID", c.Value.ID));
+                    xc.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
+                    xc.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
+
+                    if (c.Value.ExecBoxes.Any())
+                    {
+                        XElement xsc = new("ExecBoxes");
+
+                        foreach (var sc in c.Value.ExecBoxes)
+                        {
+                            XElement xeb = new("ExecBox");
+                            xeb.Add(new XAttribute("Type", sc.Type == ExecType.Exec ? "Exec" : "DynIntExec"));
+                            xeb.Add(new XAttribute("Exec", sc.Exec.ToString()));
+                            xeb.Add(new XAttribute("DynIntExec", sc.DynIntExec.ToString()));
+                            xeb.Add(new XAttribute("Box", sc.Box.ID));
+
+                            xeb.Add(writeParams(sc.Params, "Params", "Param"));
+
+                            xsc.Add(xeb);
+                        }
+
+                        xc.Add(xsc);
+                    }
+
+                    if (c.Value.OutFuncName.Any())
+                    {
+                        XElement xsc = new("OutFuncName");
+
+                        foreach (var sc in c.Value.OutFuncName)
+                            xsc.Add(new XElement("Function", new XAttribute("Name", sc)));
+
+                        xc.Add(xsc);
+                    }
+
+                    /*if (c.Value.FromBoxes.Any())
+            	    {
+            	        XElement xsc = new("FromBoxes");
+
+            	        foreach (var sc in c.Value.FromBoxes)
+            	            xsc.Add(new XElement("Box", new XAttribute("Name", sc.ID)));
+
+            	        xc.Add(xsc);
+            	    }*/
+
+                    xc.Add(writeParams(c.Value.SetVariables, "Variables", "Variable"));
+
+                    /*if (c.SubConnections.Any())
+					{
+						XElement xsc = new("SubConnections");
+
+						foreach (var sc in c.SubConnections)
 							xsc.Add(saveConn(sc));
 
-					xcnt.Add(xsc);
-				}
-				else
-				{
-					xcnt.Add(new XAttribute("ID", c.ID));
-				}
+						xc.Add(xsc);
 
-				return xcnt;
-			}
+					}*/
 
-			XElement writeParams(List<DominoDict> prms, string pn, string vn)
-			{
-				if (prms.Any())
-				{
-					XElement xprms = new(pn);
-
-					foreach (var prm in prms)
-					{
-						XElement xPrm = new(vn, new XAttribute("Name", prm.Name));
-
-						if (prm.Value != null)
-							xPrm.Add(new XAttribute("Value", prm.Value));
-
-						xPrm.Add(writeParams(prm.ValueArray, pn, vn));
-
-						xprms.Add(xPrm);
-					}
-
-					return xprms;
-				}
-
-				return null;
-			}
-
-			XElement xGraph = new("Graph");
-			xGraph.Add(new XAttribute("Name", graphName));
-			xGraph.Add(new XAttribute("IsDefault", isDefault ? "true" : "false"));
-
-            xGraph.Add(ExportDominoMetadata());
-
-			XElement xResources = new("Resources");
-			foreach (var c in dominoResources)
-				xResources.Add(new XElement("Resource", new XAttribute("File", c.Name), new XAttribute("Type", c.Value)));
-            xGraph.Add(xResources);
-
-            xGraph.Add(writeParams(globalVariables, "Variables", "Variable"));
-
-            XElement xComments = new("Comments");
-            foreach (var c in dominoComments)
-			{
-                var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
-                xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
+                    xConns.Add(xc);
+                }
+                xGraph.Add(xConns);
             }
-            xGraph.Add(xComments);
 
-            XElement xBorders = new("Borders");
-            foreach (var b in dominoBorders)
-			{
-                var a = canvas.Transform2(new(Canvas.GetLeft(b.ContainerUI), Canvas.GetTop(b.ContainerUI)));
-                xBorders.Add(new XElement("Border", 
-					new XAttribute("Style", b.Style), 
-					new XAttribute("Color", b.Color), 
-					new XAttribute("EnableMovingChilds", b.ContainerUI.EnableMovingChilds ? "true" : "false"),
-                    new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), 
-					new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)), 
-					new XAttribute("DrawW", b.ContainerUI.Width.ToString(CultureInfo.InvariantCulture)), 
-					new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
-					));
-            }
-            xGraph.Add(xBorders);
-
-            XElement xBoxes = new("Boxes");
-			foreach (var c in dominoBoxes)
+            if (File.Exists(file))
             {
-                var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
+                XDocument doc = XDocument.Load(file);
+                XElement xGraphs = doc.Element("DominoDocument").Element("Graphs");
+                var e = xGraphs.Elements("Graph").Where(a => a.Attribute("UniqueID").Value == dominoGraphs[selGraph].UniqueID).SingleOrDefault();
+                e?.Remove();
 
-                XElement xBox = new("Box");
-				xBox.Add(new XAttribute("ID", c.Value.ID));
-				xBox.Add(new XAttribute("Name", c.Value.Name));
-				xBox.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
-				xBox.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
+                if (!afterDelete)
+                    xGraphs.Add(xGraph);
 
-				if (c.Value.Connections.Any())
-				{
-					XElement xsc = new("Connections");
-
-					foreach (var sc in c.Value.Connections)
-					{
-						xsc.Add(saveConn(sc));
-					}
-
-					xBox.Add(xsc);
-				}
-
-				xBoxes.Add(xBox);
-			}
-            xGraph.Add(xBoxes);
-
-			XElement xConns = new("Connectors");
-			foreach (var c in dominoConnectors)
-			{
-                var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
-
-				XElement xc = new("Connector");
-				xc.Add(new XAttribute("ID", c.Value.ID));
-				xc.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
-				xc.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
-
-				if (c.Value.ExecBoxes.Any())
-				{
-					XElement xsc = new("ExecBoxes");
-
-					foreach (var sc in c.Value.ExecBoxes)
-					{
-						XElement xeb = new("ExecBox");
-						xeb.Add(new XAttribute("Type", sc.Type == ExecType.Exec ? "Exec" : "DynIntExec"));
-						xeb.Add(new XAttribute("Exec", sc.Exec.ToString()));
-						xeb.Add(new XAttribute("DynIntExec", sc.DynIntExec.ToString()));
-						xeb.Add(new XAttribute("Box", sc.Box.ID));
-
-						xeb.Add(writeParams(sc.Params, "Params", "Param"));
-
-						xsc.Add(xeb);
-					}
-
-					xc.Add(xsc);
-				}
-
-				if (c.Value.OutFuncName.Any())
-				{
-					XElement xsc = new("OutFuncName");
-
-					foreach (var sc in c.Value.OutFuncName)
-						xsc.Add(new XElement("Function", new XAttribute("Name", sc)));
-
-					xc.Add(xsc);
-				}
-
-				/*if (c.Value.FromBoxes.Any())
-                {
-                    XElement xsc = new("FromBoxes");
-
-                    foreach (var sc in c.Value.FromBoxes)
-                        xsc.Add(new XElement("Box", new XAttribute("Name", sc.ID)));
-
-                    xc.Add(xsc);
-                }*/
-
-				xc.Add(writeParams(c.Value.SetVariables, "Variables", "Variable"));
-
-				/*if (c.SubConnections.Any())
-				{
-					XElement xsc = new("SubConnections");
-
-					foreach (var sc in c.SubConnections)
-						xsc.Add(saveConn(sc));
-
-					xc.Add(xsc);
-
-				}*/
-
-				xConns.Add(xc);
-			}
-            xGraph.Add(xConns);
-
-			if (File.Exists(file))
-            {
-				XDocument doc = XDocument.Load(file);
-				XElement xGraphs = doc.Element("DominoDocument").Element("Graphs");
-				var e = xGraphs.Elements("Graph").Where(a => a.Attribute("Name").Value == graphName).SingleOrDefault();
-				e?.Remove();
-
-                xGraphs.Add(xGraph);
-
-				doc.Save(file);
+                doc.Save(file);
             }
-			else
+            else
             {
                 XElement xRoot = new("DominoDocument");
                 xRoot.Add(new XElement("Game", game));
                 xRoot.Add(new XElement("Name", workspaceName));
+                xRoot.Add(new XElement("Path", datPath));
 
-                xRoot.Add(new XElement("Graphs", xGraph));
+                if (!afterDelete)
+                    xRoot.Add(new XElement("Graphs", xGraph));
 
                 XDocument doc = new();
                 doc.Add(xRoot);
                 doc.Save(file);
             }
 
-			return "";
-		}
+            return "";
+        }
 
-		public string Load()
-		{
-			void loadConn(XElement parent, DominoBox box, DominoConnector parentConn)
-			{
-				var xConns = parent.Elements("Connector");
-				foreach (var xConn in xConns)
-				{
-					DominoConnector conn = new();
-					conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
-					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
-					conn.ID = xConn.Attribute("ID")?.Value;
+        public string Load(string loadGraphID = "")
+        {
+            void loadConn(XElement parent, DominoBox box, DominoConnector parentConn)
+            {
+                var xConns = parent.Elements("Connector");
+                foreach (var xConn in xConns)
+                {
+                    DominoConnector conn = new();
+                    conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
+                    conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
+                    conn.ID = xConn.Attribute("ID")?.Value;
 
-					if (conn.ID != null)
-						dominoConnectors.Add(conn.ID, conn);
+                    if (conn.ID != null)
+                        dominoConnectors.Add(conn.ID, conn);
 
-					if (parentConn == null)
-						box.Connections.Add(conn);
-					else
-						parentConn.SubConnections.Add(conn);
+                    if (parentConn == null)
+                        box.Connections.Add(conn);
+                    else
+                        parentConn.SubConnections.Add(conn);
 
-					var xSubConnections = xConn.Element("SubConnections");
-					if (xSubConnections != null)
-					{
-						loadConn(xSubConnections, box, conn);
-					}
-				}
-			}
+                    var xSubConnections = xConn.Element("SubConnections");
+                    if (xSubConnections != null)
+                    {
+                        loadConn(xSubConnections, box, conn);
+                    }
+                }
+            }
 
-			List<DominoDict> readParams(XElement parent, string pn, string vn)
-			{
-				List<DominoDict> prms = new();
+            List<DominoDict> readParams(XElement parent, string pn, string vn)
+            {
+                List<DominoDict> prms = new();
 
-				var xParams = parent.Element(pn)?.Elements(vn);
-				if (xParams != null)
-				{
-					foreach (var xParam in xParams)
-					{
-						DominoDict prm = new();
-						prm.Name = xParam.Attribute("Name").Value;
+                var xParams = parent.Element(pn)?.Elements(vn);
+                if (xParams != null)
+                {
+                    foreach (var xParam in xParams)
+                    {
+                        DominoDict prm = new();
+                        prm.Name = xParam.Attribute("Name").Value;
 
-						string val = xParam.Attribute("Value")?.Value;
-						if (val != null)
-							prm.Value = val;
+                        string val = xParam.Attribute("Value")?.Value;
+                        if (val != null)
+                            prm.Value = val;
 
-						prm.ValueArray = readParams(xParam, pn, vn);
+                        prm.ValueArray = readParams(xParam, pn, vn);
 
-						prms.Add(prm);
-					}
-				}
+                        prms.Add(prm);
+                    }
+                }
 
-				return prms;
-			}
+                return prms;
+            }
 
-			XDocument xDoc = XDocument.Load(file);
-			XElement xRoot = xDoc.Element("DominoDocument");
+            XDocument xDoc = XDocument.Load(file);
+            XElement xRoot = xDoc.Element("DominoDocument");
 
-			game = xRoot.Element("Game").Value;
-			workspaceName = xRoot.Element("Name").Value;
+            game = xRoot.Element("Game").Value;
+            workspaceName = xRoot.Element("Name").Value;
+            datPath = xRoot.Element("Path").Value;
 
-			XElement xGraph = xRoot.Element("Graphs").Elements("Graph").Where(a => a.Attribute("IsDefault").Value == "true").Single();
-			isDefault = xGraph.Attribute("IsDefault").Value == "true";
+            IEnumerable<XElement> xGraphs = xRoot.Element("Graphs").Elements("Graph");
+            XElement xGraph = null;
 
-            graphName = xGraph.Attribute("Name").Value;
+            int cnt = 0;
+            foreach (var g in xGraphs)
+            {
+                DominoGraph graph = new();
+                graph.Name = g.Attribute("Name").Value;
+                graph.UniqueID = g.Attribute("UniqueID").Value;
+                graph.IsDefault = g.Attribute("IsDefault").Value == "true";
+                graph.Metadata = ImportDominoMetadata(g.Element("DominoMetadata"));
+                dominoGraphs.Add(graph);
+
+                if (loadGraphID != "" && graph.UniqueID == loadGraphID)
+                {
+                    xGraph = g;
+                    selGraph = cnt;
+                }
+                
+                if (graph.IsDefault && loadGraphID == "")
+                {
+                    xGraph = g;
+                    selGraph = cnt;
+
+                    if (graph.Metadata.IsSystem)
+                        return "System Domino box can't be opened.";
+                }
+
+                // todo boxes
+                if (!graph.IsDefault)
+                    AddGraphBox(graph);
+
+                cnt++;
+            }
 
             ParseAllBoxes();
 
-            string dmla = ImportDominoMetadata(xGraph.Element("DominoMetadata"));
-			if (dmla != "")
-				return dmla;
+            /*string dmla = ImportDominoMetadata(xGraph.Element("DominoMetadata"));
+            if (dmla != "")
+                return dmla;*/
 
-			var xRess = xGraph.Element("Resources").Elements("Resource");
-			foreach (var xRe in xRess)
+            /*dominoGraphs[selGraph].Metadata = ImportDominoMetadata(xGraph.Element("DominoMetadata"));
+            if (dominoGraphs[selGraph].Metadata.IsSystem)
+                return "System Domino box can't be opened.";*/
+
+            int ctrlPosY = 0;
+            foreach (var ctrl in dominoGraphs[selGraph].Metadata.ControlsIn)
+            {
+                DominoConnector inConn = new();
+                inConn.ID = ctrl.Name;
+                inConn.DrawY = ctrlPosY;
+                dominoConnectors.Add(inConn.ID, inConn);
+                ctrlPosY += 300;
+            }
+
+            var xRess = xGraph.Element("Resources").Elements("Resource");
+            foreach (var xRe in xRess)
                 dominoResources.Add(new() { Name = xRe.Attribute("File").Value, Value = xRe.Attribute("Type").Value });
 
             var xComments = xGraph.Element("Comments").Elements("Comment");
@@ -5221,7 +5352,7 @@ namespace DominoVisualizer
                 b.Color = int.Parse(xB.Attribute("Color").Value);
                 dominoBorders.Add(b);
 
-				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
+                bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
 
                 double x = double.Parse(xB.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
                 double y = double.Parse(xB.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
@@ -5233,89 +5364,96 @@ namespace DominoVisualizer
 
             globalVariables = readParams(xGraph, "Variables", "Variable");
 
-			var xBoxes = xGraph.Element("Boxes").Elements("Box");
-			foreach (var xBox in xBoxes)
-			{
-				DominoBox box = new();
-				box.ID = xBox.Attribute("ID").Value;
-				box.Name = xBox.Attribute("Name").Value;
-				box.DrawX = double.Parse(xBox.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				box.DrawY = double.Parse(xBox.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
-				dominoBoxes.Add(box.ID, box);
+            var xBoxes = xGraph.Element("Boxes").Elements("Box");
+            foreach (var xBox in xBoxes)
+            {
+                DominoBox box = new();
+                box.ID = xBox.Attribute("ID").Value;
+                box.Name = xBox.Attribute("Name").Value;
+                box.DrawX = double.Parse(xBox.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+                box.DrawY = double.Parse(xBox.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+                dominoBoxes.Add(box.ID, box);
 
-				XElement xConnections = xBox.Element("Connections");
-				if (xConnections != null)
-				{
-					loadConn(xConnections, box, null);
-				}
-			}
+                XElement xConnections = xBox.Element("Connections");
+                if (xConnections != null)
+                {
+                    loadConn(xConnections, box, null);
+                }
+            }
 
-			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
-			foreach (var xConnector in xConnectors)
-			{
-				DominoConnector conn = null;
+            var xConnectors = xGraph.Element("Connectors").Elements("Connector");
+            foreach (var xConnector in xConnectors)
+            {
+                DominoConnector conn = null;
 
-				string cID = xConnector.Attribute("ID").Value;
+                string cID = xConnector.Attribute("ID").Value;
 
-				if (dominoConnectors.ContainsKey(cID))
-					conn = dominoConnectors[cID];
-				else
-					conn = new();
+                if (dominoConnectors.ContainsKey(cID))
+                    conn = dominoConnectors[cID];
+                else
+                    conn = new();
 
-				conn.ID = cID;
-				conn.DrawX = double.Parse(xConnector.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				conn.DrawY = double.Parse(xConnector.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+                conn.ID = cID;
+                conn.DrawX = double.Parse(xConnector.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+                conn.DrawY = double.Parse(xConnector.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
 
-				if (!dominoConnectors.ContainsKey(cID))
-					dominoConnectors.Add(conn.ID, conn);
+                if (!dominoConnectors.ContainsKey(cID))
+                    dominoConnectors.Add(conn.ID, conn);
 
-				var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
-				if (xExecBoxes != null)
-				{
-					foreach (XElement xExecBox in xExecBoxes)
-					{
-						ExecBox execBox = new();
-						execBox.Type = xExecBox.Attribute("Type").Value == "Exec" ? ExecType.Exec : ExecType.ExecDynInt;
-						execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
-						execBox.DynIntExec = int.Parse(xExecBox.Attribute("DynIntExec").Value);
-						execBox.Box = dominoBoxes.Values.Where(a => a.ID == xExecBox.Attribute("Box").Value).Single();
-						conn.ExecBoxes.Add(execBox);
+                var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
+                if (xExecBoxes != null)
+                {
+                    foreach (XElement xExecBox in xExecBoxes)
+                    {
+                        ExecBox execBox = new();
+                        execBox.Type = xExecBox.Attribute("Type").Value == "Exec" ? ExecType.Exec : ExecType.ExecDynInt;
+                        execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
+                        execBox.DynIntExec = int.Parse(xExecBox.Attribute("DynIntExec").Value);
+                        execBox.Box = dominoBoxes.Values.Where(a => a.ID == xExecBox.Attribute("Box").Value).Single();
+                        conn.ExecBoxes.Add(execBox);
 
-						execBox.Params = readParams(xExecBox, "Params", "Param");
-					}
-				}
+                        execBox.Params = readParams(xExecBox, "Params", "Param");
+                    }
+                }
 
-				conn.SetVariables = readParams(xConnector, "Variables", "Variable");
-			}
+                conn.SetVariables = readParams(xConnector, "Variables", "Variable");
 
-			foreach (var box in dominoBoxes)
-			{
-				if (!regBoxes.ContainsKey(box.Value.Name))
-					LoadReqBoxes(box.Value.Name);
-			}
+                var xOutFuncs = xConnector.Element("OutFuncName")?.Elements("Function");
+                if (xOutFuncs != null)
+                {
+                    foreach (XElement xOutFunc in xOutFuncs)
+                        conn.OutFuncName.Add(xOutFunc.Attribute("Name").Value);
+                }
+            }
 
-			foreach (var c in dominoConnectors)
-			{
-				foreach (var e in c.Value.ExecBoxes)
-				{
-					if (regBoxes.ContainsKey(e.Box.Name))
-						e.ExecStr = regBoxes[e.Box.Name].ControlsIn[e.Exec].Name;
-				}
-			}
+            foreach (var box in dominoBoxes)
+            {
+                if (!regBoxes.ContainsKey(box.Value.Name))
+                    LoadReqBoxes(box.Value.Name);
+            }
 
-			Draw(true);
+            foreach (var c in dominoConnectors)
+            {
+                foreach (var e in c.Value.ExecBoxes)
+                {
+                    if (regBoxes.ContainsKey(e.Box.Name))
+                        e.ExecStr = e.Exec < regBoxes[e.Box.Name].ControlsIn.Count ? regBoxes[e.Box.Name].ControlsIn[e.Exec].Name : "EXEC DOESN'T EXIST";
+                }
+            }
 
-			setWorkspaceName(workspaceName, graphName);
+            Draw(true);
+
+            SetWorkspaceNameAndGraphs();
 
             if (errFilesB)
-				return errFiles;
+                return errFiles;
 
-			return "";
-		}
+            return "";
+        }
     }
 
-	public static class Helpers
-	{
+    public static class Helpers
+    {
         public static string RandomString()
         {
             Random random = new Random();
@@ -5328,233 +5466,233 @@ namespace DominoVisualizer
             return newstr;
         }
 
-		public static List<DominoDict> CopyList(List<DominoDict> source)
-		{
-			var newList = new List<DominoDict>();
+        public static List<DominoDict> CopyList(List<DominoDict> source)
+        {
+            var newList = new List<DominoDict>();
 
-			foreach (var i in source)
-			{
-				var ni = new DominoDict();
-				ni.Name = i.Name;
-				ni.Value = i.Value;
-				ni.ContainerUI = i.ContainerUI;
-				ni.UniqueID = i.UniqueID;
+            foreach (var i in source)
+            {
+                var ni = new DominoDict();
+                ni.Name = i.Name;
+                ni.Value = i.Value;
+                ni.ContainerUI = i.ContainerUI;
+                ni.UniqueID = i.UniqueID;
 
-				ni.ValueArray = CopyList(i.ValueArray);
+                ni.ValueArray = CopyList(i.ValueArray);
 
-				newList.Add(ni);
-			}
+                newList.Add(ni);
+            }
 
-			return newList;
+            return newList;
         }
     }
 
-	public class DominoBox
-	{
-		public DominoBox()
-		{
-			Connections = new();
-			//SetVariables = new();
-		}
+    public class DominoBox
+    {
+        public DominoBox()
+        {
+            Connections = new();
+            //SetVariables = new();
+        }
 
-		public string ID { set; get; }
+        public string ID { set; get; }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
-		public double DrawX { set; get; }
+        public double DrawX { set; get; }
 
-		public double DrawY { set; get; }
+        public double DrawY { set; get; }
 
-		public Widget Widget { set; get; }
+        public Widget Widget { set; get; }
 
-		public int Height { set; get; }
+        public int Height { set; get; }
 
-		//public Dictionary<string, string> SetVariables { set; get; }
+        //public Dictionary<string, string> SetVariables { set; get; }
 
-		public List<DominoConnector> Connections { set; get; }
-	}
+        public List<DominoConnector> Connections { set; get; }
+    }
 
-	public enum ExecType
-	{
-		Exec = 0,
-		ExecDynInt = 1
-	}
+    public enum ExecType
+    {
+        Exec = 0,
+        ExecDynInt = 1
+    }
 
-	public class ExecBox
-	{
-		public ExecBox()
-		{
-			Params = new();
+    public class ExecBox
+    {
+        public ExecBox()
+        {
+            Params = new();
 
-			ExecStr = "";
-		}
+            ExecStr = "";
+        }
 
-		public DominoBox Box { set; get; }
+        public DominoBox Box { set; get; }
 
-		public ExecType Type { set; get; }
+        public ExecType Type { set; get; }
 
-		public int Exec { set; get; }
+        public int Exec { set; get; }
 
-		public string ExecStr { set; get; }
+        public string ExecStr { set; get; }
 
-		public int DynIntExec { set; get; }
+        public int DynIntExec { set; get; }
 
-		public List<DominoDict> Params { set; get; }
+        public List<DominoDict> Params { set; get; }
 
-		public StackPanel MainUI { set; get; }
+        public StackPanel MainUI { set; get; }
 
-		public Border ContainerUI { set; get; }
+        public Border ContainerUI { set; get; }
 
-		public Color INT_clr { set; get; }
-	}
+        public Color INT_clr { set; get; }
+    }
 
-	public class DominoConnector
-	{
-		public DominoConnector()
-		{
-			SubConnections = new();
-			//FromBoxes = new();
-			ExecBoxes = new();
-			SetVariables = new();
-			OutFuncName = new();
+    public class DominoConnector
+    {
+        public DominoConnector()
+        {
+            SubConnections = new();
+            //FromBoxes = new();
+            ExecBoxes = new();
+            SetVariables = new();
+            OutFuncName = new();
 
-			FromBoxConnectIDStr = "";
+            FromBoxConnectIDStr = "";
 
-			UniqueID = Helpers.RandomString();
-		}
+            UniqueID = Helpers.RandomString();
+        }
 
-		public string ID { set; get; }
+        public string ID { set; get; }
 
-		public int FromBoxConnectID { set; get; }
+        public int FromBoxConnectID { set; get; }
 
-		public double DrawX { set; get; }
+        public double DrawX { set; get; }
 
-		public double DrawY { set; get; }
+        public double DrawY { set; get; }
 
-		public Widget Widget { set; get; }
+        public Widget Widget { set; get; }
 
-		public int Height { set; get; }
+        public int Height { set; get; }
 
-		public string FromBoxConnectIDStr { set; get; }
+        public string FromBoxConnectIDStr { set; get; }
 
-		public List<DominoConnector> SubConnections { set; get; }
+        public List<DominoConnector> SubConnections { set; get; }
 
-		//public List<DominoBox> FromBoxes { set; get; }
+        //public List<DominoBox> FromBoxes { set; get; }
 
-		public List<ExecBox> ExecBoxes { set; get; }
+        public List<ExecBox> ExecBoxes { set; get; }
 
-		public List<DominoDict> SetVariables { set; get; }
+        public List<DominoDict> SetVariables { set; get; }
 
-		public List<string> OutFuncName { set; get; }
+        public List<string> OutFuncName { set; get; }
 
-		public Border ContainerUI { set; get; }
+        public Border ContainerUI { set; get; }
 
-		public string UniqueID { get; }
+        public string UniqueID { get; }
 
         public int INT_clr { set; get; }
 
     }
 
-	public class DominoBoxMetadata
-	{
-		public DominoBoxMetadata()
-		{
-			ControlsIn = new();
-			ControlsOut = new();
-			DatasIn = new();
-			DatasOut = new();
-		}
+    public class DominoBoxMetadata
+    {
+        public DominoBoxMetadata()
+        {
+            ControlsIn = new();
+            ControlsOut = new();
+            DatasIn = new();
+            DatasOut = new();
+        }
 
-		public byte[] LuaBytes { set; get; }
+        public byte[] LuaBytes { set; get; }
 
-		public bool IsStateless { set; get; }
+        public bool IsStateless { set; get; }
 
-		public bool IsSystem { set; get; }
+        public bool IsSystem { set; get; }
 
-		public List<DominoBoxMetadataControlsIn> ControlsIn { set; get; }
+        public List<DominoBoxMetadataControlsIn> ControlsIn { set; get; }
 
-		public List<DominoBoxMetadataControlsOut> ControlsOut { set; get; }
+        public List<DominoBoxMetadataControlsOut> ControlsOut { set; get; }
 
-		public List<DominoBoxMetadataDatasIn> DatasIn { set; get; }
+        public List<DominoBoxMetadataDatasIn> DatasIn { set; get; }
 
-		public List<DominoBoxMetadataDatasOut> DatasOut { set; get; }
-	}
+        public List<DominoBoxMetadataDatasOut> DatasOut { set; get; }
+    }
 
-	public class DominoBoxMetadataControlsIn
-	{
-		public DominoBoxMetadataControlsIn(string name, int anchorDynType, string hostExecFunc)
-		{
-			Name = name;
-			AnchorDynType = anchorDynType;
-			HostExecFunc = hostExecFunc;
-		}
+    public class DominoBoxMetadataControlsIn
+    {
+        public DominoBoxMetadataControlsIn(string name, int anchorDynType, string hostExecFunc)
+        {
+            Name = name;
+            AnchorDynType = anchorDynType;
+            HostExecFunc = hostExecFunc;
+        }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
-		public int AnchorDynType { set; get; }
+        public int AnchorDynType { set; get; }
 
-		public string HostExecFunc { set; get; }
+        public string HostExecFunc { set; get; }
 
         public Border ContainerUI { set; get; }
     }
 
-	public class DominoBoxMetadataControlsOut
-	{
-		public DominoBoxMetadataControlsOut(string name, int anchorDynType, bool isDelayed)
-		{
-			Name = name;
-			AnchorDynType = anchorDynType;
-			IsDelayed = isDelayed;
+    public class DominoBoxMetadataControlsOut
+    {
+        public DominoBoxMetadataControlsOut(string name, int anchorDynType, bool isDelayed)
+        {
+            Name = name;
+            AnchorDynType = anchorDynType;
+            IsDelayed = isDelayed;
 
             UniqueID = Helpers.RandomString();
         }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
-		public int AnchorDynType { set; get; }
+        public int AnchorDynType { set; get; }
 
-		public bool IsDelayed { set; get; }
+        public bool IsDelayed { set; get; }
 
-		public string UniqueID { get; }
+        public string UniqueID { get; }
 
         public Border ContainerUI { set; get; }
     }
 
-	public class DominoBoxMetadataDatasIn
-	{
-		public DominoBoxMetadataDatasIn(string name, int anchorDynType, string dataTypeID)
-		{
-			Name = name;
-			AnchorDynType = anchorDynType;
-			DataTypeID = dataTypeID;
-		}
+    public class DominoBoxMetadataDatasIn
+    {
+        public DominoBoxMetadataDatasIn(string name, int anchorDynType, string dataTypeID)
+        {
+            Name = name;
+            AnchorDynType = anchorDynType;
+            DataTypeID = dataTypeID;
+        }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
-		public int AnchorDynType { set; get; }
+        public int AnchorDynType { set; get; }
 
-		public string DataTypeID { set; get; }
+        public string DataTypeID { set; get; }
 
-		public Border ContainerUI { set; get; }
+        public Border ContainerUI { set; get; }
     }
 
-	public class DominoBoxMetadataDatasOut : DominoBoxMetadataDatasIn
-	{
-		public DominoBoxMetadataDatasOut(string name, int anchorDynType, string dataTypeID) : base(name, anchorDynType, dataTypeID)
-		{
-		}
-	}
+    public class DominoBoxMetadataDatasOut : DominoBoxMetadataDatasIn
+    {
+        public DominoBoxMetadataDatasOut(string name, int anchorDynType, string dataTypeID) : base(name, anchorDynType, dataTypeID)
+        {
+        }
+    }
 
-	public class DominoDict
-	{
-		public DominoDict()
-		{
-			ValueArray = new();
+    public class DominoDict
+    {
+        public DominoDict()
+        {
+            ValueArray = new();
 
             UniqueID = Helpers.RandomString();
         }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
         public string Value { set; get; }
 
@@ -5563,16 +5701,16 @@ namespace DominoVisualizer
         public List<DominoDict> ValueArray { set; get; }
 
         public Border ContainerUI { set; get; }
-	}
+    }
 
-	public class DominoComment
-	{
-		public DominoComment()
-		{
+    public class DominoComment
+    {
+        public DominoComment()
+        {
             UniqueID = Helpers.RandomString();
-		}
+        }
 
-		public string Name { set; get; }
+        public string Name { set; get; }
 
         public string UniqueID { get; set; }
 
@@ -5595,5 +5733,21 @@ namespace DominoVisualizer
         public int Style { get; set; }
 
         public BorderD ContainerUI { set; get; }
+    }
+
+    public class DominoGraph
+    {
+        public DominoGraph()
+        {
+            UniqueID = Helpers.RandomString();
+        }
+
+        public string Name { set; get; }
+
+        public string UniqueID { get; set; }
+
+        public bool IsDefault { get; set; }
+
+        public DominoBoxMetadata Metadata { set; get; }
     }
 }

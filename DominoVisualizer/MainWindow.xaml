@@ -17,7 +17,7 @@
     
     <Grid>
         <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            <CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True" />
             <Grid Background="#99000000" Name="gridMainMenu">
                 <Image Source="domino.ico" Margin="-480,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center">
@@ -45,21 +45,34 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="600" Visibility="Hidden">
+            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="700" Visibility="Hidden">
                 <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="80">
-                    <Label Content="Workspace name:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,10,0,0" Foreground="White" Width="200" />
+                    <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,10,0,0" Foreground="White" Width="200" />
                     <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,10,0,0" Foreground="White" Width="290" />
-                    <Label Content="Name of this graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,40,0,0" Foreground="White" Width="200" />
+                    <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,40,0,0" Foreground="White" Width="200" />
+                    
                     <Label Content="--name--" Name="mainGraphName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,40,0,0" Foreground="White" Width="290" />
+                    <ComboBox Name="mainGraphs" Width="260" Margin="200,40,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="470,45,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
                 </Grid>
-                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="460" Margin="0,80,0,0">
+                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="560" Margin="0,80,0,0">
                     <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
                     <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
                     <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,300,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
@@ -224,7 +237,7 @@
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Add new connector" Style="{StaticResource Header}" />
-                    <TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
 
                     <TextBox Text="" Name="addConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -240,7 +253,7 @@
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Add new box" Style="{StaticResource Header}" />
-                    <TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
 
                     <CheckBox Content=" Is global" Name="addBoxGlobal" Margin="20,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -265,7 +278,7 @@
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Name="editDataLblName" Content="--name--" Style="{StaticResource Header}" />
-                    <TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
 
                     <StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="0,90,0,70">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataNameC" Visibility="Visible">
@@ -356,10 +369,10 @@
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit variable" Style="{StaticResource Header}" />
 
-                    <TextBlock Text="Variable to set" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Variable to set" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditConnVar}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="editConnVarName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <TextBlock Text="Value of the variable to set" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Value of the variable to set" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditConnVar}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="editConnVarSet" Width="490" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                     <Button Style="{StaticResource EditExecGetDataBtn}" Click="ButtonDialogEditConnVar_Click" Tag="2" Margin="0,185,15,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
@@ -457,7 +470,7 @@
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit connector" Style="{StaticResource Header}" />
-                    <TextBlock Text="Write a name of the connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Write a name of the connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditConnector}" TextWrapping="Wrap" Foreground="White" />
 
                     <TextBox Text="" Name="editConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -501,18 +514,33 @@
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Workspace" Style="{StaticResource Header}" />
 
-                    <TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="wrkspGraph" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+                    <TextBlock Text="Set path which will be used inside DAT FAT, it must end with \\." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBox Text="domino\user\" Name="wrkspDat" Width="510" Margin="20,260,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                     <Button Style="{StaticResource CBtn}" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                </Grid>
+            </Grid>
+            <Grid Background="#99000000" Name="gridDialogAddGraph" Visibility="Hidden">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
+                    <Rectangle Style="{StaticResource DialogRect}" />
+                    <Label Content="Add graph" Style="{StaticResource Header}" />
+
+                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBox Text="" Name="addGraphName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
 

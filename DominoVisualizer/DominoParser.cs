@@ -77,6 +77,7 @@ namespace DominoVisualizer
 
 		string workspaceName = "";
 		string graphName = "";
+		bool isDefault = false;
 
         Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
@@ -162,11 +163,12 @@ namespace DominoVisualizer
         {
             workspaceName = workspace;
             graphName = graph;
+			isDefault = true;
 
             Draw();
-		}
+        }
 
-		public string Parse()
+        public string Parse()
 		{
 			uint luaType = luaFile.ReadValueU32();
 			if (luaType != 0x4341554C)
@@ -184,6 +186,15 @@ namespace DominoVisualizer
 				return dmla;
 
 			luaFile.Close();
+
+			string[] fileName = Path.GetFileNameWithoutExtension(file).Replace("_", " ").Split('.');
+			if (fileName.Length > 0)
+			{
+				workspaceName = fileName[0];
+				graphName = fileName[1];
+			}
+
+            setWorkspaceName(workspaceName, graphName);
 
             var stream = new MemoryStream();
 
@@ -1436,7 +1447,7 @@ namespace DominoVisualizer
             linesColors.Add((Color)ColorConverter.ConvertFromString("#263238")); // blue grey
         }
 
-		private void HandleSomethingHappened(string id, double x, double y)
+		private void HandleMoving(string id, double x, double y)
 		{
 			foreach (var line in lines)
 			{
@@ -1475,7 +1486,7 @@ namespace DominoVisualizer
                 b.ContainerUI.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 
             foreach (var b in lines)
-                b.UI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
+                b.UI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
 
             foreach (var b in dominoBorders)
                 b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
@@ -1637,7 +1648,7 @@ namespace DominoVisualizer
 
         private void Draw(bool workspace = false)
 		{
-			canvas.SomethingHappened += new MyEventHandler(HandleSomethingHappened);
+			canvas.Moving += new MovingEventHandler(HandleMoving);
 			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
             canvas.MouseLeftButtonDown += W_MouseDoubleClick;
 			canvas.Moved += new MovedEventHandler(HandleMoved);
@@ -4263,10 +4274,23 @@ namespace DominoVisualizer
                 return acb;
 
 			string exportPath = "";
+			string fileName = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graphName.Replace(" ", "_").ToLowerInvariant() + ".lua";
 
-			if (file == "" || file.EndsWith(".lua"))
+            if (file == "" || file.EndsWith(".lua"))
 			{
-				SaveFileDialog sfd = new();
+                System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
+                {
+                    Description = "Select output folder.",
+                    AutoUpgradeEnabled = false
+                };
+                if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    exportPath = folderBrowserDialog.SelectedPath + "\\" + fileName;
+                }
+                else
+                    return "";
+
+                /*SaveFileDialog sfd = new();
 				sfd.Title = "Export Domino Workspace to LUA";
 				sfd.Filter = "Compiled Domino Workspace|*.lua";
 				if (sfd.ShowDialog() == true)
@@ -4274,10 +4298,10 @@ namespace DominoVisualizer
 					exportPath = sfd.FileName;
 				}
 				else
-					return "";
-			}
+					return "";*/
+            }
 			else
-				exportPath = file.Replace(".domino.xml", ".lua");
+				exportPath = file.Replace(Path.GetFileName(file), "") + fileName;
 
             string nl = Environment.NewLine;
 
@@ -4286,7 +4310,10 @@ namespace DominoVisualizer
 
 			streamWriter.WriteLine("");
 			streamWriter.WriteLine("--Created with " + MainWindow.appName);
-			streamWriter.WriteLine("");
+			streamWriter.WriteLine("--  Domino script: " + Path.GetFileName(file));
+			streamWriter.WriteLine("--  Workspace:     " + workspaceName);
+            streamWriter.WriteLine("--  Graph:         " + graphName);
+            streamWriter.WriteLine("");
 			streamWriter.WriteLine("export = {}");
 			streamWriter.WriteLine("function export:LuaDependencies()");
 			streamWriter.WriteLine("  local luaDepTable = {}");
@@ -4298,7 +4325,7 @@ namespace DominoVisualizer
 			foreach (var b in regBoxes)
 				streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{b.Key}\")");
 
-			dominoResources.Sort();
+            dominoResources = dominoResources.OrderBy(a => a.Name).ToList();
             foreach (var res in dominoResources)
 				streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
 
@@ -4941,6 +4968,8 @@ namespace DominoVisualizer
 			}
 
 			XElement xGraph = new("Graph");
+			xGraph.Add(new XAttribute("Name", graphName));
+			xGraph.Add(new XAttribute("IsDefault", isDefault ? "true" : "false"));
 
             xGraph.Add(ExportDominoMetadata());
 
@@ -5084,8 +5113,9 @@ namespace DominoVisualizer
             {
                 XElement xRoot = new("DominoDocument");
                 xRoot.Add(new XElement("Game", game));
+                xRoot.Add(new XElement("Name", workspaceName));
 
-				xRoot.Add(new XElement("Graphs", xGraph));
+                xRoot.Add(new XElement("Graphs", xGraph));
 
                 XDocument doc = new();
                 doc.Add(xRoot);
@@ -5154,9 +5184,10 @@ namespace DominoVisualizer
 			game = xRoot.Element("Game").Value;
 			workspaceName = xRoot.Element("Name").Value;
 
-			XElement xGraph = xRoot.Element("Graphs").Elements("Graph").Where(a => a.Attribute("Default").Value == "1").Single();
+			XElement xGraph = xRoot.Element("Graphs").Elements("Graph").Where(a => a.Attribute("IsDefault").Value == "true").Single();
+			isDefault = xGraph.Attribute("IsDefault").Value == "true";
 
-			graphName = xGraph.Attribute("Name").Value;
+            graphName = xGraph.Attribute("Name").Value;
 
             ParseAllBoxes();
 

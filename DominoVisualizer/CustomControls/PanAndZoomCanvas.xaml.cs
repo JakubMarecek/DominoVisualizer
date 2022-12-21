@@ -28,9 +28,9 @@ namespace WpfPanAndZoom.CustomControls
         private List<Line> _gridLines = new List<Line>();
         private List<Line> _gridLinesSmall = new List<Line>();
 
-        public delegate void MyEventHandler(string foo, double x, double y);
+        public delegate void MovingEventHandler(string foo, double x, double y);
 
-        public event MyEventHandler SomethingHappened;
+        public event MovingEventHandler Moving;
 
         public delegate void ZoomEventHandler(int zoomFactor);
 
@@ -132,8 +132,8 @@ namespace WpfPanAndZoom.CustomControls
         {
             MinX = 0;
             MinY = 0;
-            MaxX = 5000;
-            MaxY = 5000;
+            MaxX = (int)System.Windows.SystemParameters.PrimaryScreenWidth;
+            MaxY = (int)System.Windows.SystemParameters.PrimaryScreenHeight;
         }
 
         public void MakeGrid()
@@ -323,13 +323,14 @@ namespace WpfPanAndZoom.CustomControls
 
         private void PanAndZoomCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            if (_dragging)
+                Moved();
+
             _dragging = false;
             _selectedElement = null;
             _borderChilds.Clear();
             _borderChildsDeltas.Clear();
             Cursor = Cursors.Arrow;
-
-            Moved();
         }
 
         private void PanAndZoomCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -361,7 +362,7 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
                         var b = Point.Subtract(a, Mouse.GetPosition(_selectedElement));
-                        SomethingHappened(widget.ID, b.X, b.Y);
+                        Moving(widget.ID, b.X, b.Y);
                     }
 
                     if (_borderChilds.Any())
@@ -384,7 +385,7 @@ namespace WpfPanAndZoom.CustomControls
                                 var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
                                 var c = Point.Subtract(a, Mouse.GetPosition(_borderChilds[i]));
 
-                                SomethingHappened(widgetC.ID, c.X, c.Y);
+                                Moving(widgetC.ID, c.X, c.Y);
                             }
                         }
                     }

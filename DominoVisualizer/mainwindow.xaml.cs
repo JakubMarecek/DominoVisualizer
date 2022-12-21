@@ -261,6 +261,7 @@ namespace DominoVisualizer
 
 				parser = new(canvas, game);
 				parser.Create(wrkspName.Text, wrkspGraph.Text);
+                SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
 
                 Loading();
 			}

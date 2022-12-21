@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+	  <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>domino.ico</ApplicationIcon>
     <Copyright>Copyright © ArmanIII 2022</Copyright>
     <Company>ArmanIII</Company>

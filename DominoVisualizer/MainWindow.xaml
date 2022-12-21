@@ -45,7 +45,7 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="600" Visibility="Visible">
+            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="600" Visibility="Hidden">
                 <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="80">
                     <Label Content="Workspace name:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,10,0,0" Foreground="White" Width="200" />
                     <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,10,0,0" Foreground="White" Width="290" />

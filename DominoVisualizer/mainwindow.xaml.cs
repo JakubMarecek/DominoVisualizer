@@ -1064,7 +1064,7 @@ namespace DominoVisualizer
 
         bool allowChangeGraphs = false;
 
-        private void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, bool forceReload)
+        private void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, string forceReload)
         {
             allowChangeGraphs = false;
             mainWorkspaceName.Content = workspace;
@@ -1074,34 +1074,44 @@ namespace DominoVisualizer
             mainGraphs.Items.Refresh();
             allowChangeGraphs = true;
 
-            if (forceReload)
-                ChangeGraph();
-        }
-
-        private void ChangeGraph()
-        {
-            string f = parser.CurrentFile;
-            CloseWorkspace(gridLoading, () =>
+            if (forceReload != "")
             {
-                Timer aTimer = new Timer(1000);
-                aTimer.Enabled = true;
-                aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                string f = parser.CurrentFile;
+                CloseWorkspace(gridLoading, () =>
                 {
-                    aTimer.Stop();
-                    Dispatcher.Invoke(() =>
+                    Timer aTimer = new Timer(1000);
+                    aTimer.Enabled = true;
+                    aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                     {
-                        string graph = ((DominoGraph)mainGraphs.SelectedItem).UniqueID;
-                        OpenFile(OpenType.SwapGraph, graph, f);
-                    });
-                };
-            });
+                        aTimer.Stop();
+                        Dispatcher.Invoke(() =>
+                        {
+                            OpenFile(OpenType.SwapGraph, forceReload, f);
+                        });
+                    };
+                });
+            }
         }
 
         private void mainGraphs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (allowChangeGraphs)
             {
-                ChangeGraph();
+                string f = parser.CurrentFile;
+                CloseWorkspace(gridLoading, () =>
+                {
+                    Timer aTimer = new Timer(1000);
+                    aTimer.Enabled = true;
+                    aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                    {
+                        aTimer.Stop();
+                        Dispatcher.Invoke(() =>
+                        {
+                            string graph = ((DominoGraph)mainGraphs.SelectedItem).UniqueID;
+                            OpenFile(OpenType.SwapGraph, graph, f);
+                        });
+                    };
+                });
             }
         }
 

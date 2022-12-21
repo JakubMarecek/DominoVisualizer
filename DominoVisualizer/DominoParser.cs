@@ -70,8 +70,9 @@ namespace DominoVisualizer
 		 * -add execbox default selected				ok
 		 * -own execbox color
 		 * -duplicate - instances						ok
-		 * -load all box names from graphs
-		 * -check if box exists in other graphs
+		 * -load all box names from graphs              ok
+		 * -check if box exists in other graphs         ok
+		 * -new graph save
 		 */
 
         string workspaceName = "";
@@ -4240,10 +4241,10 @@ namespace DominoVisualizer
 
 
 
-        public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, bool forceReload);
+        public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, string forceReload);
         public SetWorkspaceName setWorkspaceName;
 
-        private void SetWorkspaceNameAndGraphs(bool forceReload = false)
+        private void SetWorkspaceNameAndGraphs(string forceReload = "")
         {
             setWorkspaceName(workspaceName, dominoGraphs, selGraph, forceReload);
         }
@@ -4251,7 +4252,7 @@ namespace DominoVisualizer
         public string AddGraph(string name)
         {
             if (dominoGraphs.Any(a => a.Name == name))
-                return "Graph with this name already exists. Please select another.";
+                return "Graph with this name already exists. Please select another name.";
 
             DominoGraph g = new();
             g.Name = name;
@@ -4277,6 +4278,13 @@ namespace DominoVisualizer
                 }
 
                 // todo check if box exists in other graphs
+                var gbp = BuildGraphName(g, true);
+                var ge = dominoGraphs.Any(a => a.ContainsBoxes.Contains(gbp));
+                if (ge)
+                {
+                    openInfoDialog("Delete graph", "Can't delete the graph because it is used as box in another graph in this workspace.");
+                    return;
+                }
 
                 Save(null, true);
 
@@ -4285,19 +4293,25 @@ namespace DominoVisualizer
                 var dg = dominoGraphs.Where(a => a.IsDefault).Single();
 
                 selGraph = dominoGraphs.FindIndex(a => a.UniqueID == dg.UniqueID);
-                SetWorkspaceNameAndGraphs(true);
+                SetWorkspaceNameAndGraphs(dg.UniqueID);
             });
         }
 
-        private string BuildGraphName(DominoGraph graph)
+        private string BuildGraphName(DominoGraph graph, bool inDatPath)
         {
-            return workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+            string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+
+            if (inDatPath)
+                f = datPath + f;
+
+            f = f.Replace("\\", "/").ToLower();
+
+            return f;
         }
 
         private void AddGraphBox(DominoGraph graph)
         {
-            string boxName = datPath + BuildGraphName(graph);
-            boxName = boxName.Replace("\\", "/").ToLower();
+            string boxName = BuildGraphName(graph, true);
 
             regBoxes.Add(boxName, graph.Metadata);
             regBoxesAll.Add(boxName, graph.Metadata);
@@ -4353,7 +4367,7 @@ namespace DominoVisualizer
                 return acb;
 
             string exportPath = "";
-            string fileName = BuildGraphName(dominoGraphs[selGraph]);
+            string fileName = BuildGraphName(dominoGraphs[selGraph], false);
 
             if (file == "" || file.EndsWith(".lua"))
             {
@@ -5299,9 +5313,15 @@ namespace DominoVisualizer
                         return "System Domino box can't be opened.";
                 }
 
-                // todo boxes
                 if (!graph.IsDefault)
                     AddGraphBox(graph);
+
+                IEnumerable<XElement> boxes = g.Element("Boxes")?.Elements("Box");
+                if (boxes != null)
+                    foreach (var b in boxes)
+                    {
+                        graph.ContainsBoxes.Add(b.Attribute("Name").Value);
+                    }
 
                 cnt++;
             }
@@ -5739,6 +5759,8 @@ namespace DominoVisualizer
     {
         public DominoGraph()
         {
+            ContainsBoxes = new();
+
             UniqueID = Helpers.RandomString();
         }
 
@@ -5749,5 +5771,7 @@ namespace DominoVisualizer
         public bool IsDefault { get; set; }
 
         public DominoBoxMetadata Metadata { set; get; }
+
+        public List<string> ContainsBoxes { set; get; }
     }
 }

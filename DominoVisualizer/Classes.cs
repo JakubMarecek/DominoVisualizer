@@ -120,6 +120,8 @@ namespace DominoVisualizer
             ControlsOut = new();
             DatasIn = new();
             DatasOut = new();
+
+            INT_Graph = false;
         }
 
         public byte[] LuaBytes { set; get; }
@@ -127,6 +129,8 @@ namespace DominoVisualizer
         public bool IsStateless { set; get; }
 
         public bool IsSystem { set; get; }
+
+        public bool INT_Graph { set; get; }
 
         public List<DominoBoxMetadataControlsIn> ControlsIn { set; get; }
 

@@ -45,14 +45,13 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="700" Visibility="Hidden">
-                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500" Height="80">
-                    <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,10,0,0" Foreground="White" Width="200" />
-                    <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,10,0,0" Foreground="White" Width="290" />
-                    <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,40,0,0" Foreground="White" Width="200" />
+            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden">
+                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
+                    <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
+                    <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
+                    <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
                     
-                    <Label Content="--name--" Name="mainGraphName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="200,40,0,0" Foreground="White" Width="290" />
-                    <ComboBox Name="mainGraphs" Width="260" Margin="200,40,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+                    <ComboBox Name="mainGraphs" Width="365" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -62,7 +61,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="470,45,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
                 </Grid>
                 <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="560" Margin="0,80,0,0">
                     <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
@@ -489,7 +488,7 @@
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding}" />
+                                        <TextBlock Text="{Binding Name}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -547,7 +546,7 @@
             <Grid Width="Auto" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0">
                 <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
             </Grid>
-            <Grid Background="#99000000" Name="gridLoading" Visibility="Hidden">
+            <Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
                 <Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />
             </Grid>
             <Grid Background="#cc000000" Name="gridException" Visibility="Hidden">
@@ -562,10 +561,10 @@
                 <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonX_Click" Margin="380,25,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
             </Grid>
             <Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="170">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Info" Name="dialogInfoName" Style="{StaticResource Header}" />
-                    <TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
+                    <TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
                     <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>

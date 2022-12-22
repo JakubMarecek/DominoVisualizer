@@ -127,81 +127,88 @@ namespace DominoVisualizer
 
 		private void OpenFile(OpenType type, string game, string directFile = "")
 		{
-			void Call()
-            {
-                bool eS = false;
-                
-                try
-				{
-					string r = "";
-
-                    parser.setWorkspaceName = SetWorkspaceName;
-                    
-                    if (type == OpenType.Open) r = parser.Load();
-                    if (type == OpenType.SwapGraph) r = parser.Load(game);
-        	        if (type == OpenType.Import || type == OpenType.Binary) (eS, r) = parser.Parse();
-				    if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
-
-					if (r != "")
-					{
-						OpenInfoDialog("Notice", r);
-
-                        if (eS)
-                        {
-                            CloseWorkspace(gridMainMenu, () => { });
-                            Animation(false, gridLoading);
-                            return;
-                        }
-					}
-
-					parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
-					parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
-					parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
-					parser.openEditDataDialog = OpenEditDataDialog;
-					parser.openEditConnVarDialog = OpenEditConnVarDialog;
-					parser.openAskDialog = OpenAskDialog;
-					parser.openAddCommentDialog = OpenAddCommentDialog;
-					parser.openAddBorderDialog = OpenAddBorderDialog;
-					parser.openEditResourceDialog = OpenEditResourceDialog;
-					parser.openEditConnectorDialog = OpenEditConnectorDialog;
-                    parser.openInfoDialog = OpenInfoDialog;
-                    parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
-
-                    loaded = true;
-					Animation(true, gridMainClose);
-				}
-				catch (Exception ex)
-				{
-					Animation(false, gridDialogSelGame);
-					Animation(false, gridLoading);
-					Animation(true, gridException);
-
-					excLabel.Text = ex.ToString();
-                }
-
-                if (!eS)
-                {
-                    Timer aTimer = new Timer(1000);
-                    aTimer.Enabled = true;
-                    aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-                    {
-                        aTimer.Stop();
-                        Dispatcher.Invoke(() =>
-                        {
-                            Blur(false);
-                            Animation(false, gridLoading);
-                        });
-                    };
-                }
-            }
-
 			void Loading()
-			{
-                Call();
+            {
+                Timer bTimer = new Timer(500);
+                bTimer.Enabled = true;
+                bTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                {
+                    bTimer.Stop();
+                    Dispatcher.Invoke(() =>
+                    {
+                        bool eS = false;
+
+                        try
+				        {
+				        	string r = "";
+
+                            parser.setWorkspaceName = SetWorkspaceName;
+
+                            if (type == OpenType.Open) r = parser.Load();
+                            if (type == OpenType.SwapGraph) r = parser.Load(game);
+        	                if (type == OpenType.Import || type == OpenType.Binary) (eS, r) = parser.Parse();
+				            if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
+
+				        	if (r != "")
+				        	{
+				        		OpenInfoDialog("Notice", r);
+
+                                if (eS)
+                                {
+                                    CloseWorkspace(gridMainMenu, () => { });
+                                    Animation(false, gridLoading);
+                                    return;
+                                }
+				        	}
+
+				        	parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
+				        	parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
+				        	parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
+				        	parser.openEditDataDialog = OpenEditDataDialog;
+				        	parser.openEditConnVarDialog = OpenEditConnVarDialog;
+				        	parser.openAskDialog = OpenAskDialog;
+				        	parser.openAddCommentDialog = OpenAddCommentDialog;
+				        	parser.openAddBorderDialog = OpenAddBorderDialog;
+				        	parser.openEditResourceDialog = OpenEditResourceDialog;
+				        	parser.openEditConnectorDialog = OpenEditConnectorDialog;
+                            parser.openInfoDialog = OpenInfoDialog;
+                            parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
+
+                            loaded = true;
+				        	Animation(true, gridMainClose);
+				        }
+				        catch (Exception ex)
+				        {
+				        	Animation(false, gridDialogSelGame);
+				        	Animation(false, gridLoading);
+				        	Animation(true, gridException);
+
+				        	excLabel.Text = ex.ToString();
+                        }
+
+                        if (!eS)
+                        {
+                            Timer aTimer = new Timer(1000);
+                            aTimer.Enabled = true;
+                            aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                            {
+                                aTimer.Stop();
+                                Dispatcher.Invoke(() =>
+                                {
+                                    Blur(false);
+                                    Animation(false, gridLoading);
+                                });
+                            };
+                        }
+                    });
+                };
             }
 
-			Animation(false, gridMainMenu);
-			Animation(true, gridLoading);
+            if (type != OpenType.SwapGraph)
+            {
+			    Animation(false, gridMainMenu);
+			    Animation(true, gridLoading);
+            }
 
 			if (type == OpenType.Binary)
 			{
@@ -664,7 +671,7 @@ namespace DominoVisualizer
 					OpenInfoDialog("Add exec box", "No box selected.");
 					return;
                 }
-                parser.AddExecBoxCreate(((ExecEntry)addExecBoxBox.SelectedItem).Name);
+                parser.AddExecBoxCreate(((ExecEntry)addExecBoxBox.SelectedItem).Num);
             }
 
             Animation(false, gridDialogAddExecBox);
@@ -998,7 +1005,7 @@ namespace DominoVisualizer
             Animation(false, gridDialogEditConnector);
         }
 
-        private void OpenGetDataFromBoxDialog(List<string> boxes)
+        private void OpenGetDataFromBoxDialog(List<ExecEntry> boxes)
         {
             addGetDataFromBoxBox.ItemsSource = boxes;
             if (boxes.Any())
@@ -1017,7 +1024,7 @@ namespace DominoVisualizer
                     OpenInfoDialog("Get data from box", "No box selected.");
                     return;
                 }
-                parser.GetDataFromBoxCreate(addGetDataFromBoxBox.SelectedItem.ToString(), ((ExecEntry)addGetDataFromBoxData.SelectedItem).Num);
+                parser.GetDataFromBoxCreate(((ExecEntry)addGetDataFromBoxBox.SelectedItem).Num, ((ExecEntry)addGetDataFromBoxData.SelectedItem).Num);
             }
 
             Animation(false, gridDialogGetDataFromBox);
@@ -1027,7 +1034,7 @@ namespace DominoVisualizer
         {
             if (addGetDataFromBoxBox.SelectedItem != null)
             {
-                addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(addGetDataFromBoxBox.SelectedItem.ToString());
+                addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(((ExecEntry)addGetDataFromBoxBox.SelectedItem).Num);
                 addGetDataFromBoxData.SelectedIndex = 0;
                 addGetDataFromBoxData.Items.Refresh();
             }
@@ -1079,7 +1086,7 @@ namespace DominoVisualizer
                 string f = parser.CurrentFile;
                 CloseWorkspace(gridLoading, () =>
                 {
-                    Timer aTimer = new Timer(1000);
+                    Timer aTimer = new Timer(500);
                     aTimer.Enabled = true;
                     aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                     {
@@ -1100,7 +1107,7 @@ namespace DominoVisualizer
                 string f = parser.CurrentFile;
                 CloseWorkspace(gridLoading, () =>
                 {
-                    Timer aTimer = new Timer(1000);
+                    Timer aTimer = new Timer(500);
                     aTimer.Enabled = true;
                     aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                     {

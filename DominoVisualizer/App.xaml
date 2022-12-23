@@ -46,6 +46,11 @@
                     <SolidColorBrush Color="White" />
                 </Setter.Value>
             </Setter>
+            <Setter Property="SelectionBrush">
+                <Setter.Value>
+                    <SolidColorBrush Color="#F28C28" />
+                </Setter.Value>
+            </Setter>
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="3,0,3,0"/>
 
@@ -683,7 +688,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="true">
-                                <Setter TargetName="Border" Property="Background" Value="#FF4F4F4F"/>
+                                <Setter TargetName="Border" Property="Background" Value="#9c5a19"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="Transparent"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
                                 <Setter Property="Foreground" Value="#888888"/>

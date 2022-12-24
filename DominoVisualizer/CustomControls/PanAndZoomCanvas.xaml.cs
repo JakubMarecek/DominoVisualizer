@@ -1,5 +1,4 @@
 ﻿using DominoVisualizer.CustomControls;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -22,6 +21,7 @@ namespace WpfPanAndZoom.CustomControls
         private bool _dragging;
         private UIElement _selectedElement;
         private Vector _draggingDelta;
+        private Rectangle _selectRect;
 
         private Color _lineColor = Color.FromArgb(0xFF, 0x66, 0x66, 0x66);
         private Color _backgroundColor = (Color)ColorConverter.ConvertFromString("#1e1e1e"); // Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
@@ -65,6 +65,10 @@ namespace WpfPanAndZoom.CustomControls
             _borderChilds = new();
             _borderChildsDeltas = new();
             zoom = 0;
+
+            _selectRect = new();
+            _selectRect.Fill = new SolidColorBrush(Colors.Red);
+            Children.Add(_selectRect);
 
             Background = new SolidColorBrush(_backgroundColor);
 
@@ -319,6 +323,15 @@ namespace WpfPanAndZoom.CustomControls
 
                             _dragging = true;
                         }
+
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                var a = Transform3(Mouse.GetPosition(this));
+                Canvas.SetLeft(_selectRect, a.X);
+                Canvas.SetTop(_selectRect, a.Y);
+                _selectRect.Width = 1;
+                _selectRect.Height = 1;
+            }
         }
 
         private void PanAndZoomCanvas_MouseUp(object sender, MouseButtonEventArgs e)
@@ -413,6 +426,23 @@ namespace WpfPanAndZoom.CustomControls
                                 (_selectedElement as FrameworkElement).Height = a.Y;
                         }
                     }
+
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                double x = Mouse.GetPosition(this).X;
+                double y = Mouse.GetPosition(this).Y;
+
+                x -= Canvas.GetLeft(_selectRect);
+                y -= Canvas.GetTop(_selectRect);
+
+                var a = _transform.Inverse.Transform(new(x, y));
+
+                if (a.X > 0)
+                    _selectRect.Width = a.X;
+
+                if (a.Y > 0)
+                    _selectRect.Height = a.Y;
+            }
         }
 
         /*

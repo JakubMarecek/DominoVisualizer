@@ -262,6 +262,12 @@ namespace WpfPanAndZoom.CustomControls
             return new(bb.X, bb.Y);
         }
 
+        public Vector Transform5(IInputElement source)
+        {
+            var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
+            return Point.Subtract(a, Mouse.GetPosition(source));
+        }
+
         private float Zoomfactor = 1.1f;
 
         private void PanAndZoomCanvas_MouseDown(object sender, MouseButtonEventArgs e)
@@ -305,9 +311,7 @@ namespace WpfPanAndZoom.CustomControls
 
                                 double xc = Canvas.GetLeft(child);
                                 double yc = Canvas.GetTop(child);
-                                var aa = _transform.Transform(new(borderD.Width, borderD.Height));
-                                var bb = _transform.Transform(new Point(0, 0));
-                                var cc = Point.Subtract(aa, bb);
+                                var cc = Transform4(new(borderD.Width, borderD.Height));
 
                                 if (
                                     xc > x &&
@@ -383,17 +387,26 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         double xc = Canvas.GetLeft(c);
                         double yc = Canvas.GetTop(c);
-                        var aa = _transform.Transform(new(_selectRect.Width, _selectRect.Height));
-                        var bb = _transform.Transform(new Point(0, 0));
-                        var cc = Point.Subtract(aa, bb);
+                        var cc = Transform4(new(_selectRect.Width, _selectRect.Height));
+
+                        w.Border.Stroke = new SolidColorBrush(Colors.Black);
+                        w.Border.StrokeDashArray = new() { 1, 0 };
+                        w.Border.StrokeThickness = 2;
+
+                        var dd = Transform4(new(w.ActualWidth, w.ActualHeight));
 
                         if (
-                            xc > x &&
-                            yc > y &&
+                            (
+                                (xc > x && yc > y) ||
+                                (xc + dd.X > x && yc + dd.Y > y)
+                            ) &&
                             xc < x + cc.X &&
                             yc < y + cc.Y
                             )
                         {
+                            w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                            w.Border.StrokeDashArray = new() { 4, 2 };
+                            w.Border.StrokeThickness = 4;
                             _selectionItems.Add(c);
                         }
                     }
@@ -434,8 +447,7 @@ namespace WpfPanAndZoom.CustomControls
 
                     if (_selectedElement is Widget widget)
                     {
-                        var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
-                        var b = Point.Subtract(a, Mouse.GetPosition(_selectedElement));
+                        var b = Transform5(_selectedElement);
                         Moving(widget.ID, b.X, b.Y);
                     }
 
@@ -456,9 +468,7 @@ namespace WpfPanAndZoom.CustomControls
 
                                 var c = Point.Add(a, new(bb.X, bb.Y));*/
 
-                                var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
-                                var c = Point.Subtract(a, Mouse.GetPosition(_borderChilds[i]));
-
+                                var c = Transform5(_borderChilds[i]);
                                 Moving(widgetC.ID, c.X, c.Y);
                             }
                         }
@@ -475,8 +485,7 @@ namespace WpfPanAndZoom.CustomControls
                     Canvas.SetLeft(_selectionItems[i], x + _selectionItemsDeltas[i].X);
                     Canvas.SetTop(_selectionItems[i], y + _selectionItemsDeltas[i].Y);
 
-                    var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
-                    var b = Point.Subtract(a, Mouse.GetPosition(_selectionItems[i]));
+                    var b = Transform5(_selectionItems[i]);
                     Moving((_selectionItems[i] as Widget).ID, b.X, b.Y);
                 }
             }
@@ -494,7 +503,10 @@ namespace WpfPanAndZoom.CustomControls
                 var bb = Transform2(new(_draggingDelta.X - aa.X, _draggingDelta.Y - aa.Y));
 
                 if (a.X > 0 && bb.X < 0)
+                {
+                    Canvas.SetLeft(_selectRect, _draggingDelta.X);
                     _selectRect.Width = a.X;
+                }
                 else
                 {
                     Canvas.SetLeft(_selectRect, aa.X);
@@ -502,7 +514,10 @@ namespace WpfPanAndZoom.CustomControls
                 }
 
                 if (a.Y > 0 && bb.Y < 0)
+                {
+                    Canvas.SetTop(_selectRect, _draggingDelta.Y);
                     _selectRect.Height = a.Y;
+                }
                 else
                 {
                     Canvas.SetTop(_selectRect, aa.Y);

@@ -29,6 +29,7 @@ namespace WpfPanAndZoom.CustomControls
         private List<Line> _gridLines = new List<Line>();
         private List<Line> _gridLinesSmall = new List<Line>();
 
+        private bool _selecting;
         private List<UIElement> _selectionItems = new();
         private List<Vector> _selectionItemsDeltas = new();
 
@@ -326,6 +327,7 @@ namespace WpfPanAndZoom.CustomControls
                             }
                     }
 
+                    _selectionItemsDeltas = new();
                     if (_selectionItems.Any())
                     {
                         foreach (UIElement child in _selectionItems)
@@ -347,6 +349,8 @@ namespace WpfPanAndZoom.CustomControls
                 _selectRect.Width = 1;
                 _selectRect.Height = 1;
                 _draggingDelta = new Vector(a.X, a.Y);
+
+                _selecting = true;
             }
 
             if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Shift)
@@ -373,27 +377,39 @@ namespace WpfPanAndZoom.CustomControls
             _borderChildsDeltas.Clear();
             Cursor = Cursors.Arrow;
 
-            _selectionItems = new();
-            _selectionItemsDeltas = new();
-
-            double x = Canvas.GetLeft(_selectRect);
-            double y = Canvas.GetTop(_selectRect);
-
-            foreach (UIElement c in Children)
+            if (_selecting)
             {
-                if (c is Widget w)
-                {
-                    if (!w.DisableMove)
-                    {
-                        double xc = Canvas.GetLeft(c);
-                        double yc = Canvas.GetTop(c);
-                        var cc = Transform4(new(_selectRect.Width, _selectRect.Height));
+                _selectionItems = new();
+                _selectionItemsDeltas = new();
 
+                double x = Canvas.GetLeft(_selectRect);
+                double y = Canvas.GetTop(_selectRect);
+
+                foreach (UIElement c in Children)
+                {
+                    Widget w = null;
+
+                    if (c is Widget)
+                    {
+                        w = c as Widget;
+                        if (w.DisableMove)
+                            continue;
+                    }
+
+                    double xc = Canvas.GetLeft(c);
+                    double yc = Canvas.GetTop(c);
+                    var cc = Transform4(new(_selectRect.Width, _selectRect.Height));
+
+                    if (w != null)
+                    {
                         w.Border.Stroke = new SolidColorBrush(Colors.Black);
                         w.Border.StrokeDashArray = new() { 1, 0 };
                         w.Border.StrokeThickness = 2;
+                    }
 
-                        var dd = Transform4(new(w.ActualWidth, w.ActualHeight));
+                    if (_selectRect.Width > 10 && _selectRect.Height > 10)
+                    {
+                        var dd = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
 
                         if (
                             (
@@ -404,20 +420,26 @@ namespace WpfPanAndZoom.CustomControls
                             yc < y + cc.Y
                             )
                         {
-                            w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
-                            w.Border.StrokeDashArray = new() { 4, 2 };
-                            w.Border.StrokeThickness = 4;
+                            if (w != null)
+                            {
+                                w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                                w.Border.StrokeDashArray = new() { 4, 2 };
+                                w.Border.StrokeThickness = 4;
+                            }
+
                             _selectionItems.Add(c);
                         }
                     }
                 }
-            }
 
-            _selectRect.Width = 1;
-            _selectRect.Height = 1;
-            Canvas.SetLeft(_selectRect, -10);
-            Canvas.SetTop(_selectRect, -10);
-            _selectRect.Visibility = Visibility.Hidden;
+                _selectRect.Width = 1;
+                _selectRect.Height = 1;
+                Canvas.SetLeft(_selectRect, -10);
+                Canvas.SetTop(_selectRect, -10);
+                _selectRect.Visibility = Visibility.Hidden;
+
+                _selecting = false;
+            }
         }
 
         private void PanAndZoomCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -486,10 +508,12 @@ namespace WpfPanAndZoom.CustomControls
                     Canvas.SetTop(_selectionItems[i], y + _selectionItemsDeltas[i].Y);
 
                     var b = Transform5(_selectionItems[i]);
-                    Moving((_selectionItems[i] as Widget).ID, b.X, b.Y);
+
+                    if (_selectionItems[i] is Widget w)
+                        Moving(w.ID, b.X, b.Y);
                 }
             }
-            else if (!_dragging && e.LeftButton == MouseButtonState.Pressed)
+            else if (!_dragging && e.LeftButton == MouseButtonState.Pressed && _selecting)
             {
                 double x = Mouse.GetPosition(this).X;
                 double y = Mouse.GetPosition(this).Y;

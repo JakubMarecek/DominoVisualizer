@@ -1504,7 +1504,7 @@ namespace DominoVisualizer
 			}
 
 			foreach (var b in dominoComments)
-				b.ContainerUI.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.ContainerUI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
 
 			foreach (var b in lines)
 				b.UI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;

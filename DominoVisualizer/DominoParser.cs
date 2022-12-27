@@ -78,7 +78,7 @@ namespace DominoVisualizer
 		 * -rename graph (must not be used), rename workspace
 		 * -add box new ID								ok
 		 * -connector dyn int num - ignore non dyn int	ok
-		 * -add exec box same color?
+		 * -add exec box same color?					ok
 		 */
 
 		string workspaceName = "";
@@ -2803,6 +2803,15 @@ namespace DominoVisualizer
 			return nextID;
         }
 
+		private string FindConnectorFreeID(string boxOutName, int inc = -1)
+        {
+            var a = inc >= 0 ? "_" + inc.ToString() : "";
+            if (dominoConnectors.ContainsKey("f_" + boxOutName + a))
+                return FindConnectorFreeID(boxOutName, inc + 1);
+            else
+                return boxOutName + a;
+        }
+
         public delegate void OpenEditExecBoxDialog(List<ParamEntry> wndData, List<ExecEntry> execs, int selType, int selExec, int selDynInt);
 		public OpenEditExecBoxDialog openEditExecBoxDialog;
 		DominoConnector connEdit = null;
@@ -3293,16 +3302,7 @@ namespace DominoVisualizer
 				if (selConn == "<<<Create new connector>>>")
 				{
 					name = boxEdit.ID.Replace("self[", "").Replace("]", "").Replace("en_", "") + name;
-
-					string checkCName(int inc = -1)
-					{
-						var a = inc >= 0 ? "_" + inc.ToString() : "";
-						if (dominoConnectors.ContainsKey("f_" + name + a))
-							return checkCName(inc + 1);
-						else
-							return name + a;
-					}
-					name = checkCName();
+					name = FindConnectorFreeID(name);
 
 					AddConnectorCreate(500, 500, name, false, false, "");
 					return dominoConnectors["f_" + name];
@@ -4191,7 +4191,10 @@ namespace DominoVisualizer
 						string newConnID = null;
 
 						if (orig.ID != null)
-							newConnID = orig.ID.Replace("f_" + oldID + "_", "f_" + newID.ToString() + "_");
+                        {
+                            newConnID = orig.ID.Replace("f_" + oldID + "_", newID.ToString() + "_");
+							newConnID = "f_" + FindConnectorFreeID(newConnID);
+                        }
 
 						DominoConnector newConn = new();
 						newConn.ID = newConnID;

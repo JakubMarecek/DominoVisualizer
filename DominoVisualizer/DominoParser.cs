@@ -76,6 +76,9 @@ namespace DominoVisualizer
 		 * -graph boxes - disable open                  ok
 		 * -workspace name UI pos                       ok
 		 * -rename graph (must not be used), rename workspace
+		 * -add box new ID								ok
+		 * -connector dyn int num - ignore non dyn int	ok
+		 * -add exec box same color?
 		 */
 
 		string workspaceName = "";
@@ -85,7 +88,7 @@ namespace DominoVisualizer
 
 		Dictionary<string, DominoBox> dominoBoxes = new();
 		Dictionary<string, DominoConnector> dominoConnectors = new();
-		SortedDictionary<string, DominoBoxMetadata> regBoxes = new();
+		//SortedDictionary<string, DominoBoxMetadata> regBoxes = new();
 		SortedDictionary<string, DominoBoxMetadata> regBoxesAll = new();
 		Dictionary<ulong, string> regBoxesCRC64 = new();
 		List<DominoDict> globalVariables = new();
@@ -94,6 +97,7 @@ namespace DominoVisualizer
 		List<DominoComment> dominoComments = new();
 		List<DominoBorder> dominoBorders = new();
 		//DominoBoxMetadata thisMetadata = new();
+		Dictionary<int, bool> testUniqueBoxID = new();
 
 		byte[] fileBytes = null;
 		string runPath = "";
@@ -342,7 +346,7 @@ namespace DominoVisualizer
 
 					regex = new Regex(@"(cbox:CreateBox\(|cbox:CreateBox_PathID\()""(.*?)""\)");
 					v = regex.Match(l);
-					string tempBoxName = v.Groups[2].ToString();
+					string tempBoxName = v.Groups[2].ToString().ToLower();
 
 					if (l.Contains("cbox:CreateBox_PathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
 					{
@@ -398,7 +402,7 @@ namespace DominoVisualizer
 					{
 						var regex = new Regex(@"Boxes\[(.*?)\]");
 						var v = regex.Match(l);
-						string tempBoxName = v.Groups[1].ToString();
+						string tempBoxName = v.Groups[1].ToString().ToLower();
 						tempBoxName = tempBoxName.Replace("\"", "");
 
 						if (!l.Contains("GetPathID(") && regBoxesCRC64.ContainsKey(ulong.Parse(tempBoxName)))
@@ -655,45 +659,33 @@ namespace DominoVisualizer
 
 		private void LoadReqBoxes(string line)
 		{
-			string f = line.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "");
-			regBoxesCRC64.Add(CRC64.Hash(f.ToLower().Replace("/", "\\")), f);
+			string f = line.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "").ToLower();
+			regBoxesCRC64.Add(CRC64.Hash(f.Replace("/", "\\")), f);
 
-			// parse nebo conv - ziskat xml
-			//string ff = runPath + "\\lib" + f.ToLower().Replace("domino", "").Replace("/", "\\");
-			string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace("/", "\\");
-			string ff3 = file.Replace(Path.GetFileName(file), "") + Path.GetFileName(f);
+			if (f.ToLower().StartsWith("domino/user/"))
+            {
+                // parse nebo conv - ziskat xml
+                //string ff = runPath + "\\lib" + f.ToLower().Replace("domino", "").Replace("/", "\\");
+                string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace("/", "\\");
+                string ff3 = file.Replace(Path.GetFileName(file), "") + Path.GetFileName(f);
 
-			Stream fs = new MemoryStream();
+                Stream fs = new MemoryStream();
 
-			if (!File.Exists(ff2) && !File.Exists(ff3))
-			{
-				string zipFileStr = "";
-				if (game == "fc5") zipFileStr = "FC5";
-				if (game == "fcnd") zipFileStr = "FCND";
-				if (game == "fc6") zipFileStr = "FC6";
+                if (File.Exists(ff2)) fs = File.Open(ff2, FileMode.Open, FileAccess.Read, FileShare.Read);
+                else if (File.Exists(ff3)) fs = File.Open(ff3, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-				ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib" + zipFileStr + ".zip");
-				ZipArchiveEntry zipFile = zip.Entries.Where(a => a.FullName.Equals(f.ToLower())).FirstOrDefault();
-				if (zipFile != null)
-				{
-					Stream tmpStream = zipFile.Open();
-					tmpStream.CopyTo(fs);
-				}
-			}
-			else if (File.Exists(ff2)) fs = File.Open(ff2, FileMode.Open, FileAccess.Read, FileShare.Read);
-			else if (File.Exists(ff3)) fs = File.Open(ff3, FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (fs.Length > 0)
+                {
+                    var m = ParseLuaBoxFile(fs);
 
-			if (fs.Length > 0)
-			{
-				var m = ParseLuaBoxFile(fs);
-
-				regBoxes.Add(f, m);
-			}
-			else
-			{
-				errFiles += f + Environment.NewLine;
-				errFilesB = true;
-			}
+                    regBoxesAll.Add(f, m);
+                }
+                else
+                {
+                    errFiles += f + Environment.NewLine;
+                    errFilesB = true;
+                }
+            }
 		}
 
 		private void ParseAllBoxes()
@@ -919,8 +911,8 @@ namespace DominoVisualizer
 					execBox.Params = tempParams;
 					execBox.Box = dominoBoxes[boxID];
 
-					if (regBoxes.ContainsKey(execBox.Box.Name))
-						execBox.ExecStr = regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name;
+					if (regBoxesAll.ContainsKey(execBox.Box.Name))
+						execBox.ExecStr = regBoxesAll[execBox.Box.Name].ControlsIn[execBox.Exec].Name;
 
 					if (l.Contains(":Exec(")) execBox.Type = ExecType.Exec;
 					if (l.Contains(":ExecDynInt("))
@@ -989,7 +981,7 @@ namespace DominoVisualizer
 					//var cns = execBox.Box.Connections.OrderBy(a => (a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr) || a.IsDelayed || a.FromBoxConnectIDStr.ToLower().Contains("open") || a.FromBoxConnectIDStr.ToLower().Contains("start")) ? 0 : 1).ToList();
 					var cns = execBox.Box.Connections
 						.OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
-						.ThenByDescending(a => regBoxes.ContainsKey(execBox.Box.Name) ? regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed : false)
+						.ThenByDescending(a => regBoxesAll.ContainsKey(execBox.Box.Name) ? regBoxesAll[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed : false)
 						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
 						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
 						.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
@@ -1244,10 +1236,10 @@ namespace DominoVisualizer
 				int dataOutParam = int.Parse(varAssignSp[1].Replace("GetDataOutValue(", "").Replace(")", ""));
 				var boxNameP = dominoBoxes[varAssignSp[0]].Name;
 
-				if (!regBoxes.ContainsKey(boxNameP))
+				if (!regBoxesAll.ContainsKey(boxNameP))
 					return "";
 
-				string varBoxOutData = inputStr + " - " + regBoxes[boxNameP].DatasOut[dataOutParam].Name;
+				string varBoxOutData = inputStr + " - " + regBoxesAll[boxNameP].DatasOut[dataOutParam].Name;
 
 				return varBoxOutData;
 			}
@@ -1304,9 +1296,9 @@ namespace DominoVisualizer
 				conn.FromBoxConnectID = num;
 				//conn.FromBoxes.Add(tempBox);
 
-				if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
+				if (regBoxesAll.ContainsKey(tempBox.Name) && parentConn == null)
 				{
-					conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
+					conn.FromBoxConnectIDStr = regBoxesAll[tempBox.Name].ControlsOut[num].Name;
 				}
 
 				if (parentConn == null)
@@ -1326,9 +1318,9 @@ namespace DominoVisualizer
 				conn.FromBoxConnectID = num;
 				//conn.FromBoxes.Add(tempBox);
 
-				if (regBoxes.ContainsKey(tempBox.Name) && parentConn == null)
+				if (regBoxesAll.ContainsKey(tempBox.Name) && parentConn == null)
 				{
-					conn.FromBoxConnectIDStr = regBoxes[tempBox.Name].ControlsOut[num].Name;
+					conn.FromBoxConnectIDStr = regBoxesAll[tempBox.Name].ControlsOut[num].Name;
 				}
 
 				if (parentConn == null)
@@ -1651,7 +1643,7 @@ namespace DominoVisualizer
 
 			AskDialog("Open", "Open the selected Domino script?", () =>
 			{
-				File.WriteAllBytes(runPath + "\\tmp", regBoxes[openParam].LuaBytes);
+				File.WriteAllBytes(runPath + "\\tmp", regBoxesAll[openParam].LuaBytes);
 
 				ProcessStartInfo startInfo = new ProcessStartInfo(runPath + "\\DominoVisualizer.exe");
 				startInfo.UseShellExecute = true;
@@ -1994,7 +1986,7 @@ namespace DominoVisualizer
 							//var cns = execBox.Box.Connections;
 							var cns = execBox.Box.Connections
 								.OrderByDescending(a => a.FromBoxConnectIDStr.StartsWith(execBox.ExecStr))
-								.ThenByDescending(a => regBoxes.ContainsKey(execBox.Box.Name) ? (a.FromBoxConnectID < regBoxes[execBox.Box.Name].ControlsOut.Count ? regBoxes[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed : false) : false)
+								.ThenByDescending(a => regBoxesAll.ContainsKey(execBox.Box.Name) ? (a.FromBoxConnectID < regBoxesAll[execBox.Box.Name].ControlsOut.Count ? regBoxesAll[execBox.Box.Name].ControlsOut[a.FromBoxConnectID].IsDelayed : false) : false)
 								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("open"))
 								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower().Contains("start"))
 								.ThenByDescending(a => a.FromBoxConnectIDStr.ToLower() == "loaded")
@@ -2145,8 +2137,8 @@ namespace DominoVisualizer
 		private StackPanel DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
 		{
 			string name = "";
-			if (regBoxes.ContainsKey(execBox.Box.Name))
-				name = execBox.Exec < regBoxes[execBox.Box.Name].ControlsIn.Count ? regBoxes[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
+			if (regBoxesAll.ContainsKey(execBox.Box.Name))
+				name = execBox.Exec < regBoxesAll[execBox.Box.Name].ControlsIn.Count ? regBoxesAll[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
 
 			string execStr = "Exec: " + "(" + execBox.Exec.ToString() + ") " + name;
 			if (execBox.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + execBox.DynIntExec.ToString();
@@ -2178,11 +2170,11 @@ namespace DominoVisualizer
 						pv = GetSetVarOutName(param.Value);*/
 
 					var paramName = "";
-					if (regBoxes.ContainsKey(execBox.Box.Name))
-						paramName = int.Parse(param.Name) < regBoxes[execBox.Box.Name].DatasIn.Count ? regBoxes[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
+					if (regBoxesAll.ContainsKey(execBox.Box.Name))
+						paramName = int.Parse(param.Name) < regBoxesAll[execBox.Box.Name].DatasIn.Count ? regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
 
 					Grid g = new() { Height = 30 };
-					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxes.ContainsKey(execBox.Box.Name) ? paramName : ""), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : ""), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					sp.Children.Add(g);
 
@@ -2348,7 +2340,7 @@ namespace DominoVisualizer
 			box.Widget = wb;
 			box.Height = 40;
 
-			if (regBoxes.ContainsKey(box.Name) && !regBoxes[box.Name].IsSystem && !regBoxes[box.Name].INT_Graph)
+			if (regBoxesAll.ContainsKey(box.Name) && !regBoxesAll[box.Name].IsSystem && !regBoxesAll[box.Name].INT_Graph)
 			{
 				wb.list.Children.Add(DrawBtn("Open in new window >>>", box.Name, OnOpenClick));
 				box.Height += 20;
@@ -2549,13 +2541,16 @@ namespace DominoVisualizer
 
 				foreach (var c in dominoConnectors.Values)
 				{
-					var eb = c.ExecBoxes.Where(a => a.Box.ID == tag).SingleOrDefault();
+					var eb = c.ExecBoxes.Where(a => a.Box.ID == tag).ToList();
 					if (eb != null)
 					{
-						c.Widget.list.Children.Remove(eb.ContainerUI);
-						c.ExecBoxes.RemoveAll(a => a.Box.ID == tag);
+						foreach (var ebf in eb)
+                        {
+                            c.Widget.list.Children.Remove(ebf.ContainerUI);
+                            c.ExecBoxes.RemoveAll(a => a.Box.ID == tag);
 
-						RemoveLine(c.ID + "-P1", tag + "-P1");
+                            RemoveLine(c.ID + "-P1", tag + "-P1");
+                        }
 					}
 				}
 
@@ -2576,12 +2571,6 @@ namespace DominoVisualizer
 
 				canvas.Children.Remove(b.Widget);
 				dominoBoxes.Remove(tag);
-
-				var toRem = regBoxes.Where(r => dominoBoxes.Count(m => m.Value.Name == r.Key) == 0).Select(pair => pair.Key).ToList();
-				foreach (var tr in toRem)
-				{
-					regBoxes.Remove(tr);
-				}
 			});
 		}
 
@@ -2805,7 +2794,16 @@ namespace DominoVisualizer
 		{
 		}
 
-		public delegate void OpenEditExecBoxDialog(List<ParamEntry> wndData, List<ExecEntry> execs, int selType, int selExec, int selDynInt);
+		private int FindBoxFreeID(int nextID = 0)
+        {
+            var a = dominoBoxes.Any(a => a.Key == "self[" + nextID.ToString() + "]" || a.Key == "en_" + nextID.ToString());
+			if (a)
+				return FindBoxFreeID(nextID + 1);
+
+			return nextID;
+        }
+
+        public delegate void OpenEditExecBoxDialog(List<ParamEntry> wndData, List<ExecEntry> execs, int selType, int selExec, int selDynInt);
 		public OpenEditExecBoxDialog openEditExecBoxDialog;
 		DominoConnector connEdit = null;
 		ExecBox execBoxEdit = null;
@@ -2820,14 +2818,14 @@ namespace DominoVisualizer
 			connEdit = dominoConnectors[ids[0]];
 			execBoxEdit = connEdit.ExecBoxes.Where(e => e.Box.ID == ids[1]).Single();
 
-			if (!regBoxes.ContainsKey(execBoxEdit.Box.Name))
+			if (!regBoxesAll.ContainsKey(execBoxEdit.Box.Name))
 			{
 				openInfoDialog("Edit exec box", "Can't find metadata of the box.");
 				return;
 			}
 
 			List<ExecEntry> execs = new();
-			var b = regBoxes[execBoxEdit.Box.Name].ControlsIn;
+			var b = regBoxesAll[execBoxEdit.Box.Name].ControlsIn;
 			for (int i = 0; i < b.Count; i++)
 			{
 				execs.Add(new() { Name = "(" + i.ToString() + ") " + b[i].Name + (b[i].AnchorDynType > 0 ? " - DynInt" : ""), Num = i.ToString() });
@@ -2915,7 +2913,7 @@ namespace DominoVisualizer
 			}
 			else
 			{
-				var a = regBoxes[execBoxEdit.Box.Name].DatasIn;
+				var a = regBoxesAll[execBoxEdit.Box.Name].DatasIn;
 				for (int i = 0; i < a.Count; i++)
 				{
 					string paramName = "(" + i.ToString() + ") " + a[i].Name;
@@ -3161,7 +3159,7 @@ namespace DominoVisualizer
 				int cc = 0;
 				foreach (var aa in dominoConnectors.Values)
 					foreach (var bb in aa.ExecBoxes)
-						if (bb.Box.ID == eb.Box.ID)
+						if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == eb.Box.ID)
 							cc++;
 
 				eb.DynIntExec = cc;
@@ -3171,7 +3169,7 @@ namespace DominoVisualizer
 
 			connEdit.ExecBoxes.Add(eb);
 
-			var clr = connEdit.Widget.list.Children.Count;
+			var clr = connEdit.ExecBoxes.Count;
 
 			DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);
 
@@ -3263,13 +3261,13 @@ namespace DominoVisualizer
 					boxFuncs.Add(new() { Name = n, Num = prntUniqID });
 			}
 
-			if (!regBoxes.ContainsKey(boxEdit.Name))
+			if (!regBoxesAll.ContainsKey(boxEdit.Name))
 			{
 				openInfoDialog("Add connector", "Can't find metadata of the box.");
 				return;
 			}
 
-			var a = regBoxes[boxEdit.Name].ControlsOut;
+			var a = regBoxesAll[boxEdit.Name].ControlsOut;
 			for (int i = 0; i < a.Count; i++)
 			{
 				aa(null, i, a[i].Name, "", a[i].UniqueID);
@@ -3376,7 +3374,7 @@ namespace DominoVisualizer
 				return list.Count;
 			}
 
-			var a = regBoxes[boxEdit.Name].ControlsOut;
+			var a = regBoxesAll[boxEdit.Name].ControlsOut;
 			for (int i = 0; i < a.Count; i++)
 			{
 				var ec = boxEdit.Connections.Where(a => a.UniqueID == selBoxFnc && a.FromBoxConnectID == i).SingleOrDefault();
@@ -3487,7 +3485,10 @@ namespace DominoVisualizer
 			if (e)
 				return "A connector with this name already exists. Select another name.";
 
-			bool findBox(List<DominoConnector> c)
+			dominoConnectors.Remove(editConnector.ID);
+			dominoConnectors.Add(name, editConnector);
+
+            bool findBox(List<DominoConnector> c)
 			{
 				var conn = c.Where(a => a.ID == editConnector.ID).SingleOrDefault();
 				if (conn != null)
@@ -3506,15 +3507,22 @@ namespace DominoVisualizer
 				b.Widget.list.Children.Remove(editConnector.ContainerUI);
 			}
 
+			foreach (var l in lines)
+			{
+				l.Point1 = l.Point1.Replace(editConnector.ID, name);
+				l.Point2 = l.Point2.Replace(editConnector.ID, name);
+            }
+
 			editConnector.ID = name;
 			editConnector.Widget.Header.Text = name;
-			editConnector.Widget.delBtn.Tag = b.ID;
-			editConnector.Widget.swapBtn.Tag = b.ID;
+			editConnector.Widget.delBtn.Tag = name;
+			editConnector.Widget.editBtn.Tag = name;
+            //editConnector.Widget.swapBtn.Tag = b.ID;
 
-			foreach (var btn in editConnector.Widget.list.Children)
+            foreach (var btn in editConnector.Widget.list.Children)
 				if (btn is Button)
 				{
-					((Button)btn).Tag = b.ID;
+					((Button)btn).Tag = name;
 				}
 
 			string findParentName(string currName, List<DominoConnector> c)
@@ -3556,16 +3564,8 @@ namespace DominoVisualizer
 
 		public string AddBoxCreate(int width, int height, bool global, string name)
 		{
-			string newID = dominoBoxes.Count.ToString();
-
-			for (int i = 0; i < dominoBoxes.Count; i++)
-			{
-				//var a = dominoBoxes.Any(a => (global && a.Key == "self[" + i.ToString() + "]") || (!global && a.Key == "en_" + i.ToString()));
-				var a = dominoBoxes.Any(a => a.Key == "self[" + i.ToString() + "]" || a.Key == "en_" + i.ToString());
-				if (!a)
-					newID = i.ToString();
-			}
-
+			string newID = FindBoxFreeID().ToString();
+			
 			var isStateless = regBoxesAll[name].IsStateless;
 			if (!isStateless && !global)
 				return "Selected box is not stateless and must be defined as global.";
@@ -3577,10 +3577,10 @@ namespace DominoVisualizer
 
 			//canvas.ResetZoom();
 
-			if (!regBoxes.ContainsKey(name))
+			if (!regBoxesAll.ContainsKey(name))
 			{
 				var meta = regBoxesAll[name];
-				regBoxes.Add(name, meta);
+                regBoxesAll.Add(name, meta);
 			}
 
 			DominoBox b = new();
@@ -4063,9 +4063,9 @@ namespace DominoVisualizer
 			List<ExecEntry> boxes = new();
 			foreach (var b in dominoBoxes.Values)
 			{
-				if (regBoxes.ContainsKey(b.Name))
+				if (regBoxesAll.ContainsKey(b.Name))
 				{
-					var m = regBoxes[b.Name].DatasOut.Any();
+					var m = regBoxesAll[b.Name].DatasOut.Any();
 					if (m)
 						boxes.Add(new() { Name = b.ID + " - " + b.Name, Num = b.ID });
 				}
@@ -4079,7 +4079,7 @@ namespace DominoVisualizer
 		public List<ExecEntry> GetDataFromBoxDatas(string selBox)
 		{
 			var b = dominoBoxes[selBox];
-			var m = regBoxes[b.Name].DatasOut;
+			var m = regBoxesAll[b.Name].DatasOut;
 
 			List<ExecEntry> entries = new();
 			for (int i = 0; i < m.Count; i++)
@@ -4144,7 +4144,6 @@ namespace DominoVisualizer
 				foreach (var c in newComments)
 					dominoComments.Add(c);
 
-				int newBoxID = dominoBoxes.Count;
 				Dictionary<string, DominoBox> newBoxes = new();
 				Dictionary<string, DominoConnector> newConnectors = new();
 				Dictionary<string, string> oldNewBoxes = new();
@@ -4159,8 +4158,10 @@ namespace DominoVisualizer
 						bx < pos.X + add.X &&
 						by < pos.Y + add.Y
 						)
-					{
-						string ni = "";
+                    {
+                        int newBoxID = FindBoxFreeID();
+
+                        string ni = "";
 						if (b.ID.StartsWith("self["))
 							ni = $"self[{newBoxID}]";
 						else
@@ -4173,8 +4174,6 @@ namespace DominoVisualizer
 						boxNew.Name = b.Name;
 						DrawBox(boxNew, bx, by + newPosY);
 						newBoxes.Add(ni, boxNew);
-
-						newBoxID++;
 					}
 				}
 
@@ -4231,7 +4230,7 @@ namespace DominoVisualizer
 								cc = 0;
 								foreach (var aa in dominoConnectors.Values)
 									foreach (var bb in aa.ExecBoxes)
-										if (bb.Box.ID == e.Box.ID)
+										if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == e.Box.ID)
 											cc++;
 							}
 
@@ -4349,8 +4348,8 @@ namespace DominoVisualizer
 
 		private string BuildGraphName(string boxName)
 		{
-			if (regBoxes.ContainsKey(boxName))
-				if (regBoxes[boxName].INT_Graph)
+			if (regBoxesAll.ContainsKey(boxName))
+				if (regBoxesAll[boxName].INT_Graph)
 				{
 					//boxName = BuildGraphName(boxName);
 
@@ -4366,8 +4365,6 @@ namespace DominoVisualizer
 		private void AddGraphBox(DominoGraph graph)
 		{
 			string boxName = "GRAPH: " + graph.Name; // BuildGraphName(graph, true);
-
-			regBoxes.Add(boxName, graph.Metadata);
 
 			if (dominoGraphs[selGraph].UniqueID != graph.UniqueID)
 				regBoxesAll.Add(boxName, graph.Metadata);
@@ -4471,9 +4468,19 @@ namespace DominoVisualizer
 			streamWriter.WriteLine("function export:Create(cboxRes)");
 			streamWriter.WriteLine("  --if cboxRes:ShouldLoadResources() == true then");
 
-			foreach (var b in regBoxes)
-				if (!b.Key.EndsWith(dominoGraphs[selGraph].Name))// != BuildGraphName(dominoGraphs[selGraph], true)
-					streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{BuildGraphName(b.Key)}\")");
+			/*foreach (var b in regBoxes)
+			{
+				bool bu = dominoBoxes.Any(b => b.Value.Name == b.Key);
+                if (!b.Key.EndsWith(dominoGraphs[selGraph].Name) && bu)// != BuildGraphName(dominoGraphs[selGraph], true)
+                    streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{BuildGraphName(b.Key)}\")");
+            }*/
+
+			var usedBoxesN = dominoBoxes.Select(a => a.Value.Name).ToList().Distinct();
+			var usedBoxes = regBoxesAll.Where(a => usedBoxesN.Contains(a.Key)).ToList().Distinct();
+			foreach (var usedBox in usedBoxes)
+            {
+                streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{BuildGraphName(usedBox.Key)}\")");
+            }
 
 			dominoResources = dominoResources.OrderBy(a => a.Name).ToList();
 			foreach (var res in dominoResources)
@@ -4486,7 +4493,7 @@ namespace DominoVisualizer
 			{
 				streamWriter.WriteLine("function export:RegisterCppMetadata()");
 
-				foreach (var regBox in regBoxes)
+				foreach (var regBox in usedBoxes)
 				{
 					streamWriter.WriteLine($"  metadataTable[GetPathID(\"{BuildGraphName(regBox.Key)}\")] = {{");
 					streamWriter.WriteLine($"    stateless = {(regBox.Value.IsStateless ? "true" : "false")},");
@@ -5407,8 +5414,8 @@ namespace DominoVisualizer
 						return "System Domino box can't be opened.";
 				}
 
-				if (!graph.IsDefault)
-					AddGraphBox(graph);
+				/*if (!graph.IsDefault)
+					AddGraphBox(graph);*/
 
 				IEnumerable<XElement> boxes = g.Element("Boxes")?.Elements("Box");
 				if (boxes != null)
@@ -5540,22 +5547,30 @@ namespace DominoVisualizer
 				}
 			}
 
-			foreach (var box in dominoBoxes)
+            foreach (var graph in dominoGraphs)
+            {
+                if (!graph.IsDefault)
+                    AddGraphBox(graph);
+            }
+
+            foreach (var box in dominoBoxes)
 			{
-				if (!regBoxes.ContainsKey(box.Value.Name))
+				if (!regBoxesAll.ContainsKey(box.Value.Name))
 					LoadReqBoxes(box.Value.Name);
-			}
+
+				testUniqueBoxID.Add(int.Parse(box.Value.ID.Replace("self[", "").Replace("]", "").Replace("en_", "")), true);
+            }
 
 			foreach (var c in dominoConnectors)
 			{
 				foreach (var e in c.Value.ExecBoxes)
 				{
-					if (regBoxes.ContainsKey(e.Box.Name))
-						e.ExecStr = e.Exec < regBoxes[e.Box.Name].ControlsIn.Count ? regBoxes[e.Box.Name].ControlsIn[e.Exec].Name : "EXEC DOESN'T EXIST";
+					if (regBoxesAll.ContainsKey(e.Box.Name))
+						e.ExecStr = e.Exec < regBoxesAll[e.Box.Name].ControlsIn.Count ? regBoxesAll[e.Box.Name].ControlsIn[e.Exec].Name : "EXEC DOESN'T EXIST";
 				}
 			}
 
-			Draw(true);
+            Draw(true);
 
 			SetWorkspaceNameAndGraphs();
 

@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shell;
 using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
@@ -79,10 +80,10 @@ namespace DominoVisualizer
 		 * -add box new ID								ok
 		 * -connector dyn int num - ignore non dyn int	ok
 		 * -add exec box same color?					ok
-		 * -border select ignore inside
-		 * -graphs sort
-		 * -dyn int sel tweak - find first free
-		 * -duplicate border box ID - list
+		 * -border select ignore inside					ok
+		 * -graphs sort									ok
+		 * -dyn int sel tweak - find first free			ok
+		 * -duplicate border box ID - list				ok
 		 */
 
 		string workspaceName = "";
@@ -2798,11 +2799,18 @@ namespace DominoVisualizer
 		{
 		}
 
-		private int FindBoxFreeID(int nextID = 0)
+		private int FindBoxFreeID(int nextID = 0, List<DominoBox> secondList = null)
         {
-            var a = dominoBoxes.Any(a => a.Key == "self[" + nextID.ToString() + "]" || a.Key == "en_" + nextID.ToString());
+			var tmpList = new List<DominoBox>();
+
+			tmpList.AddRange(dominoBoxes.Values.ToList());
+
+			if (secondList != null)
+				tmpList.AddRange(secondList);
+
+            var a = tmpList.Any(a => a.ID == "self[" + nextID.ToString() + "]" || a.ID == "en_" + nextID.ToString());
 			if (a)
-				return FindBoxFreeID(nextID + 1);
+				return FindBoxFreeID(nextID + 1, secondList);
 
 			return nextID;
         }
@@ -2814,6 +2822,25 @@ namespace DominoVisualizer
                 return FindConnectorFreeID(boxOutName, inc + 1);
             else
                 return boxOutName + a;
+        }
+
+		private int FindDynIntFreeNum(string reqID)
+		{
+			List<int> lst = new List<int>();
+
+			foreach (var aa in dominoConnectors.Values)
+				foreach (var bb in aa.ExecBoxes)
+					if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == reqID)
+						lst.Add(bb.DynIntExec);
+
+			int find(int n = 0)
+			{
+				if (lst.Contains(n))
+					return find(n + 1);
+				return n;
+			}
+
+			return find();
         }
 
         public delegate void OpenEditExecBoxDialog(List<ParamEntry> wndData, List<ExecEntry> execs, int selType, int selExec, int selDynInt);
@@ -3168,14 +3195,7 @@ namespace DominoVisualizer
 			if (ctrlMeta)
 			{
 				eb.Type = ExecType.ExecDynInt;
-
-				int cc = 0;
-				foreach (var aa in dominoConnectors.Values)
-					foreach (var bb in aa.ExecBoxes)
-						if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == eb.Box.ID)
-							cc++;
-
-				eb.DynIntExec = cc;
+				eb.DynIntExec = FindDynIntFreeNum(eb.Box.ID);
 			}
 			else
 				eb.Type = ExecType.Exec;
@@ -4163,7 +4183,7 @@ namespace DominoVisualizer
 						by < pos.Y + add.Y
 						)
                     {
-                        int newBoxID = FindBoxFreeID();
+                        int newBoxID = FindBoxFreeID(0, newBoxes.Values.ToList());
 
                         string ni = "";
 						if (b.ID.StartsWith("self["))
@@ -4233,12 +4253,7 @@ namespace DominoVisualizer
 							else
 							{
 								execBox = dominoBoxes[e.Box.ID];
-
-								cc = 0;
-								foreach (var aa in dominoConnectors.Values)
-									foreach (var bb in aa.ExecBoxes)
-										if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == e.Box.ID)
-											cc++;
+                                cc = FindDynIntFreeNum(e.Box.ID);
 							}
 
 							ExecBox execBoxNew = new();
@@ -4290,7 +4305,8 @@ namespace DominoVisualizer
 
 		private void SetWorkspaceNameAndGraphs(string forceReload = "")
 		{
-			setWorkspaceName(workspaceName, dominoGraphs, selGraph, forceReload);
+			var graphsSorted = dominoGraphs.OrderBy(a => a.Name).ToList();
+			setWorkspaceName(workspaceName, graphsSorted, graphsSorted.FindIndex(a => a.UniqueID == dominoGraphs[selGraph].UniqueID), forceReload);
 		}
 
 		public string AddGraph(string name)

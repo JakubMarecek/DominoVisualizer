@@ -382,8 +382,8 @@ namespace WpfPanAndZoom.CustomControls
                 _selectionItems = new();
                 _selectionItemsDeltas = new();
 
-                double x = Canvas.GetLeft(_selectRect);
-                double y = Canvas.GetTop(_selectRect);
+                double selX = Canvas.GetLeft(_selectRect);
+                double selY = Canvas.GetTop(_selectRect);
 
                 foreach (UIElement c in Children)
                 {
@@ -396,9 +396,9 @@ namespace WpfPanAndZoom.CustomControls
                             continue;
                     }
 
-                    double xc = Canvas.GetLeft(c);
-                    double yc = Canvas.GetTop(c);
-                    var cc = Transform4(new(_selectRect.Width, _selectRect.Height));
+                    double widX = Canvas.GetLeft(c);
+                    double widY = Canvas.GetTop(c);
+                    var selSize = Transform4(new(_selectRect.Width, _selectRect.Height));
 
                     if (w != null)
                     {
@@ -407,18 +407,28 @@ namespace WpfPanAndZoom.CustomControls
                         w.Border.StrokeThickness = 2;
                     }
 
+                    if (c.GetType() == typeof(BorderD))
+                        (c as BorderD).Background = new SolidColorBrush(Colors.Transparent);
+
+                    if (c.GetType() == typeof(Border))
+                        (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
+
                     if (_selectRect.Width > 10 && _selectRect.Height > 10)
                     {
-                        var dd = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
+                        var widSize = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
 
                         if (
                             (
-                                (xc > x && yc > y) ||
-                                (xc + dd.X > x && yc + dd.Y > y)
+                                (widX > selX && widY > selY) ||
+                                (widX + widSize.X > selX && widY + widSize.Y > selY)
                             ) &&
-                            xc < x + cc.X &&
-                            yc < y + cc.Y
+                            widX < selX + selSize.X &&
+                            widY < selY + selSize.Y &&
+                            !(
+                                widX < selX && widX + widSize.X > selSize.X &&
+                                widY < selY && widY + widSize.Y > selSize.Y
                             )
+                        )
                         {
                             if (w != null)
                             {
@@ -426,6 +436,12 @@ namespace WpfPanAndZoom.CustomControls
                                 w.Border.StrokeDashArray = new() { 4, 2 };
                                 w.Border.StrokeThickness = 4;
                             }
+
+                            if (c.GetType() == typeof(BorderD))
+                                (c as BorderD).Background = _selectRect.Fill;
+
+                            if (c.GetType() == typeof(Border))
+                                (c as Border).Background = _selectRect.Fill;
 
                             _selectionItems.Add(c);
                         }

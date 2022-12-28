@@ -105,7 +105,7 @@
                     </StackPanel>
 
                     <ListView Style="{StaticResource ParamsList}" ItemContainerStyle="{StaticResource ParamsListContainer}"
-                      KeyboardNavigation.TabNavigation="Local" Margin="10,220,10,60" Name="paramsList" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                      KeyboardNavigation.TabNavigation="Local" Margin="10,220,8,60" Name="paramsList" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListView.View>
                             <GridView ColumnHeaderContainerStyle="{StaticResource ParamsListHeader}" AllowsColumnReorder="False">
                                 <GridViewColumn Header="">

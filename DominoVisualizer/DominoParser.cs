@@ -79,6 +79,10 @@ namespace DominoVisualizer
 		 * -add box new ID								ok
 		 * -connector dyn int num - ignore non dyn int	ok
 		 * -add exec box same color?					ok
+		 * -border select ignore inside
+		 * -graphs sort
+		 * -dyn int sel tweak - find first free
+		 * -duplicate border box ID - list
 		 */
 
 		string workspaceName = "";

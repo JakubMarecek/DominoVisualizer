@@ -425,8 +425,8 @@ namespace WpfPanAndZoom.CustomControls
                             widX < selX + selSize.X &&
                             widY < selY + selSize.Y &&
                             !(
-                                widX < selX && widX + widSize.X > selSize.X &&
-                                widY < selY && widY + widSize.Y > selSize.Y
+                                widX < selX && widX + widSize.X > selX + selSize.X &&
+                                widY < selY && widY + widSize.Y > selY + selSize.Y
                             )
                         )
                         {

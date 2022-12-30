@@ -84,7 +84,7 @@ namespace DominoVisualizer
 		 * -graphs sort									ok
 		 * -dyn int sel tweak - find first free			ok
 		 * -duplicate border box ID - list				ok
-		 * -selection - right side
+		 * -selection - right side						ok
 		 */
 
 		string workspaceName = "";

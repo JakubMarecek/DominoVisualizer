@@ -222,7 +222,7 @@ namespace DominoVisualizer
 				{
 					aTimer.Stop();
 
-					parser = new(arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
+					parser = new(this, arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
 
 					Dispatcher.Invoke(() =>
 					{
@@ -243,7 +243,7 @@ namespace DominoVisualizer
 
 				if (ofdI.ShowDialog() == true)
 				{
-					parser = new(ofdI.FileName, canvas, game);
+					parser = new(this, ofdI.FileName, canvas, game);
 
                     Title = appName + " - " + ofdI.FileName;
 
@@ -264,7 +264,7 @@ namespace DominoVisualizer
 
 				if (ofdO.ShowDialog() == true)
 				{
-					parser = new(ofdO.FileName, canvas);
+					parser = new(this, ofdO.FileName, canvas);
 
                     Title = appName + " - " + ofdO.FileName;
 
@@ -279,7 +279,7 @@ namespace DominoVisualizer
 
 			if (type == OpenType.SwapGraph)
 			{
-				parser = new(directFile, canvas);
+				parser = new(this, directFile, canvas);
                 Title = appName + " - " + directFile;
                 Loading();
 			}
@@ -288,7 +288,7 @@ namespace DominoVisualizer
 			{
                 Title = appName + " - Unsaved workspace";
 
-				parser = new(canvas, game);
+				parser = new(this, canvas, game);
                 //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
 
                 Loading();
@@ -589,7 +589,7 @@ namespace DominoVisualizer
 
 		private void ButtonSave_Click(object sender, RoutedEventArgs e)
 		{
-			var a = parser.Save(this);
+			var a = parser.Save();
 			if (a != "")
             {
 				OpenInfoDialog("Save", a);
@@ -984,25 +984,7 @@ namespace DominoVisualizer
 
         private void OpenEditConnectorDialog(string name)
         {
-			editConnectorName.Text = name;
-            Animation(true, gridDialogEditConnector);
-        }
-
-        private void ButtonDialogEditConnector_Click(object sender, RoutedEventArgs e)
-        {
-            string tag = (string)((Button)sender).Tag;
-
-            if (tag == "1")
-			{
-                var a = parser.EditConnectorDialogAct(editConnectorName.Text);
-                if (a != "")
-                {
-                    OpenInfoDialog("Edit connector", a);
-                    return;
-                }
-            }
-
-            Animation(false, gridDialogEditConnector);
+            OpenEditNameDialog("Edit connector", "Write a name of the connector, it must be unique:", name, "connector");
         }
 
         private void OpenGetDataFromBoxDialog(List<ExecEntry> boxes)
@@ -1046,7 +1028,7 @@ namespace DominoVisualizer
 
             if (tag == "1")
             {
-                if (wrkspDat.Text == "" || !wrkspDat.Text.EndsWith("\\"))
+                if (wrkspDat.Text == "")
                 {
                     OpenInfoDialog("Workspace", "Wrong DAT FAT path.");
                     return;
@@ -1076,6 +1058,7 @@ namespace DominoVisualizer
             allowChangeGraphs = false;
             mainWorkspaceName.Content = workspace;
             //mainGraphName.Content = graph;
+            mainGraphs.ItemsSource = null;
             mainGraphs.ItemsSource = graphs;
             mainGraphs.SelectedIndex = selGraph;
             mainGraphs.Items.Refresh();
@@ -1147,6 +1130,61 @@ namespace DominoVisualizer
         private void ButtonMainGraphDel_Click(object sender, RoutedEventArgs e)
         {
             parser.DeleteGraph(((DominoGraph)mainGraphs.SelectedItem).UniqueID);
+        }
+
+        private void ButtonWorkspaceRename_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "workspace")
+                OpenEditNameDialog("Edit workspace name", "Set new workspace name:", mainWorkspaceName.Content.ToString(), tag);
+
+            if (tag == "graph")
+                OpenEditNameDialog("Edit graph name", "Set new graph name:", ((DominoGraph)mainGraphs.SelectedItem).Name, tag);
+
+            if (tag == "path")
+                OpenEditNameDialog("Edit path", "Set path which will be used inside DAT FAT:", parser.CurrentDatPath, tag);
+        }
+
+        string dialogEditNameTag = "";
+
+        private void OpenEditNameDialog(string title, string desc, string name, string tag)
+        {
+            dialogEditNameTitle.Content = title;
+            dialogEditNameDesc.Text = desc;
+            dialogEditName.Text = name;
+            Animation(true, gridDialogEditName);
+
+            dialogEditNameTag = tag;
+        }
+
+        private void ButtonDialogEditName_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "1")
+            {
+                if (dialogEditNameTag == "connector")
+                {
+                    var a = parser.EditConnectorDialogAct(dialogEditName.Text);
+                    if (a != "")
+                    {
+                        OpenInfoDialog("Edit connector", a);
+                        return;
+                    }
+                }
+                else
+                {
+                    var a = parser.RenameWorkspace(dialogEditNameTag, dialogEditName.Text);
+                    if (a != "")
+                    {
+                        OpenInfoDialog("Edit workspace", a);
+                        return;
+                    }
+                }
+            }
+
+            Animation(false, gridDialogEditName);
         }
 
         /*private void ExportPicture(object sender, RoutedEventArgs e)

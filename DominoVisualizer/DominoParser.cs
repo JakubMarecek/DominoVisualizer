@@ -16,7 +16,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shell;
 using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
@@ -76,7 +75,7 @@ namespace DominoVisualizer
 		 * -new graph save                              ok
 		 * -graph boxes - disable open                  ok
 		 * -workspace name UI pos                       ok
-		 * -rename graph (must not be used), rename workspace
+		 * -rename graph (must not be used), rename workspace		ok
 		 * -add box new ID								ok
 		 * -connector dyn int num - ignore non dyn int	ok
 		 * -add exec box same color?					ok
@@ -113,6 +112,7 @@ namespace DominoVisualizer
 		MemoryStream luaFile = null;
 		StreamReader reader = null;
 		PanAndZoomCanvas canvas;
+		Window wnd;
 
 		DominoBox tempBox = null;
 		List<string> processedBoxes = new();
@@ -124,8 +124,11 @@ namespace DominoVisualizer
 
 		public string CurrentFile { get { return file; } }
 
-		public DominoParser(PanAndZoomCanvas canvas, string game)
+		public string CurrentDatPath { get { return datPath; } }
+
+		public DominoParser(Window window, PanAndZoomCanvas canvas, string game)
 		{
+			this.wnd = window;
 			this.canvas = canvas;
 			this.game = game;
 
@@ -135,9 +138,10 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(string dominoPath, PanAndZoomCanvas canvas)
-		{
-			file = dominoPath;
+		public DominoParser(Window window, string dominoPath, PanAndZoomCanvas canvas)
+        {
+            this.wnd = window;
+            file = dominoPath;
 			this.canvas = canvas;
 
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -145,9 +149,10 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(string dominoPath, PanAndZoomCanvas canvas, string game)
-		{
-			file = dominoPath;
+		public DominoParser(Window window, string dominoPath, PanAndZoomCanvas canvas, string game)
+        {
+            this.wnd = window;
+            file = dominoPath;
 			this.canvas = canvas;
 			this.game = game;
 
@@ -159,9 +164,10 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
-		{
-			file = dominoSearchFolder;
+		public DominoParser(Window window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
+        {
+            this.wnd = window;
+            file = dominoSearchFolder;
 			this.canvas = canvas;
 			this.game = game;
 
@@ -181,7 +187,10 @@ namespace DominoVisualizer
 			datPath = dat;
 			selGraph = 0;
 
-			DominoGraph g = new();
+			if (!datPath.EndsWith("\\"))
+				datPath += "\\";
+
+            DominoGraph g = new();
 			g.Name = graph;
 			g.IsDefault = true;
 			g.Metadata = new();
@@ -696,16 +705,16 @@ namespace DominoVisualizer
 
 		private void ParseAllBoxes()
 		{
-			string zipFileStr = "";
-			if (game == "fc5") zipFileStr = "FC5";
-			if (game == "fcnd") zipFileStr = "FCND";
-			if (game == "fc6") zipFileStr = "FC6";
+			ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib.zip");
 
-			ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib" + zipFileStr + ".zip");
+            string zipFileStr = "";
+            if (game == "fc5") zipFileStr = "FC5";
+            if (game == "fcnd") zipFileStr = "FCND";
+            if (game == "fc6") zipFileStr = "FC6";
 
-			foreach (var l in zip.Entries)
+            foreach (var l in zip.Entries)
 			{
-				if (l.FullName.EndsWith(".lua"))
+				if (l.FullName.StartsWith(zipFileStr) && l.FullName.EndsWith(".lua"))
 				{
 					MemoryStream fs = new MemoryStream();
 
@@ -719,7 +728,7 @@ namespace DominoVisualizer
 					if (offset > 0)
 					{
 						var m = ParseLuaBoxFile(fs);
-						regBoxesAll.Add(l.FullName, m);
+						regBoxesAll.Add(l.FullName.Replace(zipFileStr + "/", ""), m);
 					}
 				}
 			}
@@ -1482,8 +1491,8 @@ namespace DominoVisualizer
 				}
 			}
 
-			wasEdited = true;
-		}
+			WasEdited();
+        }
 
 		private void HandleZoomed(int zoom)
 		{
@@ -2674,8 +2683,8 @@ namespace DominoVisualizer
 				}
 			}
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		private void DrawComment(DominoComment c, double currX, double currY)
 		{
@@ -3121,8 +3130,8 @@ namespace DominoVisualizer
 				}
 			}
 
-			wasEdited = true;
-			return "";
+            WasEdited();
+            return "";
 		}
 
 		private void RemoveExecBox(object sender, RoutedEventArgs e)
@@ -3139,8 +3148,8 @@ namespace DominoVisualizer
 
 				RemoveLine(ids[0] + "-P1", ids[1] + "-P1");
 
-				wasEdited = true;
-			});
+                WasEdited();
+            });
 		}
 
 		public delegate void OpenAddExecBoxDialog(List<ExecEntry> boxes);
@@ -3222,8 +3231,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		private void RemoveBoxConnS(DominoBox box, List<DominoConnector> c, string connID)
 		{
@@ -3253,10 +3262,10 @@ namespace DominoVisualizer
 				var box = dominoBoxes[ids[0]];
 				RemoveBoxConnS(box, box.Connections, ids[1]);
 
-				//RemoveLine(ids[0] + "-P2", ids[1] + "-P2");
+                //RemoveLine(ids[0] + "-P2", ids[1] + "-P2");
 
-				wasEdited = true;
-			});
+                WasEdited();
+            });
 		}
 
 		public delegate void OpenAddBoxConnectorDialog(List<ExecEntry> boxFuncs, List<ExecEntry> connectors);
@@ -3419,8 +3428,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 
 		public string AddConnectorCreate(int widthA, int height, string name, bool? isIn, bool? isOut, string outName)
@@ -3484,9 +3493,9 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
+            WasEdited();
 
-			return "";
+            return "";
 		}
 
 		public delegate void OpenEditConnectorDialog(string name);
@@ -3571,9 +3580,9 @@ namespace DominoVisualizer
 				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), null, false, editConnector.INT_clr);
 			}
 
-			wasEdited = true;
+            WasEdited();
 
-			return "";
+            return "";
 		}
 
 
@@ -3619,9 +3628,9 @@ namespace DominoVisualizer
 			DrawBox(b, (int)pnt.X, (int)pnt.Y);
 			canvas.RefreshChilds();
 
-			wasEdited = true;
+            WasEdited();
 
-			return "";
+            return "";
 		}
 
 
@@ -3649,7 +3658,7 @@ namespace DominoVisualizer
 					wiGlobalVars.list.Children.Remove(m.ContainerUI);
 					globalVariables.RemoveAll(a => a.UniqueID == tag[1]);
 				}
-				/*if (tag[0] == "controlin")
+                /*if (tag[0] == "controlin")
 				{
 					var m = thisMetadata.ControlsIn.Where(a => a.Name == tag[1]).Single();
 					wiMetaControlIn.list.Children.Remove(m.ContainerUI);
@@ -3668,8 +3677,8 @@ namespace DominoVisualizer
 						RemoveLine(c.ID + "-P1", "ControlsOut-P2");
 				}*/
 
-				wasEdited = true;
-			});
+                WasEdited();
+            });
 		}
 
 		private void AddMetadataInfo(object sender, RoutedEventArgs e)
@@ -3696,7 +3705,7 @@ namespace DominoVisualizer
 				globalVariables.Add(m);
 				DrawGlobalVar(m);
 			}
-			/*if (tag == "controlin")
+            /*if (tag == "controlin")
 			{
 				var m = new DominoBoxMetadataControlsIn("New Control In", 0, "");
 				thisMetadata.ControlsIn.Add(m);
@@ -3709,8 +3718,8 @@ namespace DominoVisualizer
 				DrawMetaControlOut(m);
 			}*/
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public delegate void OpenEditDataDialog(string name, string desc, string metaName, string anchorDynType, string dataTypeID, string hostExecFunc, bool? isDelayed, List<ParamEntry> dataList);
 		public OpenEditDataDialog openEditDataDialog;
@@ -3809,8 +3818,8 @@ namespace DominoVisualizer
 				DrawGlobalVar(m);
 			}
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		private void RemoveConnVar(object sender, RoutedEventArgs e)
 		{
@@ -3824,8 +3833,8 @@ namespace DominoVisualizer
 				c.Widget.list.Children.Remove(m.ContainerUI);
 				c.SetVariables.RemoveAll(a => a.UniqueID == tags[1]);
 
-				wasEdited = true;
-			});
+                WasEdited();
+            });
 		}
 
 		public delegate void OpenEditConnVarDialog(string name, string val);
@@ -3857,8 +3866,8 @@ namespace DominoVisualizer
 			c.Widget.list.Children.Remove(v.ContainerUI);
 			DrawConnVariable(c, v);
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		private void AddConnVar(object sender, RoutedEventArgs e)
 		{
@@ -3867,8 +3876,8 @@ namespace DominoVisualizer
 			c.SetVariables.Add(v);
 			DrawConnVariable(c, v);
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public void AddComment(int width, int height)
 		{
@@ -3886,8 +3895,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public delegate void OpenAddCommentDialog(string name, int selClr, List<ColorEntry> colors);
 		public OpenAddCommentDialog openAddCommentDialog;
@@ -3915,8 +3924,8 @@ namespace DominoVisualizer
 					canvas.Children.Remove(editComment.ContainerUI);
 					dominoComments.Remove(editComment);
 
-					wasEdited = true;
-				});
+                    WasEdited();
+                });
 			}
 		}
 
@@ -3936,8 +3945,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public void AddBorder(int width, int height)
 		{
@@ -3955,8 +3964,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public delegate void OpenAddBorderDialog(int selStyle, int selClr, List<ColorEntry> colors, bool moveChilds);
 		public OpenAddBorderDialog openAddBorderDialog;
@@ -3984,8 +3993,8 @@ namespace DominoVisualizer
 					canvas.Children.Remove(editBorder.ContainerUI);
 					dominoBorders.Remove(editBorder);
 
-					wasEdited = true;
-				});
+                    WasEdited();
+                });
 			}
 		}
 
@@ -4007,8 +4016,8 @@ namespace DominoVisualizer
 
 			canvas.RefreshChilds();
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		public void AddResource(object sender, RoutedEventArgs e)
 		{
@@ -4019,8 +4028,8 @@ namespace DominoVisualizer
 			DrawResource(b);
 			dominoResources.Add(b);
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 		List<string> resourcesTypes = new()
 		{
@@ -4058,8 +4067,8 @@ namespace DominoVisualizer
 					wiResources.list.Children.Remove(editResource.ContainerUI);
 					dominoResources.Remove(editResource);
 
-					wasEdited = true;
-				});
+                    WasEdited();
+                });
 			}
 		}
 
@@ -4072,8 +4081,8 @@ namespace DominoVisualizer
 
 			DrawResource(editResource);
 
-			wasEdited = true;
-		}
+            WasEdited();
+        }
 
 
 
@@ -4118,6 +4127,43 @@ namespace DominoVisualizer
 			var d = selBox + $":GetDataOutValue({selData})";
 			getDataFromBoxAction(d);
 		}
+
+
+
+		public string RenameWorkspace(string type, string name)
+        {
+            if (type == "workspace")
+            {
+				workspaceName = name;
+            }
+            if (type == "graph")
+            {
+                if (dominoGraphs.Any(a => a.Name == name))
+                    return "Graph with this name already exists. Please select another name.";
+
+                dominoGraphs[selGraph].Name = name;
+
+				foreach (var b in dominoBoxes.Values)
+				{
+					if (b.Name.StartsWith("GRAPH: "))
+					{
+						b.Name = "GRAPH: " + name;
+                        //b.Widget.Header.Text = b.ID + " - " + b.Name; - not needed cuz current graph can't contain itself
+                    }
+				}
+            }
+            if (type == "path")
+            {
+				datPath = name;
+
+                if (!datPath.EndsWith("\\"))
+                    datPath += "\\";
+            }
+
+            SetWorkspaceNameAndGraphs();
+
+			return "";
+        }
 
 
 
@@ -4292,14 +4338,28 @@ namespace DominoVisualizer
 				foreach (var c in newConnectors)
 					dominoConnectors.Add(c.Key, c.Value);
 
-				wasEdited = true;
+                WasEdited();
 
-				canvas.RefreshChilds();
+                canvas.RefreshChilds();
 			});
 		}
 
 
 
+
+		private void WasEdited(bool clean = false)
+		{
+			if (clean)
+            {
+                wasEdited = false;
+                wnd.Title = MainWindow.appName + " - " + file;
+            }
+			else
+            {
+                wasEdited = true;
+                wnd.Title = MainWindow.appName + " - *" + file;
+            }
+        }
 
 		public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, string forceReload);
 		public SetWorkspaceName setWorkspaceName;
@@ -4322,9 +4382,9 @@ namespace DominoVisualizer
 
 			SetWorkspaceNameAndGraphs();
 
-			wasEdited = true;
+            WasEdited();
 
-			return "";
+            return "";
 		}
 
 		public void DeleteGraph(string graphID)
@@ -4347,7 +4407,7 @@ namespace DominoVisualizer
 					return;
 				}
 
-				Save(null, true);
+				Save(true);
 
 				dominoGraphs.RemoveAll(a => a.UniqueID == graphID);
 
@@ -4473,6 +4533,8 @@ namespace DominoVisualizer
 			else
 				exportPath = file.Replace(Path.GetFileName(file), "") + fileName;
 
+			Dictionary<string, string> exportDepData = new();
+
 			string nl = Environment.NewLine;
 
 			var luaData = new MemoryStream();
@@ -4503,12 +4565,17 @@ namespace DominoVisualizer
 			var usedBoxes = regBoxesAll.Where(a => usedBoxesN.Contains(a.Key)).ToList().Distinct();
 			foreach (var usedBox in usedBoxes)
             {
-                streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{BuildGraphName(usedBox.Key)}\")");
+				var bn = BuildGraphName(usedBox.Key);
+                streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{bn}\")");
+				exportDepData.Add(bn, "CDominoBoxResource");
             }
 
 			dominoResources = dominoResources.OrderBy(a => a.Name).ToList();
 			foreach (var res in dominoResources)
-				streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
+            {
+                streamWriter.WriteLine($"    cboxRes:LoadResource(\"{res.Name}\", \"{res.Value}\")");
+                exportDepData.Add(res.Name, res.Value);
+            }
 
 			streamWriter.WriteLine("  --end");
 			streamWriter.WriteLine("end");
@@ -4965,6 +5032,22 @@ namespace DominoVisualizer
 			fileStream.WriteBytes(meta);
 			fileStream.Close();
 
+			XDocument xDepload = new();
+			XElement xCRes = new("CBinaryResourceContainer", new XAttribute("ID", datPath + Path.GetFileName(exportPath)));
+			
+			foreach (var a in exportDepData)
+			{
+				string v = a.Key;
+
+				if (v.EndsWith(".bnk"))
+					v = "soundbinary\\" + v;
+
+                xCRes.Add(new XElement(a.Value, new XAttribute("ID", v.Replace("/", "\\"))));
+            }
+
+			xDepload.Add(xCRes);
+            xDepload.Save(exportPath.Replace(".lua", "_depload.xml"));
+
 			return "";
 		}
 
@@ -5086,7 +5169,7 @@ namespace DominoVisualizer
 			return output;
 		}
 
-		public string Save(Window wnd = null, bool afterDelete = false)
+		public string Save(bool afterDelete = false)
 		{
 			var acb = CheckConnBox();
 			if (acb != "")
@@ -5109,9 +5192,9 @@ namespace DominoVisualizer
 				wnd.Title = MainWindow.appName + " - " + file;
 
 			//canvas.ResetZoom();
-			wasEdited = false;
+			WasEdited(true);
 
-			static XElement saveConn(DominoConnector c)
+            static XElement saveConn(DominoConnector c)
 			{
 				XElement xcnt = new("Connector");
 				xcnt.Add(new XAttribute("FromBoxConnectID", c.FromBoxConnectID.ToString()));

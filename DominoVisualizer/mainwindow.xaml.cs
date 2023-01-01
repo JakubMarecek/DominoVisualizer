@@ -23,15 +23,19 @@ namespace DominoVisualizer
 		//string fileSel = "";
 		bool loaded = false;
 		bool externalLaunch = false;
-		public const string appName = "Domino Visualizer v1.00 by ArmanIII";
+		public const string appName = "Domino Visualizer v1.10 by ArmanIII";
         //int actInx = 0;
 		Arguments arguments;
-		OpenType selDialogType;
+		OpenType selDialogType = OpenType.None;
+        string selDialogFile = "";
 
 		private enum OpenType
 		{
+            None,
 			Import,
+            ImportParam,
 			Open,
+            OpenParam,
 			Binary,
 			Create,
             SwapGraph
@@ -64,13 +68,15 @@ namespace DominoVisualizer
 				{
 					if (File.Exists(a) && a.EndsWith(".lua"))
 					{
-                		selDialogType = OpenType.Import;
-			    		Animation(true, gridDialogSelGame);
+                		selDialogType = OpenType.ImportParam;
+                        selDialogFile = a;
+
+                        Animation(true, gridDialogSelGame);
 						break;
 					}
 					if (File.Exists(a) && a.EndsWith(".domino.xml"))
 					{
-                		OpenFile(OpenType.Open, null);
+                		OpenFile(OpenType.OpenParam, null, a);
 						break;
 					}
 				}
@@ -144,9 +150,9 @@ namespace DominoVisualizer
 
                             parser.setWorkspaceName = SetWorkspaceName;
 
-                            if (type == OpenType.Open) r = parser.Load();
+                            if (type == OpenType.Open || type == OpenType.OpenParam) r = parser.Load();
                             if (type == OpenType.SwapGraph) r = parser.Load(game);
-        	                if (type == OpenType.Import || type == OpenType.Binary) (eS, r) = parser.Parse();
+        	                if (type == OpenType.Import || type == OpenType.ImportParam || type == OpenType.Binary) (eS, r) = parser.Parse();
 				            if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
 
 				        	if (r != "")
@@ -204,6 +210,46 @@ namespace DominoVisualizer
                 };
             }
 
+            if (type == OpenType.Import)
+            {
+                OpenFileDialog ofdI = new OpenFileDialog();
+                //ofd.InitialDirectory = Path.GetDirectoryName(filenamesel);
+                //ofd.FileName = filenamesel;
+                ofdI.Title = "Select compiled Domino script";
+                ofdI.Filter = "Domino script|*.lua";
+
+                if (ofdI.ShowDialog() == true)
+                {
+                    OpenFile(OpenType.ImportParam, game, ofdI.FileName);
+                }
+                /*else
+                {
+                    Animation(true, gridMainMenu);
+                    Animation(false, gridLoading);
+                }*/
+
+                return;
+            }
+
+            if (type == OpenType.Open)
+            {
+                OpenFileDialog ofdO = new OpenFileDialog();
+                ofdO.Title = "Select Domino Workspace";
+                ofdO.Filter = "Domino Workspace|*.domino.xml";
+
+                if (ofdO.ShowDialog() == true)
+                {
+                    OpenFile(OpenType.OpenParam, game, ofdO.FileName);
+                }
+                /*else
+                {
+                    Animation(true, gridMainMenu);
+                    Animation(false, gridLoading);
+                }*/
+
+                return;
+            }
+
             if (type != OpenType.SwapGraph)
             {
 			    Animation(false, gridMainMenu);
@@ -233,49 +279,23 @@ namespace DominoVisualizer
 				return;
 			}
 
-			if (type == OpenType.Import)
-			{
-                OpenFileDialog ofdI = new OpenFileDialog();
-                //ofd.InitialDirectory = Path.GetDirectoryName(filenamesel);
-                //ofd.FileName = filenamesel;
-				ofdI.Title = "Select compiled Domino script";
-				ofdI.Filter = "Domino script|*.lua";
+            if (type == OpenType.ImportParam)
+            {
+                parser = new(this, directFile, canvas, game);
 
-				if (ofdI.ShowDialog() == true)
-				{
-					parser = new(this, ofdI.FileName, canvas, game);
+                Title = appName + " - " + directFile;
 
-                    Title = appName + " - " + ofdI.FileName;
+                Loading();
+            }
 
-                    Loading();
-                }
-				else
-				{
-					Animation(true, gridMainMenu);
-					Animation(false, gridLoading);
-				}
-			}
+            if (type == OpenType.OpenParam)
+            {
+                parser = new(this, directFile, canvas);
 
-			if (type == OpenType.Open)
-			{
-                OpenFileDialog ofdO = new OpenFileDialog();
-				ofdO.Title = "Select Domino Workspace";
-				ofdO.Filter = "Domino Workspace|*.domino.xml";
+                Title = appName + " - " + directFile;
 
-				if (ofdO.ShowDialog() == true)
-				{
-					parser = new(this, ofdO.FileName, canvas);
-
-                    Title = appName + " - " + ofdO.FileName;
-
-                    Loading();
-                }
-				else
-				{
-					Animation(true, gridMainMenu);
-					Animation(false, gridLoading);
-				}
-			}
+                Loading();
+            }
 
 			if (type == OpenType.SwapGraph)
 			{
@@ -293,7 +313,10 @@ namespace DominoVisualizer
 
                 Loading();
 			}
-		}
+
+            selDialogType = OpenType.None;
+            selDialogFile = "";
+        }
 
 /*
 		private void Button_Click(object sender, RoutedEventArgs e)
@@ -387,7 +410,7 @@ namespace DominoVisualizer
 			if (tag == "cancel")
 				return;
 
-			OpenFile(selDialogType, tag);
+			OpenFile(selDialogType, tag, selDialogFile);
         }
 
 		private void ButtonSelDialog_Click(object sender, RoutedEventArgs e)

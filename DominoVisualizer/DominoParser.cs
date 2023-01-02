@@ -10,6 +10,8 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -1560,17 +1562,6 @@ namespace DominoVisualizer
 			canvas.RefreshChilds();
 		}
 
-		private void CleanChilds(UIElement except)
-		{
-			foreach (var child in canvas.Children)
-				((UIElement)child).Opacity = 1;
-
-			if (except is Widget || except is ArrowLine)
-				foreach (var child in canvas.Children)
-					if (child != except && (child is Widget || child is ArrowLine))
-						((UIElement)child).Opacity = 0.25;
-		}
-
 		private void MarkBox(string boxID)
 		{
 			foreach (var line in lines)
@@ -1602,7 +1593,15 @@ namespace DominoVisualizer
 		{
 			if (e.ClickCount == 2)
 			{
-				CleanChilds((UIElement)e.Source);
+				var except = (UIElement)e.Source;
+
+				foreach (var child in canvas.Children)
+					((UIElement)child).Opacity = 1;
+
+				if (except is Widget || except is ArrowLine)
+					foreach (var child in canvas.Children)
+						if (child != except && (child is Widget || child is ArrowLine))
+							((UIElement)child).Opacity = 0.25;
 
 				if (e.Source is Widget)
 					foreach (var child in canvas.Children)
@@ -1637,14 +1636,31 @@ namespace DominoVisualizer
 		{
 			bool found = false;
 
-			foreach (var child in canvas.Children)
+			/*foreach (var child in canvas.Children)
 				if (child is Widget w)
 					if (w.ID == input)
 					{
 						CleanChilds(w);
 						MarkBox(w.ID);
 						found = true;
-					}
+					}*/
+
+			foreach (var child in canvas.Children)
+				((UIElement)child).Opacity = 0.25;
+
+			foreach (var b in dominoBoxes.Values)
+				if (b.ID.Contains(input))
+				{
+					MarkBox(b.ID);
+					found = true;
+				}
+
+			foreach (var c in dominoConnectors.Values)
+				if (c.ID.Contains(input))
+				{
+					MarkBox(c.ID);
+					found = true;
+				}
 
 			if (!found)
 				return input + " was not found.";
@@ -4344,6 +4360,37 @@ namespace DominoVisualizer
 			});
 		}
 
+		public void CopyingMakeCopy()
+		{
+			var d = DataToXML(false, canvas.SelectedItems);
+			string outData = d.ToString();
+
+			Clipboard.SetText(outData);
+		}
+
+		public void CopyingPaste()
+		{
+			string strData = Clipboard.GetText();
+
+			XElement xData = XElement.Parse(strData);
+
+			var data = XMLToData(xData, true);
+
+			globalVariables.AddRange(data.Item1);
+			dominoComments.AddRange(data.Item2);
+			dominoBorders.AddRange(data.Item3);
+			foreach (var a in data.Item4)
+				dominoBoxes.Add(a.Key, a.Value);
+			foreach (var a in data.Item5)
+				dominoConnectors.Add(a.Key, a.Value);
+
+
+
+            WasEdited();
+
+            canvas.RefreshChilds();
+		}
+
 
 
 
@@ -5169,6 +5216,209 @@ namespace DominoVisualizer
 			return output;
 		}
 
+		private XElement DataToXML(bool afterDelete, List<UIElement> UIList = null)
+		{
+            static XElement saveConn(DominoConnector c)
+			{
+				XElement xcnt = new("Connector");
+				xcnt.Add(new XAttribute("FromBoxConnectID", c.FromBoxConnectID.ToString()));
+				xcnt.Add(new XAttribute("FromBoxConnectIDStr", c.FromBoxConnectIDStr.ToString()));
+
+				if (c.SubConnections.Any())
+				{
+					XElement xsc = new("SubConnections");
+
+					foreach (var sc in c.SubConnections)
+						if (sc.ID != null || sc.SubConnections.Any())
+							xsc.Add(saveConn(sc));
+
+					xcnt.Add(xsc);
+				}
+				else
+				{
+					xcnt.Add(new XAttribute("ID", c.ID));
+				}
+
+				return xcnt;
+			}
+
+			XElement writeParams(List<DominoDict> prms, string pn, string vn)
+			{
+				if (prms.Any())
+				{
+					XElement xprms = new(pn);
+
+					foreach (var prm in prms)
+					{
+						XElement xPrm = new(vn, new XAttribute("Name", prm.Name));
+
+						if (prm.Value != null)
+							xPrm.Add(new XAttribute("Value", prm.Value));
+
+						xPrm.Add(writeParams(prm.ValueArray, pn, vn));
+
+						xprms.Add(xPrm);
+					}
+
+					return xprms;
+				}
+
+				return null;
+			}
+
+			XElement xGraph = new("Graph");
+			if (!afterDelete)
+			{
+				if (UIList == null)
+				{
+					xGraph.Add(new XAttribute("Name", dominoGraphs[selGraph].Name));
+					xGraph.Add(new XAttribute("UniqueID", dominoGraphs[selGraph].UniqueID));
+					xGraph.Add(new XAttribute("IsDefault", dominoGraphs[selGraph].IsDefault ? "true" : "false"));
+
+					xGraph.Add(ExportDominoMetadata());
+
+					XElement xResources = new("Resources");
+					foreach (var c in dominoResources)
+						xResources.Add(new XElement("Resource", new XAttribute("File", c.Name), new XAttribute("Type", c.Value)));
+					xGraph.Add(xResources);
+
+					xGraph.Add(writeParams(globalVariables, "Variables", "Variable"));
+				}
+
+				XElement xComments = new("Comments");
+				foreach (var c in dominoComments)
+				{
+					if (UIList != null && !UIList.Contains(c.ContainerUI))
+						continue;
+
+					var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
+					xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
+				}
+				xGraph.Add(xComments);
+
+				XElement xBorders = new("Borders");
+				foreach (var b in dominoBorders)
+				{
+					if (UIList != null && !UIList.Contains(b.ContainerUI))
+						continue;
+
+					var a = canvas.Transform2(new(Canvas.GetLeft(b.ContainerUI), Canvas.GetTop(b.ContainerUI)));
+					xBorders.Add(new XElement("Border",
+						new XAttribute("Style", b.Style),
+						new XAttribute("Color", b.Color),
+						new XAttribute("EnableMovingChilds", b.ContainerUI.EnableMovingChilds ? "true" : "false"),
+						new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)),
+						new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)),
+						new XAttribute("DrawW", b.ContainerUI.Width.ToString(CultureInfo.InvariantCulture)),
+						new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
+						));
+				}
+				xGraph.Add(xBorders);
+
+				XElement xBoxes = new("Boxes");
+				foreach (var c in dominoBoxes)
+				{
+					if (UIList != null && !UIList.Contains(c.Value.Widget))
+						continue;
+
+					var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
+
+					XElement xBox = new("Box");
+					xBox.Add(new XAttribute("ID", c.Value.ID));
+					xBox.Add(new XAttribute("Name", c.Value.Name));
+					xBox.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
+					xBox.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
+
+					if (c.Value.Connections.Any())
+					{
+						XElement xsc = new("Connections");
+
+						foreach (var sc in c.Value.Connections)
+						{
+							xsc.Add(saveConn(sc));
+						}
+
+						xBox.Add(xsc);
+					}
+
+					xBoxes.Add(xBox);
+				}
+				xGraph.Add(xBoxes);
+
+				XElement xConns = new("Connectors");
+				foreach (var c in dominoConnectors)
+				{
+					if (UIList != null && !UIList.Contains(c.Value.Widget))
+						continue;
+
+					var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
+
+					XElement xc = new("Connector");
+					xc.Add(new XAttribute("ID", c.Value.ID));
+					xc.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
+					xc.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
+
+					if (c.Value.ExecBoxes.Any())
+					{
+						XElement xsc = new("ExecBoxes");
+
+						foreach (var sc in c.Value.ExecBoxes)
+						{
+							XElement xeb = new("ExecBox");
+							xeb.Add(new XAttribute("Type", sc.Type == ExecType.Exec ? "Exec" : "DynIntExec"));
+							xeb.Add(new XAttribute("Exec", sc.Exec.ToString()));
+							xeb.Add(new XAttribute("DynIntExec", sc.DynIntExec.ToString()));
+							xeb.Add(new XAttribute("Box", sc.Box.ID));
+
+							xeb.Add(writeParams(sc.Params, "Params", "Param"));
+
+							xsc.Add(xeb);
+						}
+
+						xc.Add(xsc);
+					}
+
+					if (c.Value.OutFuncName.Any())
+					{
+						XElement xsc = new("OutFuncName");
+
+						foreach (var sc in c.Value.OutFuncName)
+							xsc.Add(new XElement("Function", new XAttribute("Name", sc)));
+
+						xc.Add(xsc);
+					}
+
+					/*if (c.Value.FromBoxes.Any())
+					{
+						XElement xsc = new("FromBoxes");
+
+						foreach (var sc in c.Value.FromBoxes)
+							xsc.Add(new XElement("Box", new XAttribute("Name", sc.ID)));
+
+						xc.Add(xsc);
+					}*/
+
+					xc.Add(writeParams(c.Value.SetVariables, "Variables", "Variable"));
+
+					/*if (c.SubConnections.Any())
+					{
+						XElement xsc = new("SubConnections");
+
+						foreach (var sc in c.SubConnections)
+							xsc.Add(saveConn(sc));
+
+						xc.Add(xsc);
+
+					}*/
+
+					xConns.Add(xc);
+				}
+				xGraph.Add(xConns);
+			}
+
+			return xGraph;
+		}
+
 		public string Save(bool afterDelete = false)
 		{
 			var acb = CheckConnBox();
@@ -5242,140 +5492,7 @@ namespace DominoVisualizer
 				return null;
 			}
 
-			XElement xGraph = new("Graph");
-			if (!afterDelete)
-			{
-				xGraph.Add(new XAttribute("Name", dominoGraphs[selGraph].Name));
-				xGraph.Add(new XAttribute("UniqueID", dominoGraphs[selGraph].UniqueID));
-				xGraph.Add(new XAttribute("IsDefault", dominoGraphs[selGraph].IsDefault ? "true" : "false"));
-
-				xGraph.Add(ExportDominoMetadata());
-
-				XElement xResources = new("Resources");
-				foreach (var c in dominoResources)
-					xResources.Add(new XElement("Resource", new XAttribute("File", c.Name), new XAttribute("Type", c.Value)));
-				xGraph.Add(xResources);
-
-				xGraph.Add(writeParams(globalVariables, "Variables", "Variable"));
-
-				XElement xComments = new("Comments");
-				foreach (var c in dominoComments)
-				{
-					var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
-					xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
-				}
-				xGraph.Add(xComments);
-
-				XElement xBorders = new("Borders");
-				foreach (var b in dominoBorders)
-				{
-					var a = canvas.Transform2(new(Canvas.GetLeft(b.ContainerUI), Canvas.GetTop(b.ContainerUI)));
-					xBorders.Add(new XElement("Border",
-						new XAttribute("Style", b.Style),
-						new XAttribute("Color", b.Color),
-						new XAttribute("EnableMovingChilds", b.ContainerUI.EnableMovingChilds ? "true" : "false"),
-						new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)),
-						new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)),
-						new XAttribute("DrawW", b.ContainerUI.Width.ToString(CultureInfo.InvariantCulture)),
-						new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
-						));
-				}
-				xGraph.Add(xBorders);
-
-				XElement xBoxes = new("Boxes");
-				foreach (var c in dominoBoxes)
-				{
-					var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
-
-					XElement xBox = new("Box");
-					xBox.Add(new XAttribute("ID", c.Value.ID));
-					xBox.Add(new XAttribute("Name", c.Value.Name));
-					xBox.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
-					xBox.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
-
-					if (c.Value.Connections.Any())
-					{
-						XElement xsc = new("Connections");
-
-						foreach (var sc in c.Value.Connections)
-						{
-							xsc.Add(saveConn(sc));
-						}
-
-						xBox.Add(xsc);
-					}
-
-					xBoxes.Add(xBox);
-				}
-				xGraph.Add(xBoxes);
-
-				XElement xConns = new("Connectors");
-				foreach (var c in dominoConnectors)
-				{
-					var a = canvas.Transform2(new(Canvas.GetLeft(c.Value.Widget), Canvas.GetTop(c.Value.Widget)));
-
-					XElement xc = new("Connector");
-					xc.Add(new XAttribute("ID", c.Value.ID));
-					xc.Add(new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)));
-					xc.Add(new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)));
-
-					if (c.Value.ExecBoxes.Any())
-					{
-						XElement xsc = new("ExecBoxes");
-
-						foreach (var sc in c.Value.ExecBoxes)
-						{
-							XElement xeb = new("ExecBox");
-							xeb.Add(new XAttribute("Type", sc.Type == ExecType.Exec ? "Exec" : "DynIntExec"));
-							xeb.Add(new XAttribute("Exec", sc.Exec.ToString()));
-							xeb.Add(new XAttribute("DynIntExec", sc.DynIntExec.ToString()));
-							xeb.Add(new XAttribute("Box", sc.Box.ID));
-
-							xeb.Add(writeParams(sc.Params, "Params", "Param"));
-
-							xsc.Add(xeb);
-						}
-
-						xc.Add(xsc);
-					}
-
-					if (c.Value.OutFuncName.Any())
-					{
-						XElement xsc = new("OutFuncName");
-
-						foreach (var sc in c.Value.OutFuncName)
-							xsc.Add(new XElement("Function", new XAttribute("Name", sc)));
-
-						xc.Add(xsc);
-					}
-
-					/*if (c.Value.FromBoxes.Any())
-					{
-						XElement xsc = new("FromBoxes");
-
-						foreach (var sc in c.Value.FromBoxes)
-							xsc.Add(new XElement("Box", new XAttribute("Name", sc.ID)));
-
-						xc.Add(xsc);
-					}*/
-
-					xc.Add(writeParams(c.Value.SetVariables, "Variables", "Variable"));
-
-					/*if (c.SubConnections.Any())
-					{
-						XElement xsc = new("SubConnections");
-
-						foreach (var sc in c.SubConnections)
-							xsc.Add(saveConn(sc));
-
-						xc.Add(xsc);
-
-					}*/
-
-					xConns.Add(xc);
-				}
-				xGraph.Add(xConns);
-			}
+			XElement xGraph = DataToXML(afterDelete);
 
 			XElement addEmptyGraph(DominoGraph g)
 			{
@@ -5432,8 +5549,58 @@ namespace DominoVisualizer
 			return "";
 		}
 
-		public string Load(string loadGraphID = "")
+		private (List<DominoDict>, List<DominoComment>, List<DominoBorder>, Dictionary<string, DominoBox>, Dictionary<string, DominoConnector>) XMLToData(XElement xGraph, bool asNew = false)
 		{
+			List<DominoComment> comments = new();
+			List<DominoBorder> borders = new();
+			Dictionary<string, string> oldNewBoxes = new();
+			Dictionary<string, DominoBox> boxes = new();
+			Dictionary<string, DominoConnector> connectors = new();
+
+			(string, DominoBox) replaceConnID(string cID)
+			{
+				DominoBox bf = null;
+
+                if (asNew)
+                {
+                    bool findFromBox(DominoBox box, List<DominoConnector> conns)
+                    {
+                        foreach (var c in conns)
+						{
+                            if (c.ID == cID)
+                                return true;
+                            else
+                                if (c.SubConnections.Any())
+                                return findFromBox(box, c.SubConnections);
+                        }
+
+                        return false;
+                    }
+
+                    bf = boxes.Values.Where(a => findFromBox(a, a.Connections)).SingleOrDefault();
+
+                    if (bf != null)
+                    {
+                        string newID = bf.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
+
+                        string newConnID = null;
+
+                        if (cID != null)
+						{
+							newConnID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
+							newConnID = "f_" + FindConnectorFreeID(newConnID);
+						}
+						cID = newConnID;
+					}
+					else
+					{
+                        cID = "f_" + FindConnectorFreeID(cID[2..]);
+                    }
+                }
+
+				return (cID, bf);
+            }
+
 			void loadConn(XElement parent, DominoBox box, DominoConnector parentConn)
 			{
 				var xConns = parent.Elements("Connector");
@@ -5442,10 +5609,10 @@ namespace DominoVisualizer
 					DominoConnector conn = new();
 					conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
-					conn.ID = xConn.Attribute("ID")?.Value;
+					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value).Item1;
 
 					if (conn.ID != null)
-						dominoConnectors.Add(conn.ID, conn);
+						connectors.Add(conn.ID, conn);
 
 					if (parentConn == null)
 						box.Connections.Add(conn);
@@ -5485,6 +5652,167 @@ namespace DominoVisualizer
 				return prms;
 			}
 
+			var vars = readParams(xGraph, "Variables", "Variable");
+
+			var xComments = xGraph.Element("Comments").Elements("Comment");
+			foreach (var xC in xComments)
+			{
+				var c = new DominoComment();
+				c.Name = xC.Attribute("Name").Value;
+				c.Color = int.Parse(xC.Attribute("Color").Value);
+				comments.Add(c);
+
+				double x = double.Parse(xC.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+				double y = double.Parse(xC.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+
+				DrawComment(c, x, y);
+			}
+
+			var xBorders = xGraph.Element("Borders").Elements("Border");
+			foreach (var xB in xBorders)
+			{
+				var b = new DominoBorder();
+				b.Style = int.Parse(xB.Attribute("Style").Value);
+				b.Color = int.Parse(xB.Attribute("Color").Value);
+				borders.Add(b);
+
+				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
+
+				double x = double.Parse(xB.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+				double y = double.Parse(xB.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+				double w = double.Parse(xB.Attribute("DrawW").Value, CultureInfo.InvariantCulture);
+				double h = double.Parse(xB.Attribute("DrawH").Value, CultureInfo.InvariantCulture);
+
+				DrawBorder(b, x, y, w, h, moveChilds);
+			}
+
+			var xBoxes = xGraph.Element("Boxes").Elements("Box");
+			foreach (var xBox in xBoxes)
+			{
+				string origID = xBox.Attribute("ID").Value;
+
+				if (asNew)
+				{
+					int newBoxID = FindBoxFreeID(0, boxes.Values.ToList());
+
+					string ni = "";
+					if (origID.StartsWith("self["))
+						ni = $"self[{newBoxID}]";
+					else
+						ni = $"en_{newBoxID}";
+
+					oldNewBoxes.Add(origID, ni);
+
+					origID = ni;
+				}
+
+				DominoBox box = new();
+				box.ID = origID;
+				box.Name = xBox.Attribute("Name").Value;
+				box.DrawX = double.Parse(xBox.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+				box.DrawY = double.Parse(xBox.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+				boxes.Add(box.ID, box);
+
+				XElement xConnections = xBox.Element("Connections");
+				if (xConnections != null)
+				{
+					loadConn(xConnections, box, null);
+				}
+
+				if (asNew)
+                    DrawBox(box, box.DrawX, box.DrawY);
+            }
+
+			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
+			foreach (var xConnector in xConnectors)
+			{
+				DominoConnector conn = null;
+
+				var dbc = replaceConnID(xConnector.Attribute("ID").Value);
+				string cID = dbc.Item1;
+
+                if (connectors.ContainsKey(cID))
+					conn = connectors[cID];
+				else
+					conn = new();
+
+				conn.ID = cID;
+				conn.DrawX = double.Parse(xConnector.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
+				conn.DrawY = double.Parse(xConnector.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
+
+                conn.SetVariables = readParams(xConnector, "Variables", "Variable");
+
+                var xOutFuncs = xConnector.Element("OutFuncName")?.Elements("Function");
+                if (xOutFuncs != null)
+                {
+                    foreach (XElement xOutFunc in xOutFuncs)
+                        conn.OutFuncName.Add(xOutFunc.Attribute("Name").Value);
+                }
+                
+				if (!connectors.ContainsKey(cID))
+                {
+                    connectors.Add(conn.ID, conn);
+
+					if (asNew)
+					{
+                        DrawConnector(conn, conn.DrawX, conn.DrawY);
+                        DrawBoxConnectors(dbc.Item2, conn);
+                    }
+                }
+
+				var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
+				if (xExecBoxes != null)
+				{
+					foreach (XElement xExecBox in xExecBoxes)
+					{
+						string id = xExecBox.Attribute("Box").Value;
+
+						if (asNew)
+						{
+							if (oldNewBoxes.ContainsKey(id))
+								id = oldNewBoxes[id];
+						}
+
+						var box = boxes.Values.Where(a => a.ID == id).SingleOrDefault();
+						if (box != null)
+						{
+							ExecBox execBox = new();
+							execBox.Type = xExecBox.Attribute("Type").Value == "Exec" ? ExecType.Exec : ExecType.ExecDynInt;
+							execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
+							execBox.DynIntExec = int.Parse(xExecBox.Attribute("DynIntExec").Value);
+							execBox.Box = box;
+							conn.ExecBoxes.Add(execBox);
+
+							execBox.Params = readParams(xExecBox, "Params", "Param");
+							if (asNew)
+                            {
+                                int clr = conn.ExecBoxes.Count;
+
+                                DrawExecBoxContainerUI(conn, execBox, linesColors[clr]);
+
+                                var a = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
+                                var b = canvas.Transform2(new(Canvas.GetLeft(execBox.Box.Widget), Canvas.GetTop(execBox.Box.Widget)));
+
+                                DrawLine(
+                                    a.X + width,
+                                    a.Y,
+                                    b.X,
+                                    b.Y,
+                                    conn.ID + "-P1",
+                                    execBox.Box.ID + "-P1",
+                                    clr
+                                );
+                            }
+						}
+					}
+				}
+			}
+
+			return (vars, comments, borders, boxes, connectors);
+		}
+
+		public string Load(string loadGraphID = "")
+		{
 			XDocument xDoc = XDocument.Load(file);
 			XElement xRoot = xDoc.Element("DominoDocument");
 
@@ -5544,7 +5872,7 @@ namespace DominoVisualizer
 			if (dominoGraphs[selGraph].Metadata.IsSystem)
 				return "System Domino box can't be opened.";*/
 
-			int ctrlPosY = 0;
+			/*int ctrlPosY = 0;
 			foreach (var ctrl in dominoGraphs[selGraph].Metadata.ControlsIn)
 			{
 				DominoConnector inConn = new();
@@ -5552,107 +5880,20 @@ namespace DominoVisualizer
 				inConn.DrawY = ctrlPosY;
 				dominoConnectors.Add(inConn.ID, inConn);
 				ctrlPosY += 300;
-			}
+			}*/
 
 			var xRess = xGraph.Element("Resources").Elements("Resource");
 			foreach (var xRe in xRess)
 				dominoResources.Add(new() { Name = xRe.Attribute("File").Value, Value = xRe.Attribute("Type").Value });
 
-			var xComments = xGraph.Element("Comments").Elements("Comment");
-			foreach (var xC in xComments)
-			{
-				var c = new DominoComment();
-				c.Name = xC.Attribute("Name").Value;
-				c.Color = int.Parse(xC.Attribute("Color").Value);
-				dominoComments.Add(c);
-
-				double x = double.Parse(xC.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				double y = double.Parse(xC.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
-
-				DrawComment(c, x, y);
-			}
-
-			var xBorders = xGraph.Element("Borders").Elements("Border");
-			foreach (var xB in xBorders)
-			{
-				var b = new DominoBorder();
-				b.Style = int.Parse(xB.Attribute("Style").Value);
-				b.Color = int.Parse(xB.Attribute("Color").Value);
-				dominoBorders.Add(b);
-
-				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
-
-				double x = double.Parse(xB.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				double y = double.Parse(xB.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
-				double w = double.Parse(xB.Attribute("DrawW").Value, CultureInfo.InvariantCulture);
-				double h = double.Parse(xB.Attribute("DrawH").Value, CultureInfo.InvariantCulture);
-
-				DrawBorder(b, x, y, w, h, moveChilds);
-			}
-
-			globalVariables = readParams(xGraph, "Variables", "Variable");
-
-			var xBoxes = xGraph.Element("Boxes").Elements("Box");
-			foreach (var xBox in xBoxes)
-			{
-				DominoBox box = new();
-				box.ID = xBox.Attribute("ID").Value;
-				box.Name = xBox.Attribute("Name").Value;
-				box.DrawX = double.Parse(xBox.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				box.DrawY = double.Parse(xBox.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
-				dominoBoxes.Add(box.ID, box);
-
-				XElement xConnections = xBox.Element("Connections");
-				if (xConnections != null)
-				{
-					loadConn(xConnections, box, null);
-				}
-			}
-
-			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
-			foreach (var xConnector in xConnectors)
-			{
-				DominoConnector conn = null;
-
-				string cID = xConnector.Attribute("ID").Value;
-
-				if (dominoConnectors.ContainsKey(cID))
-					conn = dominoConnectors[cID];
-				else
-					conn = new();
-
-				conn.ID = cID;
-				conn.DrawX = double.Parse(xConnector.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
-				conn.DrawY = double.Parse(xConnector.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
-
-				if (!dominoConnectors.ContainsKey(cID))
-					dominoConnectors.Add(conn.ID, conn);
-
-				var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
-				if (xExecBoxes != null)
-				{
-					foreach (XElement xExecBox in xExecBoxes)
-					{
-						ExecBox execBox = new();
-						execBox.Type = xExecBox.Attribute("Type").Value == "Exec" ? ExecType.Exec : ExecType.ExecDynInt;
-						execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
-						execBox.DynIntExec = int.Parse(xExecBox.Attribute("DynIntExec").Value);
-						execBox.Box = dominoBoxes.Values.Where(a => a.ID == xExecBox.Attribute("Box").Value).Single();
-						conn.ExecBoxes.Add(execBox);
-
-						execBox.Params = readParams(xExecBox, "Params", "Param");
-					}
-				}
-
-				conn.SetVariables = readParams(xConnector, "Variables", "Variable");
-
-				var xOutFuncs = xConnector.Element("OutFuncName")?.Elements("Function");
-				if (xOutFuncs != null)
-				{
-					foreach (XElement xOutFunc in xOutFuncs)
-						conn.OutFuncName.Add(xOutFunc.Attribute("Name").Value);
-				}
-			}
+			var data = XMLToData(xGraph);
+			globalVariables.AddRange(data.Item1);
+			dominoComments.AddRange(data.Item2);
+			dominoBorders.AddRange(data.Item3);
+			foreach (var a in data.Item4)
+				dominoBoxes.Add(a.Key, a.Value);
+			foreach (var a in data.Item5)
+				dominoConnectors.Add(a.Key, a.Value);
 
             foreach (var graph in dominoGraphs)
             {

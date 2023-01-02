@@ -33,6 +33,8 @@ namespace WpfPanAndZoom.CustomControls
         private List<UIElement> _selectionItems = new();
         private List<Vector> _selectionItemsDeltas = new();
 
+        public List<UIElement> SelectedItems { get { return _selectionItems; } }
+
         public delegate void MovingEventHandler(string foo, double x, double y);
 
         public event MovingEventHandler Moving;

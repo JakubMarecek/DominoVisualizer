@@ -495,6 +495,16 @@ namespace DominoVisualizer
 				if (loaded)
 					Animation(true, gridSearch);
 			}
+			if (e.Key == Key.C && Keyboard.IsKeyDown(Key.LeftCtrl))
+			{
+				if (loaded)
+                    parser.CopyingMakeCopy();
+			}
+			if (e.Key == Key.V && Keyboard.IsKeyDown(Key.LeftCtrl))
+			{
+				if (loaded)
+                    parser.CopyingPaste();
+			}
 		}
 
 		private void ButtonSearch_Click(object sender, RoutedEventArgs e)

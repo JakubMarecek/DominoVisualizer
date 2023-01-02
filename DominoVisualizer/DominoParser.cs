@@ -5554,10 +5554,11 @@ namespace DominoVisualizer
 			List<DominoComment> comments = new();
 			List<DominoBorder> borders = new();
 			Dictionary<string, string> oldNewBoxes = new();
-			Dictionary<string, DominoBox> boxes = new();
+			Dictionary<string, string> oldNewConns = new();
+            Dictionary<string, DominoBox> boxes = new();
 			Dictionary<string, DominoConnector> connectors = new();
 
-			(string, DominoBox) replaceConnID(string cID)
+			(string, DominoBox) replaceConnID(string cID, DominoBox parentBox)
 			{
 				DominoBox bf = null;
 
@@ -5567,35 +5568,45 @@ namespace DominoVisualizer
                     {
                         foreach (var c in conns)
 						{
-                            if (c.ID == cID)
+							string id = oldNewConns.ContainsKey(cID) ? oldNewConns[cID] : cID;
+
+                            if (c.ID == id)
                                 return true;
                             else
                                 if (c.SubConnections.Any())
-                                return findFromBox(box, c.SubConnections);
+									return findFromBox(box, c.SubConnections);
                         }
 
                         return false;
                     }
 
+					string boxID = "";
+
                     bf = boxes.Values.Where(a => findFromBox(a, a.Connections)).SingleOrDefault();
 
                     if (bf != null)
                     {
-                        string newID = bf.ID.Replace("self[", "").Replace("]", "").Replace("en_", "");
-
-                        string newConnID = null;
-
-                        if (cID != null)
-						{
-							newConnID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
-							newConnID = "f_" + FindConnectorFreeID(newConnID);
-						}
-						cID = newConnID;
+						boxID = bf.ID;
 					}
-					else
-					{
-                        cID = "f_" + FindConnectorFreeID(cID[2..]);
+					else if (parentBox != null)
+                    {
+						boxID = parentBox.ID;
                     }
+
+                    string newID = boxID.Replace("self[", "").Replace("]", "").Replace("en_", "");
+					var newCID = cID;
+
+                    if (cID != null)
+                    {
+                        newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
+
+                        newCID = "f_" + FindConnectorFreeID(newCID);
+
+						if (!oldNewConns.ContainsKey(cID))
+							oldNewConns.Add(cID, newCID);
+                    }
+
+					cID = newCID;
                 }
 
 				return (cID, bf);
@@ -5609,9 +5620,9 @@ namespace DominoVisualizer
 					DominoConnector conn = new();
 					conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
-					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value).Item1;
+					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value, box).Item1;
 
-					if (conn.ID != null)
+                    if (conn.ID != null)
 						connectors.Add(conn.ID, conn);
 
 					if (parentConn == null)
@@ -5665,7 +5676,8 @@ namespace DominoVisualizer
 				double x = double.Parse(xC.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
 				double y = double.Parse(xC.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
 
-				DrawComment(c, x, y);
+                var np = canvas.Transform4(new(x, y));
+                DrawComment(c, np.X, np.Y);
 			}
 
 			var xBorders = xGraph.Element("Borders").Elements("Border");
@@ -5683,7 +5695,8 @@ namespace DominoVisualizer
 				double w = double.Parse(xB.Attribute("DrawW").Value, CultureInfo.InvariantCulture);
 				double h = double.Parse(xB.Attribute("DrawH").Value, CultureInfo.InvariantCulture);
 
-				DrawBorder(b, x, y, w, h, moveChilds);
+                var np = canvas.Transform4(new(x, y));
+                DrawBorder(b, np.X, np.Y, w, h, moveChilds);
 			}
 
 			var xBoxes = xGraph.Element("Boxes").Elements("Box");
@@ -5720,7 +5733,10 @@ namespace DominoVisualizer
 				}
 
 				if (asNew)
-                    DrawBox(box, box.DrawX, box.DrawY);
+				{
+					var np = canvas.Transform4(new(box.DrawX, box.DrawY));
+                    DrawBox(box, np.X, np.Y);
+                }
             }
 
 			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
@@ -5728,7 +5744,7 @@ namespace DominoVisualizer
 			{
 				DominoConnector conn = null;
 
-				var dbc = replaceConnID(xConnector.Attribute("ID").Value);
+				var dbc = replaceConnID(xConnector.Attribute("ID").Value, null);
 				string cID = dbc.Item1;
 
                 if (connectors.ContainsKey(cID))
@@ -5752,15 +5768,16 @@ namespace DominoVisualizer
 				if (!connectors.ContainsKey(cID))
                 {
                     connectors.Add(conn.ID, conn);
-
-					if (asNew)
-					{
-                        DrawConnector(conn, conn.DrawX, conn.DrawY);
-                        DrawBoxConnectors(dbc.Item2, conn);
-                    }
                 }
 
-				var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
+                if (asNew)
+                {
+                    var np = canvas.Transform4(new(conn.DrawX, conn.DrawY));
+                    DrawConnector(conn, np.X, np.Y);
+                    DrawBoxConnectors(dbc.Item2, conn);
+                }
+
+                var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
 				if (xExecBoxes != null)
 				{
 					foreach (XElement xExecBox in xExecBoxes)

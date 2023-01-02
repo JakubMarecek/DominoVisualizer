@@ -380,84 +380,87 @@ namespace WpfPanAndZoom.CustomControls
             Cursor = Cursors.Arrow;
 
             if (_selecting)
+                ResetSelection();
+        }
+
+        public void ResetSelection()
+        {
+            _selectionItems = new();
+            _selectionItemsDeltas = new();
+
+            double selX = Canvas.GetLeft(_selectRect);
+            double selY = Canvas.GetTop(_selectRect);
+
+            foreach (UIElement c in Children)
             {
-                _selectionItems = new();
-                _selectionItemsDeltas = new();
+                Widget w = null;
 
-                double selX = Canvas.GetLeft(_selectRect);
-                double selY = Canvas.GetTop(_selectRect);
-
-                foreach (UIElement c in Children)
+                if (c is Widget)
                 {
-                    Widget w = null;
-
-                    if (c is Widget)
-                    {
-                        w = c as Widget;
-                        if (w.DisableMove)
-                            continue;
-                    }
-
-                    double widX = Canvas.GetLeft(c);
-                    double widY = Canvas.GetTop(c);
-                    var selSize = Transform4(new(_selectRect.Width, _selectRect.Height));
-
-                    if (w != null)
-                    {
-                        w.Border.Stroke = new SolidColorBrush(Colors.Black);
-                        w.Border.StrokeDashArray = new() { 1, 0 };
-                        w.Border.StrokeThickness = 2;
-                    }
-
-                    if (c.GetType() == typeof(BorderD))
-                        (c as BorderD).Background = new SolidColorBrush(Colors.Transparent);
-
-                    if (c.GetType() == typeof(Border))
-                        (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
-
-                    if (_selectRect.Width > 10 && _selectRect.Height > 10)
-                    {
-                        var widSize = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
-
-                        if (
-                            (
-                                (widX > selX && widY > selY) ||
-                                (widX + widSize.X > selX && widY + widSize.Y > selY)
-                            ) &&
-                            widX < selX + selSize.X &&
-                            widY < selY + selSize.Y &&
-                            !(
-                                widX < selX && widX + widSize.X > selX + selSize.X &&
-                                widY < selY && widY + widSize.Y > selY + selSize.Y
-                            )
-                        )
-                        {
-                            if (w != null)
-                            {
-                                w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
-                                w.Border.StrokeDashArray = new() { 4, 2 };
-                                w.Border.StrokeThickness = 4;
-                            }
-
-                            if (c.GetType() == typeof(BorderD))
-                                (c as BorderD).Background = _selectRect.Fill;
-
-                            if (c.GetType() == typeof(Border))
-                                (c as Border).Background = _selectRect.Fill;
-
-                            _selectionItems.Add(c);
-                        }
-                    }
+                    w = c as Widget;
+                    if (w.DisableMove)
+                        continue;
                 }
 
-                _selectRect.Width = 1;
-                _selectRect.Height = 1;
-                Canvas.SetLeft(_selectRect, -10);
-                Canvas.SetTop(_selectRect, -10);
-                _selectRect.Visibility = Visibility.Hidden;
+                double widX = Canvas.GetLeft(c);
+                double widY = Canvas.GetTop(c);
+                var selSize = Transform4(new(_selectRect.Width, _selectRect.Height));
 
-                _selecting = false;
+                if (w != null)
+                {
+                    w.Border.Stroke = new SolidColorBrush(Colors.Black);
+                    w.Border.StrokeDashArray = new() { 1, 0 };
+                    w.Border.StrokeThickness = 2;
+                }
+
+                if (c.GetType() == typeof(BorderD))
+                    (c as BorderD).Background = new SolidColorBrush(Colors.Transparent);
+
+                if (c.GetType() == typeof(Border))
+                    (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
+
+                if (_selectRect.Width > 10 && _selectRect.Height > 10)
+                {
+                    var widSize = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
+
+                    if (
+                        (
+                            (widX > selX && widY > selY) ||
+                            (widX + widSize.X > selX && widY + widSize.Y > selY)
+                        ) &&
+                        widX < selX + selSize.X &&
+                        widY < selY + selSize.Y &&
+                        !(
+                            widX < selX && widX + widSize.X > selX + selSize.X &&
+                            widY < selY && widY + widSize.Y > selY + selSize.Y
+                        )
+                    )
+                    {
+                        if (w != null)
+                        {
+                            w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                            w.Border.StrokeDashArray = new() { 4, 2 };
+                            w.Border.StrokeThickness = 4;
+                        }
+
+                        if (c.GetType() == typeof(BorderD))
+                            (c as BorderD).Background = _selectRect.Fill;
+
+                        if (c.GetType() == typeof(Border))
+                            (c as Border).Background = _selectRect.Fill;
+
+                        _selectionItems.Add(c);
+                    }
+                }
             }
+
+            _selectRect.Width = 1;
+            _selectRect.Height = 1;
+            Canvas.SetLeft(_selectRect, -10);
+            Canvas.SetTop(_selectRect, -10);
+            _selectRect.Visibility = Visibility.Hidden;
+
+            _selecting = false;
         }
 
         private void PanAndZoomCanvas_MouseMove(object sender, MouseEventArgs e)

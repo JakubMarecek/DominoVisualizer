@@ -86,6 +86,8 @@ namespace DominoVisualizer
 		 * -dyn int sel tweak - find first free			ok
 		 * -duplicate border box ID - list				ok
 		 * -selection - right side						ok
+		 * -edit conn var - arrays
+		 * -clipboard - verify before process
 		 */
 
 		string workspaceName = "";
@@ -2743,9 +2745,9 @@ namespace DominoVisualizer
 			btnDel.Click += EditBorderDialog;
 			g.Children.Add(btnDel);
 
-			Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DuplBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
+			/*Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DuplBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
 			btnDup.Click += DuplicateBorder;
-			g.Children.Add(btnDup);
+			g.Children.Add(btnDup);*/
 
 			System.Windows.Shapes.Rectangle r = new();
 			r.StrokeDashArray = lineStyle;
@@ -4183,7 +4185,7 @@ namespace DominoVisualizer
 
 
 
-		private void DuplicateBorder(object sender, RoutedEventArgs e)
+		/*private void DuplicateBorder(object sender, RoutedEventArgs e)
 		{
 			AskDialog("Duplicate border", $"This will duplicate selected border with all its boxes and connectors.{Environment.NewLine}Also make sure there is free space under the border, because the border will appear under this one.{Environment.NewLine}Continue?", () =>
 			{
@@ -4358,14 +4360,24 @@ namespace DominoVisualizer
 
                 canvas.RefreshChilds();
 			});
-		}
+		}*/
 
 		public void CopyingMakeCopy()
 		{
 			var d = DataToXML(false, canvas.SelectedItems);
-			string outData = d.ToString();
 
-			Clipboard.SetText(outData);
+            XDocument doc = new();
+            doc.Add(d);
+
+            StringBuilder builder = new StringBuilder();
+            using (TextWriter writer = new StringWriter(builder))
+            {
+                doc.Save(writer);
+            }
+
+			Clipboard.SetText(builder.ToString());
+
+			canvas.ResetSelection();
 		}
 
 		public void CopyingPaste()
@@ -4374,17 +4386,7 @@ namespace DominoVisualizer
 
 			XElement xData = XElement.Parse(strData);
 
-			var data = XMLToData(xData, true);
-
-			globalVariables.AddRange(data.Item1);
-			dominoComments.AddRange(data.Item2);
-			dominoBorders.AddRange(data.Item3);
-			foreach (var a in data.Item4)
-				dominoBoxes.Add(a.Key, a.Value);
-			foreach (var a in data.Item5)
-				dominoConnectors.Add(a.Key, a.Value);
-
-
+			XMLToData(xData, true);
 
             WasEdited();
 
@@ -5269,6 +5271,9 @@ namespace DominoVisualizer
 			XElement xGraph = new("Graph");
 			if (!afterDelete)
 			{
+				double sX = double.MaxValue;
+				double sY = double.MaxValue;
+
 				if (UIList == null)
 				{
 					xGraph.Add(new XAttribute("Name", dominoGraphs[selGraph].Name));
@@ -5293,7 +5298,10 @@ namespace DominoVisualizer
 
 					var a = canvas.Transform2(new(Canvas.GetLeft(c.ContainerUI), Canvas.GetTop(c.ContainerUI)));
 					xComments.Add(new XElement("Comment", new XAttribute("Name", c.Name), new XAttribute("Color", c.Color), new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)), new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture))));
-				}
+
+					sX = Math.Min(sX, a.X);
+					sY = Math.Min(sY, a.Y);
+                }
 				xGraph.Add(xComments);
 
 				XElement xBorders = new("Borders");
@@ -5312,7 +5320,10 @@ namespace DominoVisualizer
 						new XAttribute("DrawW", b.ContainerUI.Width.ToString(CultureInfo.InvariantCulture)),
 						new XAttribute("DrawH", b.ContainerUI.Height.ToString(CultureInfo.InvariantCulture))
 						));
-				}
+
+                    sX = Math.Min(sX, a.X);
+                    sY = Math.Min(sY, a.Y);
+                }
 				xGraph.Add(xBorders);
 
 				XElement xBoxes = new("Boxes");
@@ -5342,7 +5353,10 @@ namespace DominoVisualizer
 					}
 
 					xBoxes.Add(xBox);
-				}
+
+                    sX = Math.Min(sX, a.X);
+                    sY = Math.Min(sY, a.Y);
+                }
 				xGraph.Add(xBoxes);
 
 				XElement xConns = new("Connectors");
@@ -5412,11 +5426,20 @@ namespace DominoVisualizer
 					}*/
 
 					xConns.Add(xc);
-				}
-				xGraph.Add(xConns);
-			}
 
-			return xGraph;
+                    sX = Math.Min(sX, a.X);
+                    sY = Math.Min(sY, a.Y);
+                }
+				xGraph.Add(xConns);
+
+                if (UIList != null)
+                {
+					xGraph.Add(new XElement("SX", sX.ToString(CultureInfo.InvariantCulture)));
+					xGraph.Add(new XElement("SY", sY.ToString(CultureInfo.InvariantCulture)));
+                }
+            }
+
+            return xGraph;
 		}
 
 		public string Save(bool afterDelete = false)
@@ -5549,10 +5572,8 @@ namespace DominoVisualizer
 			return "";
 		}
 
-		private (List<DominoDict>, List<DominoComment>, List<DominoBorder>, Dictionary<string, DominoBox>, Dictionary<string, DominoConnector>) XMLToData(XElement xGraph, bool asNew = false)
+		private void XMLToData(XElement xGraph, bool asNew = false)
 		{
-			List<DominoComment> comments = new();
-			List<DominoBorder> borders = new();
 			Dictionary<string, string> oldNewBoxes = new();
 			Dictionary<string, string> oldNewConns = new();
             Dictionary<string, DominoBox> boxes = new();
@@ -5652,7 +5673,12 @@ namespace DominoVisualizer
 
 						string val = xParam.Attribute("Value")?.Value;
 						if (val != null)
-							prm.Value = val;
+						{
+							foreach (var a in oldNewBoxes)
+								val = val.Replace(a.Key, a.Value);
+
+                            prm.Value = val;
+                        }
 
 						prm.ValueArray = readParams(xParam, pn, vn);
 
@@ -5663,7 +5689,22 @@ namespace DominoVisualizer
 				return prms;
 			}
 
-			var vars = readParams(xGraph, "Variables", "Variable");
+            globalVariables = readParams(xGraph, "Variables", "Variable");
+
+			double sX = 0;
+			double sY = 0;
+			double mX = 0;
+			double mY = 0;
+
+			if (asNew)
+			{
+				sX = double.Parse(xGraph.Element("SX").Value, CultureInfo.InvariantCulture);
+				sY = double.Parse(xGraph.Element("SY").Value, CultureInfo.InvariantCulture);
+
+                var mp = canvas.Transform3(Mouse.GetPosition(canvas));
+				mX = mp.X;
+				mY = mp.Y;
+            }
 
 			var xComments = xGraph.Element("Comments").Elements("Comment");
 			foreach (var xC in xComments)
@@ -5671,12 +5712,25 @@ namespace DominoVisualizer
 				var c = new DominoComment();
 				c.Name = xC.Attribute("Name").Value;
 				c.Color = int.Parse(xC.Attribute("Color").Value);
-				comments.Add(c);
+                dominoComments.Add(c);
 
 				double x = double.Parse(xC.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
 				double y = double.Parse(xC.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
 
+				if (asNew)
+				{
+					x -= sX;
+					y -= sY;
+				}
+
                 var np = canvas.Transform4(new(x, y));
+
+                if (asNew)
+                {
+                    np.X += mX;
+                    np.Y += mY;
+                }
+
                 DrawComment(c, np.X, np.Y);
 			}
 
@@ -5686,7 +5740,7 @@ namespace DominoVisualizer
 				var b = new DominoBorder();
 				b.Style = int.Parse(xB.Attribute("Style").Value);
 				b.Color = int.Parse(xB.Attribute("Color").Value);
-				borders.Add(b);
+                dominoBorders.Add(b);
 
 				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
 
@@ -5695,7 +5749,20 @@ namespace DominoVisualizer
 				double w = double.Parse(xB.Attribute("DrawW").Value, CultureInfo.InvariantCulture);
 				double h = double.Parse(xB.Attribute("DrawH").Value, CultureInfo.InvariantCulture);
 
+                if (asNew)
+                {
+                    x -= sX;
+                    y -= sY;
+                }
+
                 var np = canvas.Transform4(new(x, y));
+
+                if (asNew)
+                {
+                    np.X += mX;
+                    np.Y += mY;
+                }
+
                 DrawBorder(b, np.X, np.Y, w, h, moveChilds);
 			}
 
@@ -5726,20 +5793,36 @@ namespace DominoVisualizer
 				box.DrawY = double.Parse(xBox.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
 				boxes.Add(box.ID, box);
 
-				XElement xConnections = xBox.Element("Connections");
+                XElement xConnections = xBox.Element("Connections");
 				if (xConnections != null)
 				{
 					loadConn(xConnections, box, null);
 				}
 
 				if (asNew)
-				{
-					var np = canvas.Transform4(new(box.DrawX, box.DrawY));
+                {
+                    if (asNew)
+                    {
+                        box.DrawX -= sX;
+                        box.DrawY -= sY;
+                    }
+
+                    var np = canvas.Transform4(new(box.DrawX, box.DrawY));
+
+                    if (asNew)
+                    {
+                        np.X += mX;
+                        np.Y += mY;
+                    }
+
                     DrawBox(box, np.X, np.Y);
                 }
             }
 
-			var xConnectors = xGraph.Element("Connectors").Elements("Connector");
+            foreach (var a in boxes)
+                dominoBoxes.Add(a.Key, a.Value);
+
+            var xConnectors = xGraph.Element("Connectors").Elements("Connector");
 			foreach (var xConnector in xConnectors)
 			{
 				DominoConnector conn = null;
@@ -5772,9 +5855,24 @@ namespace DominoVisualizer
 
                 if (asNew)
                 {
+                    if (asNew)
+                    {
+                        conn.DrawX -= sX;
+                        conn.DrawY -= sY;
+                    }
+
                     var np = canvas.Transform4(new(conn.DrawX, conn.DrawY));
+
+                    if (asNew)
+                    {
+                        np.X += mX;
+                        np.Y += mY;
+                    }
+
                     DrawConnector(conn, np.X, np.Y);
-                    DrawBoxConnectors(dbc.Item2, conn);
+
+					if (dbc.Item2 != null)
+						DrawBoxConnectors(dbc.Item2, conn);
                 }
 
                 var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
@@ -5790,13 +5888,20 @@ namespace DominoVisualizer
 								id = oldNewBoxes[id];
 						}
 
-						var box = boxes.Values.Where(a => a.ID == id).SingleOrDefault();
+						var box = dominoBoxes.Values.Where(a => a.ID == id).SingleOrDefault();
 						if (box != null)
 						{
-							ExecBox execBox = new();
+                            int cc = int.Parse(xExecBox.Attribute("DynIntExec").Value);
+
+                            if (!oldNewBoxes.ContainsKey(box.ID) && asNew)
+                            {
+                                cc = FindDynIntFreeNum(box.ID);
+                            }
+
+                            ExecBox execBox = new();
 							execBox.Type = xExecBox.Attribute("Type").Value == "Exec" ? ExecType.Exec : ExecType.ExecDynInt;
 							execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
-							execBox.DynIntExec = int.Parse(xExecBox.Attribute("DynIntExec").Value);
+							execBox.DynIntExec = cc;
 							execBox.Box = box;
 							conn.ExecBoxes.Add(execBox);
 
@@ -5825,7 +5930,8 @@ namespace DominoVisualizer
 				}
 			}
 
-			return (vars, comments, borders, boxes, connectors);
+            foreach (var a in connectors)
+                dominoConnectors.Add(a.Key, a.Value);
 		}
 
 		public string Load(string loadGraphID = "")
@@ -5903,14 +6009,7 @@ namespace DominoVisualizer
 			foreach (var xRe in xRess)
 				dominoResources.Add(new() { Name = xRe.Attribute("File").Value, Value = xRe.Attribute("Type").Value });
 
-			var data = XMLToData(xGraph);
-			globalVariables.AddRange(data.Item1);
-			dominoComments.AddRange(data.Item2);
-			dominoBorders.AddRange(data.Item3);
-			foreach (var a in data.Item4)
-				dominoBoxes.Add(a.Key, a.Value);
-			foreach (var a in data.Item5)
-				dominoConnectors.Add(a.Key, a.Value);
+			XMLToData(xGraph);
 
             foreach (var graph in dominoGraphs)
             {

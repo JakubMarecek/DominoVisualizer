@@ -10,8 +10,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -70,7 +68,7 @@ namespace DominoVisualizer
 		 * -adding box - if has out delayed, force global		canc
 		 * -if it's NOT stateless - do not allow non global		ok
 		 * -add execbox default selected				ok
-		 * -own execbox color
+		 * -own execbox color							-
 		 * -duplicate - instances						ok
 		 * -load all box names from graphs              ok
 		 * -check if box exists in other graphs         ok
@@ -86,8 +84,8 @@ namespace DominoVisualizer
 		 * -dyn int sel tweak - find first free			ok
 		 * -duplicate border box ID - list				ok
 		 * -selection - right side						ok
-		 * -edit conn var - arrays
-		 * -clipboard - verify before process
+		 * -edit conn var - arrays						ok
+		 * -clipboard - verify before process			ok
 		 */
 
 		string workspaceName = "";
@@ -2511,13 +2509,15 @@ namespace DominoVisualizer
 
 		private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
 		{
+			string pv = ParamsAsString(setVar);
+
 			StackPanel sp2 = new();
 
 			Grid g = new() { Height = 18 };
 			g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
-			Button btn = new Button() { Tag = conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditConnVar;
+			Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
+			btn.Click += EditMetadataInfo;
 			g.Children.Add(btn);
 
 			Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
@@ -2526,7 +2526,7 @@ namespace DominoVisualizer
 
 			sp2.Children.Add(g);
 
-			sp2.Children.Add(new TextBox() { Text = GetSetVarOutName(setVar.Value), Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+			sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
 			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
 			setVar.ContainerUI = b2;
@@ -3230,7 +3230,7 @@ namespace DominoVisualizer
 
 			connEdit.ExecBoxes.Add(eb);
 
-			var clr = connEdit.ExecBoxes.Count;
+			var clr = connEdit.ExecBoxes.Count - 1;
 
 			DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);
 
@@ -3776,6 +3776,18 @@ namespace DominoVisualizer
 				paramsEditSingle = true;
 				openEditDataDialog("Edit global variables", "Edit global variable:", m.Name, null, null, null, null, EditExecBoxUISetParams());
 			}
+			if (tag[0] == "connvar")
+			{
+				editConnVar = tag;
+
+				var c = dominoConnectors[tag[1]];
+				var v = c.SetVariables.Where(a => a.UniqueID == tag[2]).Single();
+
+				paramsEdit = Helpers.CopyList(new() { v });
+				paramsEditSingle = true;
+
+				openEditDataDialog("Edit variable", "Set variable name and value:", v.Name, null, null, null, null, EditExecBoxUISetParams());
+			}
 		}
 
 		public void EditMetadataInfoCreate(string name, string anchorDynType, string dataTypeID, string hostExecFunc, bool? isDelayed, List<ParamEntry> paramsList)
@@ -3835,6 +3847,25 @@ namespace DominoVisualizer
 
 				DrawGlobalVar(m);
 			}
+			if (editMetadataDialogData[0] == "connvar")
+			{
+				name = name.Replace(" ", "");
+				//val = val.Replace(" ", "");
+
+				var c = dominoConnectors[editConnVar[1]];
+				var v = c.SetVariables.Where(a => a.UniqueID == editConnVar[2]).Single();
+
+				v.Name = name;
+
+				EditExecBoxUIGetParams(paramsList);
+				v.Name = name;
+				v.Value = paramsEdit[0].Value;
+				v.ValueArray = paramsEdit[0].ValueArray;
+				v.UniqueID = paramsEdit[0].UniqueID;
+
+				c.Widget.list.Children.Remove(v.ContainerUI);
+				DrawConnVariable(c, v);
+			}
 
             WasEdited();
         }
@@ -3855,37 +3886,7 @@ namespace DominoVisualizer
             });
 		}
 
-		public delegate void OpenEditConnVarDialog(string name, string val);
-		public OpenEditConnVarDialog openEditConnVarDialog;
 		string[] editConnVar;
-
-		private void EditConnVar(object sender, RoutedEventArgs e)
-		{
-			string[] tags = ((string)((Button)sender).Tag).Split('|');
-			editConnVar = tags;
-
-			var c = dominoConnectors[tags[0]];
-			var v = c.SetVariables.Where(a => a.UniqueID == tags[1]).Single();
-
-			openEditConnVarDialog(v.Name, v.Value);
-		}
-
-		public void EditConnVarCreate(string name, string val)
-		{
-			name = name.Replace(" ", "");
-			//val = val.Replace(" ", "");
-
-			var c = dominoConnectors[editConnVar[0]];
-			var v = c.SetVariables.Where(a => a.UniqueID == editConnVar[1]).Single();
-
-			v.Name = name;
-			v.Value = val;
-
-			c.Widget.list.Children.Remove(v.ContainerUI);
-			DrawConnVariable(c, v);
-
-            WasEdited();
-        }
 
 		private void AddConnVar(object sender, RoutedEventArgs e)
 		{
@@ -4384,7 +4385,16 @@ namespace DominoVisualizer
 		{
 			string strData = Clipboard.GetText();
 
-			XElement xData = XElement.Parse(strData);
+			XElement xData = null;
+
+			try
+			{
+				xData = XElement.Parse(strData);
+			}
+			catch (Exception)
+			{
+				return;
+			}
 
 			XMLToData(xData, true);
 
@@ -4590,11 +4600,14 @@ namespace DominoVisualizer
 			var streamWriter = new StreamWriter(luaData);
 
 			streamWriter.WriteLine("");
-			streamWriter.WriteLine("--Created with " + MainWindow.appName);
-			streamWriter.WriteLine("--  Domino script: " + Path.GetFileName(file));
-			streamWriter.WriteLine("--  Workspace:     " + workspaceName);
-			streamWriter.WriteLine("--  Graph:         " + dominoGraphs[selGraph].Name);
-			streamWriter.WriteLine("");
+			streamWriter.WriteLine("-- Created with " + MainWindow.appName);
+			streamWriter.WriteLine("--   Domino script: " + Path.GetFileName(file));
+			streamWriter.WriteLine("--   Workspace:     " + workspaceName);
+			streamWriter.WriteLine("--   Graph:         " + dominoGraphs[selGraph].Name);
+			streamWriter.WriteLine("--");
+			streamWriter.WriteLine("-- DO NOT EDIT MANUALLY THIS FILE OR YOUR CHANGES WILL BE LOST!");
+			streamWriter.WriteLine("-- Please modify the original Domino script instead. You have been warned.");
+            streamWriter.WriteLine("");
 			streamWriter.WriteLine("export = {}");
 			streamWriter.WriteLine("function export:LuaDependencies()");
 			streamWriter.WriteLine("  local luaDepTable = {}");
@@ -5619,7 +5632,8 @@ namespace DominoVisualizer
 
                     if (cID != null)
                     {
-                        newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
+						if (newCID.Contains("_") && newCID.StartsWith("f_"))
+                        	newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
 
                         newCID = "f_" + FindConnectorFreeID(newCID);
 
@@ -5908,7 +5922,7 @@ namespace DominoVisualizer
 							execBox.Params = readParams(xExecBox, "Params", "Param");
 							if (asNew)
                             {
-                                int clr = conn.ExecBoxes.Count;
+                                int clr = conn.ExecBoxes.Count - 1;
 
                                 DrawExecBoxContainerUI(conn, execBox, linesColors[clr]);
 

@@ -171,7 +171,6 @@ namespace DominoVisualizer
 				        	parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
 				        	parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
 				        	parser.openEditDataDialog = OpenEditDataDialog;
-				        	parser.openEditConnVarDialog = OpenEditConnVarDialog;
 				        	parser.openAskDialog = OpenAskDialog;
 				        	parser.openAddCommentDialog = OpenAddCommentDialog;
 				        	parser.openAddBorderDialog = OpenAddBorderDialog;
@@ -871,29 +870,6 @@ namespace DominoVisualizer
                 ICollectionView view = CollectionViewSource.GetDefaultView(editDataList.ItemsSource);
                 view.Refresh();
             });
-        }
-
-        private void OpenEditConnVarDialog(string name, string val)
-        {
-            editConnVarName.Text = name;
-            editConnVarSet.Text = val;
-            Animation(true, gridDialogEditConnVar);
-        }
-
-        private void ButtonDialogEditConnVar_Click(object sender, RoutedEventArgs e)
-        {
-            string tag = (string)((Button)sender).Tag;
-
-			if (tag == "1")
-				parser.EditConnVarCreate(editConnVarName.Text, editConnVarSet.Text);
-
-            if (tag == "2")
-            {
-                parser.GetDataFromBox((outDta) => { editConnVarSet.Text = outDta; });
-                return;
-            }
-
-            Animation(false, gridDialogEditConnVar);
         }
 
         private void OpenAskDialog(string name, string val)

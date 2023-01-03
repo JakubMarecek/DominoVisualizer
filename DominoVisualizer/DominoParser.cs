@@ -4398,6 +4398,8 @@ namespace DominoVisualizer
 
 			XMLToData(xData, true);
 
+			HandleMoved();
+
             WasEdited();
 
             canvas.RefreshChilds();

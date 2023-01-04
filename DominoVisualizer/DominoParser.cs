@@ -5609,6 +5609,8 @@ namespace DominoVisualizer
             Dictionary<string, DominoBox> boxes = new();
 			Dictionary<string, DominoConnector> connectors = new();
 
+			List<string> xConnsIDs = new();
+
 			DominoBox getFromBox(string cID)
 			{
                 bool findFromBox(DominoBox box, List<DominoConnector> conns)
@@ -5674,20 +5676,25 @@ namespace DominoVisualizer
 				var xConns = parent.Elements("Connector");
 				foreach (var xConn in xConns)
 				{
-					DominoConnector conn = new();
+					string id = xConn.Attribute("ID")?.Value;
+
+                    DominoConnector conn = new();
 					conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
-					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value, box);
+					conn.ID = replaceConnID(id, box);
 
-                    if (conn.ID != null)
-						connectors.Add(conn.ID, conn);
+					if (xConnsIDs.Contains(id))
+                    {
+                        if (conn.ID != null)
+                            connectors.Add(conn.ID, conn);
 
-					if (parentConn == null)
-						box.Connections.Add(conn);
-					else
-						parentConn.SubConnections.Add(conn);
+                        if (parentConn == null)
+                            box.Connections.Add(conn);
+                        else
+                            parentConn.SubConnections.Add(conn);
+                    }
 
-					var xSubConnections = xConn.Element("SubConnections");
+                    var xSubConnections = xConn.Element("SubConnections");
 					if (xSubConnections != null)
 					{
 						loadConn(xSubConnections, box, conn);
@@ -5806,7 +5813,11 @@ namespace DominoVisualizer
                 DrawBorder(b, np.X, np.Y, w, h, moveChilds);
 			}
 
-			var xBoxes = xGraph.Element("Boxes").Elements("Box");
+            var xConnectors = xGraph.Element("Connectors").Elements("Connector");
+			foreach (var xConn in xConnectors)
+				xConnsIDs.Add(xConn.Attribute("ID").Value);
+
+            var xBoxes = xGraph.Element("Boxes").Elements("Box");
 			foreach (var xBox in xBoxes)
 			{
 				string origID = xBox.Attribute("ID").Value;
@@ -5862,7 +5873,6 @@ namespace DominoVisualizer
             foreach (var a in boxes)
                 dominoBoxes.Add(a.Key, a.Value);
 
-            var xConnectors = xGraph.Element("Connectors").Elements("Connector");
 			foreach (var xConnector in xConnectors)
 			{
 				DominoConnector conn = null;

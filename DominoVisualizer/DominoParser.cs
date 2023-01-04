@@ -86,6 +86,7 @@ namespace DominoVisualizer
 		 * -selection - right side						ok
 		 * -edit conn var - arrays						ok
 		 * -clipboard - verify before process			ok
+		 * -copy box - wrong conn copy?
 		 */
 
 		string workspaceName = "";
@@ -2843,16 +2844,23 @@ namespace DominoVisualizer
 			return nextID;
         }
 
-		private string FindConnectorFreeID(string boxOutName, int inc = -1)
+		private string FindConnectorFreeID(string boxOutName, List<DominoConnector> secondList = null, int inc = -1)
         {
+			var tmpList = new List<DominoConnector>();
+
+			tmpList.AddRange(dominoConnectors.Values.ToList());
+
+			if (secondList != null)
+				tmpList.AddRange(secondList);
+
             var a = inc >= 0 ? "_" + inc.ToString() : "";
-            if (dominoConnectors.ContainsKey("f_" + boxOutName + a))
-                return FindConnectorFreeID(boxOutName, inc + 1);
+            if (tmpList.Any(b => b.ID == "f_" + boxOutName + a))
+                return FindConnectorFreeID(boxOutName, secondList, inc + 1);
             else
                 return boxOutName + a;
         }
 
-		private int FindDynIntFreeNum(string reqID)
+		private int FindDynIntFreeNum(string reqID, List<DominoConnector> secondList = null)
 		{
 			List<int> lst = new List<int>();
 
@@ -2860,6 +2868,12 @@ namespace DominoVisualizer
 				foreach (var bb in aa.ExecBoxes)
 					if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == reqID)
 						lst.Add(bb.DynIntExec);
+
+			if (secondList != null)
+				foreach (var aa in secondList)
+					foreach (var bb in aa.ExecBoxes)
+						if (bb.Type == ExecType.ExecDynInt && bb.Box.ID == reqID)
+							lst.Add(bb.DynIntExec);
 
 			int find(int n = 0)
 			{
@@ -3570,6 +3584,7 @@ namespace DominoVisualizer
 			editConnector.Widget.delBtn.Tag = name;
 			editConnector.Widget.editBtn.Tag = name;
             //editConnector.Widget.swapBtn.Tag = b.ID;
+			editConnector.Widget.ID = name;
 
             foreach (var btn in editConnector.Widget.list.Children)
 				if (btn is Button)
@@ -5594,31 +5609,36 @@ namespace DominoVisualizer
             Dictionary<string, DominoBox> boxes = new();
 			Dictionary<string, DominoConnector> connectors = new();
 
-			(string, DominoBox) replaceConnID(string cID, DominoBox parentBox)
+			DominoBox getFromBox(string cID)
+			{
+                bool findFromBox(DominoBox box, List<DominoConnector> conns)
+                {
+                    foreach (var c in conns)
+					{
+						string id = cID; //oldNewConns.ContainsKey(cID) ? oldNewConns[cID] : cID;
+
+                        if (c.ID == id)
+                            return true;
+                        else
+                            if (c.SubConnections.Any())
+								return findFromBox(box, c.SubConnections);
+                    }
+
+                    return false;
+                }
+
+                return boxes.Values.Where(a => findFromBox(a, a.Connections)).SingleOrDefault();
+			}
+
+			string replaceConnID(string cID, DominoBox parentBox)
 			{
 				DominoBox bf = null;
 
                 if (asNew)
                 {
-                    bool findFromBox(DominoBox box, List<DominoConnector> conns)
-                    {
-                        foreach (var c in conns)
-						{
-							string id = oldNewConns.ContainsKey(cID) ? oldNewConns[cID] : cID;
-
-                            if (c.ID == id)
-                                return true;
-                            else
-                                if (c.SubConnections.Any())
-									return findFromBox(box, c.SubConnections);
-                        }
-
-                        return false;
-                    }
-
 					string boxID = "";
 
-                    bf = boxes.Values.Where(a => findFromBox(a, a.Connections)).SingleOrDefault();
+					bf = getFromBox(cID);
 
                     if (bf != null)
                     {
@@ -5637,7 +5657,7 @@ namespace DominoVisualizer
 						if (newCID.Contains("_") && newCID.StartsWith("f_"))
                         	newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
 
-                        newCID = "f_" + FindConnectorFreeID(newCID);
+                        newCID = "f_" + FindConnectorFreeID(newCID, connectors.Values.ToList());
 
 						if (!oldNewConns.ContainsKey(cID))
 							oldNewConns.Add(cID, newCID);
@@ -5646,7 +5666,7 @@ namespace DominoVisualizer
 					cID = newCID;
                 }
 
-				return (cID, bf);
+				return cID;
             }
 
 			void loadConn(XElement parent, DominoBox box, DominoConnector parentConn)
@@ -5657,7 +5677,7 @@ namespace DominoVisualizer
 					DominoConnector conn = new();
 					conn.FromBoxConnectID = int.Parse(xConn.Attribute("FromBoxConnectID").Value);
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
-					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value, box).Item1;
+					conn.ID = replaceConnID(xConn.Attribute("ID")?.Value, box);
 
                     if (conn.ID != null)
 						connectors.Add(conn.ID, conn);
@@ -5690,8 +5710,12 @@ namespace DominoVisualizer
 						string val = xParam.Attribute("Value")?.Value;
 						if (val != null)
 						{
-							foreach (var a in oldNewBoxes)
-								val = val.Replace(a.Key, a.Value);
+							if (val.Contains(":GetDataOutValue(") && asNew)
+							{
+								string p = val.Split(':')[0];
+								var oldNewID = oldNewBoxes[p];
+								val = val.Replace(p, oldNewID);
+							}
 
                             prm.Value = val;
                         }
@@ -5843,8 +5867,13 @@ namespace DominoVisualizer
 			{
 				DominoConnector conn = null;
 
-				var dbc = replaceConnID(xConnector.Attribute("ID").Value, null);
-				string cID = dbc.Item1;
+				string gotID = xConnector.Attribute("ID").Value;
+				string cID = "";
+
+				if (oldNewConns.ContainsKey(gotID))
+					cID = oldNewConns[gotID];
+				else
+					cID = replaceConnID(gotID, null);
 
                 if (connectors.ContainsKey(cID))
 					conn = connectors[cID];
@@ -5887,8 +5916,9 @@ namespace DominoVisualizer
 
                     DrawConnector(conn, np.X, np.Y);
 
-					if (dbc.Item2 != null)
-						DrawBoxConnectors(dbc.Item2, conn);
+					DominoBox pb = getFromBox(cID);
+					if (pb != null)
+						DrawBoxConnectors(pb, conn);
                 }
 
                 var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
@@ -5911,7 +5941,7 @@ namespace DominoVisualizer
 
                             if (!oldNewBoxes.ContainsKey(box.ID) && asNew)
                             {
-                                cc = FindDynIntFreeNum(box.ID);
+                                cc = FindDynIntFreeNum(box.ID, connectors.Values.ToList());
                             }
 
                             ExecBox execBox = new();

@@ -86,7 +86,7 @@ namespace DominoVisualizer
 		 * -selection - right side						ok
 		 * -edit conn var - arrays						ok
 		 * -clipboard - verify before process			ok
-		 * -copy box - wrong conn copy?
+		 * -copy box - wrong conn copy?					ok
 		 */
 
 		string workspaceName = "";
@@ -5683,7 +5683,7 @@ namespace DominoVisualizer
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
 					conn.ID = replaceConnID(id, box);
 
-					if (xConnsIDs.Contains(id))
+					if (!asNew || (asNew && xConnsIDs.Contains(id)))
                     {
                         if (conn.ID != null)
                             connectors.Add(conn.ID, conn);

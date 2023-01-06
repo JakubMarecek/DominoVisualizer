@@ -5656,8 +5656,10 @@ namespace DominoVisualizer
 
                     if (cID != null)
                     {
-						if (newCID.Contains("_") && newCID.StartsWith("f_"))
+						if (newCID.Contains("_") && newCID.StartsWith("f_") && newCID.Count(c => c == '_') > 1)
                         	newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
+						else if (newCID.Contains("_") && newCID.StartsWith("f_") && newCID.Count(c => c == '_') == 1)
+                            newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_')));
 
                         newCID = "f_" + FindConnectorFreeID(newCID, connectors.Values.ToList());
 
@@ -5736,7 +5738,8 @@ namespace DominoVisualizer
 				return prms;
 			}
 
-            globalVariables = readParams(xGraph, "Variables", "Variable");
+            if (!asNew)
+                globalVariables = readParams(xGraph, "Variables", "Variable");
 
 			double sX = 0;
 			double sY = 0;

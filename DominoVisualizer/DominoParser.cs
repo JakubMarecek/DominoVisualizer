@@ -5112,7 +5112,7 @@ namespace DominoVisualizer
 			fileStream.Close();
 
 			XDocument xDepload = new();
-			XElement xCRes = new("CBinaryResourceContainer", new XAttribute("ID", datPath + Path.GetFileName(exportPath)));
+			XElement xCRes = new("CBinaryResourceContainer", new XAttribute("ID", datPath + Path.GetFileName(exportPath)), new XAttribute("addNode", "1"));
 			
 			foreach (var a in exportDepData)
 			{

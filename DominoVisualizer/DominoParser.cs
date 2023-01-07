@@ -90,7 +90,7 @@ namespace DominoVisualizer
 		 * -copy box - wrong conn copy?					ok
 		 * -in data type select							ok
 		 * -setting box param - show type				ok
-		 * -saving new doc - make name from workspace
+		 * -saving new doc - make name from workspace	ok
 		 */
 
 		string workspaceName = "";
@@ -4640,7 +4640,7 @@ namespace DominoVisualizer
 					exportPath = folderBrowserDialog.SelectedPath + "\\" + fileName;
 				}
 				else
-					return "";
+					return "r";
 
 				/*SaveFileDialog sfd = new();
 				sfd.Title = "Export Domino Workspace to LUA";
@@ -5529,12 +5529,13 @@ namespace DominoVisualizer
 				SaveFileDialog sfd = new();
 				sfd.Title = "Save Domino Workspace";
 				sfd.Filter = "Domino Workspace|*.domino.xml";
-				if (sfd.ShowDialog() == true)
+				sfd.FileName = workspaceName.Replace(" ", "_").ToLower();
+                if (sfd.ShowDialog() == true)
 				{
 					file = sfd.FileName;
 				}
 				else
-					return "";
+					return "r";
 			}
 
 			if (wnd != null)

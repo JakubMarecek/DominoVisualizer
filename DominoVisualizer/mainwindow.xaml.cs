@@ -609,7 +609,10 @@ namespace DominoVisualizer
 		private void ButtonExport_Click(object sender, RoutedEventArgs e)
 		{
 			var a = parser.Export();
-            if (a != "")
+            if (a == "r")
+            {
+            }
+            else if (a != "")
             {
 				OpenInfoDialog("Export", a);
             }
@@ -622,9 +625,12 @@ namespace DominoVisualizer
 		private void ButtonSave_Click(object sender, RoutedEventArgs e)
 		{
 			var a = parser.Save();
-			if (a != "")
+            if (a == "r")
             {
-				OpenInfoDialog("Save", a);
+            }
+            else if (a != "")
+            {
+                OpenInfoDialog("Save", a);
             }
             else
             {

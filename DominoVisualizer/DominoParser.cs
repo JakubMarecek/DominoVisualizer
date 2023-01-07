@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -87,6 +88,9 @@ namespace DominoVisualizer
 		 * -edit conn var - arrays						ok
 		 * -clipboard - verify before process			ok
 		 * -copy box - wrong conn copy?					ok
+		 * -in data type select
+		 * -setting box param - show type
+		 * -saving new doc - make name from workspace
 		 */
 
 		string workspaceName = "";
@@ -1476,7 +1480,15 @@ namespace DominoVisualizer
 			linesColors.Add((Color)ColorConverter.ConvertFromString("#3e2723")); // brown
 			linesColors.Add((Color)ColorConverter.ConvertFromString("#212121")); // grey
 			linesColors.Add((Color)ColorConverter.ConvertFromString("#263238")); // blue grey
-		}
+
+            var a = typeof(Colors).GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public)
+                                .Select(c => (Color)c.GetValue(null, null))
+                                .ToList();
+
+            foreach (var c in a)
+                if (!linesColors.Contains(c))
+                    linesColors.Add(c);
+        }
 
 		private void HandleMoving(string id, double x, double y)
 		{

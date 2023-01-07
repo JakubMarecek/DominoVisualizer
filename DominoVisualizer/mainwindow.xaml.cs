@@ -809,7 +809,10 @@ namespace DominoVisualizer
 
             if (dataTypeID != null)
             {
-                editDataDataTypeID.Text = dataTypeID;
+                //editDataDataTypeID.Text = dataTypeID;
+                var data = parser.GetDataTypes();
+                editDataDataTypeID.ItemsSource = data;
+                editDataDataTypeID.SelectedIndex = data.FindIndex(a => a == dataTypeID);
                 editDataDataTypeIDC.Visibility = Visibility.Visible;
             }
 

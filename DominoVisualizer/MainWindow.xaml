@@ -295,7 +295,14 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataDataTypeIDC" Visibility="Collapsed">
                             <Label Content="Data Type ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                            <TextBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
+                            <!--<TextBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />-->
+
+
+                            <ComboBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
+                            </ComboBox>
+
+
+
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataHostExecFuncC" Visibility="Collapsed">
                             <Label Content="Host Exec Func" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />

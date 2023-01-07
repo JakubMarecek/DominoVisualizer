@@ -88,8 +88,8 @@ namespace DominoVisualizer
 		 * -edit conn var - arrays						ok
 		 * -clipboard - verify before process			ok
 		 * -copy box - wrong conn copy?					ok
-		 * -in data type select
-		 * -setting box param - show type
+		 * -in data type select							ok
+		 * -setting box param - show type				ok
 		 * -saving new doc - make name from workspace
 		 */
 
@@ -127,9 +127,47 @@ namespace DominoVisualizer
 		bool errFilesB = false;
 		bool wasEdited = false;
 
-		//Random r = new();
+        List<string> resourcesTypes = new()
+        {
+            "CSoundResource",
+            "CGeometryResource",
+            "CTextureResource",
+            "CAnimationResource",
+            "CBinkResource",
+            "CBinkUIResource",
+            "CSequenceResource",
+            "CEntityArchetypeRes",
+            "WolfskinItemResource",
+            "WolfskinConfigResource",
+            "CFireUIResource",
+        };
 
-		public string CurrentFile { get { return file; } }
+        List<string> dataTypes = new()
+        {
+            "string",
+            "int",
+            "float",
+            "bool",
+            "entity",
+            "list",
+            "group",
+            "SoundType",
+            "Sound",
+            "Video",
+            "genericdb",
+            "sequence",
+            "oasis",
+            "oasiseditor",
+            "database",
+            "archetype",
+            "animation",
+            "GSF",
+            "SoundMixing",
+        };
+
+        //Random r = new();
+
+        public string CurrentFile { get { return file; } }
 
 		public string CurrentDatPath { get { return datPath; } }
 
@@ -2214,11 +2252,16 @@ namespace DominoVisualizer
 						pv = GetSetVarOutName(param.Value);*/
 
 					var paramName = "";
-					if (regBoxesAll.ContainsKey(execBox.Box.Name))
-						paramName = int.Parse(param.Name) < regBoxesAll[execBox.Box.Name].DatasIn.Count ? regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
+					var paramType = "";
 
-					Grid g = new() { Height = 30 };
-					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : ""), Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+					if (regBoxesAll.ContainsKey(execBox.Box.Name))
+					{
+                        paramName = int.Parse(param.Name) < regBoxesAll[execBox.Box.Name].DatasIn.Count ? regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
+						paramType = " (" + regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].DataTypeID + ")";
+                    }
+
+                    Grid g = new() { Height = 30 };
+					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					sp.Children.Add(g);
 
@@ -3010,7 +3053,7 @@ namespace DominoVisualizer
 				var a = regBoxesAll[execBoxEdit.Box.Name].DatasIn;
 				for (int i = 0; i < a.Count; i++)
 				{
-					string paramName = "(" + i.ToString() + ") " + a[i].Name;
+					string paramName = "(" + i.ToString() + ") " + a[i].Name + " (" + a[i].DataTypeID + ")";
 
 					var prmVal = paramsEdit.Where(a => a.Name == i.ToString()).SingleOrDefault();
 
@@ -3770,7 +3813,12 @@ namespace DominoVisualizer
 		public OpenEditDataDialog openEditDataDialog;
 		string[] editMetadataDialogData;
 
-		private void EditMetadataInfo(object sender, RoutedEventArgs e)
+		public List<string> GetDataTypes()
+		{
+			return dataTypes;
+		}
+
+        private void EditMetadataInfo(object sender, RoutedEventArgs e)
 		{
 			string[] tag = ((string)((Button)sender).Tag).Split('|');
 			editMetadataDialogData = tag;
@@ -4077,20 +4125,6 @@ namespace DominoVisualizer
             WasEdited();
         }
 
-		List<string> resourcesTypes = new()
-		{
-			"CSoundResource",
-			"CGeometryResource",
-			"CTextureResource",
-			"CAnimationResource",
-			"CBinkResource",
-			"CBinkUIResource",
-			"CSequenceResource",
-			"CEntityArchetypeRes",
-			"WolfskinItemResource",
-			"WolfskinConfigResource",
-			"CFireUIResource",
-		};
 		public delegate void OpenEditResourceDialog(string name, int selType, List<string> types);
 		public OpenEditResourceDialog openEditResourceDialog;
 		private DominoDict editResource = null;

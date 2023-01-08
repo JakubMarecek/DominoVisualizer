@@ -2251,13 +2251,16 @@ namespace DominoVisualizer
 					else
 						pv = GetSetVarOutName(param.Value);*/
 
-					var paramName = "";
+					var paramName = "PARAM DOESN'T EXIST";
 					var paramType = "";
 
 					if (regBoxesAll.ContainsKey(execBox.Box.Name))
 					{
-                        paramName = int.Parse(param.Name) < regBoxesAll[execBox.Box.Name].DatasIn.Count ? regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name : "PARAM DOESN'T EXIST";
-						paramType = " (" + regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].DataTypeID + ")";
+						if (int.Parse(param.Name) < regBoxesAll[execBox.Box.Name].DatasIn.Count)
+                        {
+                            paramName = regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].Name;
+                            paramType = " (" + regBoxesAll[execBox.Box.Name].DatasIn[int.Parse(param.Name)].DataTypeID + ")";
+                        }
                     }
 
                     Grid g = new() { Height = 30 };

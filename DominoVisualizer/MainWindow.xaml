@@ -22,7 +22,7 @@
                 <Image Source="domino.ico" Margin="-480,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                     <Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,0,-10" />
-                    <Label Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
+                    <Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
                     <Label Content="by ArmanIII" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,70" />
                     <Label Content="Import Domino from LUA:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,0,0,15" />
                     <Button Style="{StaticResource CBtn}" Content="Import" Click="ButtonSelDialog_Click" Tag="0" />

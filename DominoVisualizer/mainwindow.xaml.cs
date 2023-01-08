@@ -23,9 +23,10 @@ namespace DominoVisualizer
 		//string fileSel = "";
 		bool loaded = false;
 		bool externalLaunch = false;
-		public const string appName = "Domino Visualizer v1.10 by ArmanIII";
+		const string appVer = "v1.10";
+		public const string appName = "Domino Visualizer " + appVer + " by ArmanIII";
         //int actInx = 0;
-		Arguments arguments;
+        Arguments arguments;
 		OpenType selDialogType = OpenType.None;
         string selDialogFile = "";
 
@@ -50,14 +51,15 @@ namespace DominoVisualizer
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-			/*gridLoading.Visibility = Visibility.Hidden;
+            /*gridLoading.Visibility = Visibility.Hidden;
 			gridException.Visibility = Visibility.Hidden;
 			gridNotice.Visibility = Visibility.Hidden;
 			gridSearch.Visibility = Visibility.Hidden;
 			gridDialog.Visibility = Visibility.Hidden;
 			gridDialogRun.Visibility = Visibility.Hidden;*/
+            verT.Content = appVer;
 
-			string[] args = Environment.GetCommandLineArgs();
+            string[] args = Environment.GetCommandLineArgs();
 			arguments = new(args);
 
 			if (arguments["bytes"] != null && arguments["fcver"] != null && arguments["fileFolder"] != null && arguments["fn"] != null)

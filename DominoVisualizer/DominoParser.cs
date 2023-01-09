@@ -5075,7 +5075,53 @@ namespace DominoVisualizer
 					List<string> tmpVarsSets = new();
 					int vi = 0;
 
-					foreach (var svar in conn.Value.SetVariables)
+					List<string> writeArray(List<DominoDict> arr)
+                    {
+                        foreach (var svar in arr)
+                        {
+                            if (svar.Name.Contains(':'))
+                            {
+                                tmpVars.Add(svar.Name.Split(':')[0], "l" + vi.ToString());
+                                vi++;
+                            }
+
+                            if (svar.Value != null)
+                            {
+                                if (svar.Value.Contains(':'))
+                                {
+                                    var a = tmpVars.TryAdd(svar.Value.Split(':')[0], "l" + vi.ToString());
+                                    if (a) vi++;
+                                }
+                            }
+                        }
+
+                        List<string> outVal = new();
+
+                        foreach (var svar in arr)
+                        {
+                            if (svar.Value != null)
+                            {
+                                string dSet = svar.Name + " = " + svar.Value;
+
+                                foreach (var tmpVar in tmpVars)
+                                    dSet = dSet.Replace(tmpVar.Key, tmpVar.Value);
+
+                                outVal.Add(dSet);
+                            }
+
+                            if (svar.ValueArray.Any())
+							{
+								string v = svar.Name + " = {" + nl + "    " + string.Join("," + nl + "    ", writeArray(svar.ValueArray)) + nl + "  }";
+                                outVal.Add(v);
+                            }
+                        }
+
+						return outVal;
+                    }
+
+                    tmpVarsSets.AddRange(writeArray(conn.Value.SetVariables));
+
+					/*foreach (var svar in conn.Value.SetVariables)
 					{
 						if (svar.Name.Contains(':'))
 						{
@@ -5098,8 +5144,8 @@ namespace DominoVisualizer
 							dSet = dSet.Replace(tmpVar.Key, tmpVar.Value);
 
 						tmpVarsSets.Add(dSet);
-					}
-
+					}*/
+					
 					string outVDef = "";
 
 					foreach (var tmpVar in tmpVars)

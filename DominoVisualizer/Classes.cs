@@ -253,6 +253,8 @@ namespace DominoVisualizer
 
         public int Color { get; set; }
 
+        public int BackgroundColor { get; set; }
+
         public int Style { get; set; }
 
         public BorderD ContainerUI { set; get; }

@@ -414,7 +414,7 @@ namespace WpfPanAndZoom.CustomControls
                 }
 
                 if (c.GetType() == typeof(BorderD))
-                    (c as BorderD).Background = new SolidColorBrush(Colors.Transparent);
+                    (c as BorderD).Background = (c as BorderD).BackgroundColor; //new SolidColorBrush(Colors.Transparent);
 
                 if (c.GetType() == typeof(Border))
                     (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));

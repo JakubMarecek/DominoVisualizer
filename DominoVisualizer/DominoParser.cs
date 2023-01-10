@@ -21,6 +21,7 @@ using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
 using WpfPanAndZoom.CustomControls;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
@@ -2814,12 +2815,20 @@ namespace DominoVisualizer
 			r.StrokeThickness = 2;
 			g.Children.Add(r);
 
+			SolidColorBrush clr = new SolidColorBrush(Colors.Transparent);
+            if (b.BackgroundColor != -1)
+            {
+                clr = new SolidColorBrush(linesColors[b.BackgroundColor]);
+                clr.Color = Color.FromArgb(50, clr.Color.R, clr.Color.G, clr.Color.B);
+            }
+
 			BorderD b2 = new()
 			{
 				//BorderBrush = new SolidColorBrush(linesColors[b.Color]),
-				Background = new SolidColorBrush(Colors.Transparent),
-				//BorderThickness = new(2, 2, 2, 2),
-				Height = h,
+				Background = clr,
+                BackgroundColor = clr,
+                //BorderThickness = new(2, 2, 2, 2),
+                Height = h,
 				Width = w,
 				EnableMove = true,
 				Child = g,
@@ -4052,6 +4061,7 @@ namespace DominoVisualizer
 			var b = new DominoBorder();
 			b.Color = 0;
 			b.Style = 0;
+			b.BackgroundColor = -1;
 
 			Point pnt = new(width / 2, height / 2);
 			pnt = canvas.Transform3(pnt);
@@ -4064,7 +4074,7 @@ namespace DominoVisualizer
             WasEdited();
         }
 
-		public delegate void OpenAddBorderDialog(int selStyle, int selClr, List<ColorEntry> colors, bool moveChilds);
+		public delegate void OpenAddBorderDialog(int selStyle, int selClr, int selBgClr, List<ColorEntry> colors, bool moveChilds);
 		public OpenAddBorderDialog openAddBorderDialog;
 		private DominoBorder editBorder = null;
 
@@ -4081,7 +4091,7 @@ namespace DominoVisualizer
 				foreach (var c in linesColors)
 					colors.Add(new() { Color = new(c) });
 
-				openAddBorderDialog(editBorder.Style, editBorder.Color, colors, editBorder.ContainerUI.EnableMovingChilds);
+				openAddBorderDialog(editBorder.Style, editBorder.Color, editBorder.BackgroundColor, colors, editBorder.ContainerUI.EnableMovingChilds);
 			}
 			if (tags[0] == "delete")
 			{
@@ -4095,12 +4105,13 @@ namespace DominoVisualizer
 			}
 		}
 
-		public void EditBorderDialogAct(int selClr, int selStyle, bool? moveChilds)
+		public void EditBorderDialogAct(int selClr, int selBgClr, int selStyle, bool? moveChilds)
 		{
 			//canvas.ResetZoom();
 
 			editBorder.Style = selStyle;
 			editBorder.Color = selClr;
+			editBorder.BackgroundColor = selBgClr;
 
 			var x = Canvas.GetLeft(editBorder.ContainerUI);
 			var y = Canvas.GetTop(editBorder.ContainerUI);

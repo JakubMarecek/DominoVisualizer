@@ -965,12 +965,18 @@ namespace DominoVisualizer
             parser.AddBorder((int)Width, (int)Height);
         }
 
-        private void OpenAddBorderDialog(int selStyle, int selClr, List<ColorEntry> colors, bool moveChilds)
+        private void OpenAddBorderDialog(int selStyle, int selClr, int selBgClr, List<ColorEntry> colors, bool moveChilds)
         {
             addBorderColor.ItemsSource = colors;
             addBorderColor.SelectedIndex = selClr;
 			addBorderStyle.SelectedIndex = selStyle;
 			addBorderMove.IsChecked = moveChilds;
+            addBorderBgColor.ItemsSource = colors;
+            addBorderBgColor.SelectedIndex = selBgClr == -1 ? 0 : selBgClr;
+
+            if (selBgClr == -1)
+                addBorderBgTr.IsChecked = true;
+
             Animation(true, gridDialogAddBorder);
         }
 
@@ -979,7 +985,7 @@ namespace DominoVisualizer
             string tag = (string)((Button)sender).Tag;
 
             if (tag == "1")
-                parser.EditBorderDialogAct(addBorderColor.SelectedIndex, addBorderStyle.SelectedIndex, addBorderMove.IsChecked);
+                parser.EditBorderDialogAct(addBorderColor.SelectedIndex, addBorderBgTr.IsChecked == true ? -1 : addBorderBgColor.SelectedIndex, addBorderStyle.SelectedIndex, addBorderMove.IsChecked);
 
             Animation(false, gridDialogAddBorder);
         }

@@ -399,8 +399,8 @@
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="250">
+            <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Visible">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit border" Style="{StaticResource Header}" />
 
@@ -427,7 +427,21 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <CheckBox Content=" When moving border, children will move too" Name="addBorderMove" Margin="20,150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
+                        <Label Content="Background color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
+                        <ComboBox Name="addBorderBgColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Grid Height="20" Width="280" Background="{Binding Color}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <CheckBox Content=" Transparent background" Name="addBorderBgTr" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <CheckBox Content=" When moving border, children will move too" Name="addBorderMove" Margin="20,230,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                     <Button Style="{StaticResource CBtn}" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />

@@ -36,7 +36,7 @@
             </Grid.RowDefinitions>
 
             <Rectangle x:Name="HeaderRectangle"  Grid.Row="0" Fill="Lime" />
-            <Grid Grid.Row="0">
+            <Grid Grid.Row="0" Name="HeaderGrid">
                 <TextBox x:Name="Header" Text="Widget" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                 <Button Name="swapBtn" Style="{StaticResource SwapBtn}" />
                 <Button Name="editBtn" Style="{StaticResource EditBtn}" Margin="0,0,20,0" Visibility="Hidden" />

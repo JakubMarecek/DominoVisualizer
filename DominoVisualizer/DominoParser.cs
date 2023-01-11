@@ -1553,15 +1553,19 @@ namespace DominoVisualizer
 			foreach (var b in dominoBoxes.Values)
 			{
 				b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.swapBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				//b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				//b.Widget.swapBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.HeaderGrid.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.Border.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 			}
 
 			foreach (var b in dominoConnectors.Values)
 			{
 				b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.editBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				//b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				//b.Widget.editBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.HeaderGrid.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.Border.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 			}
 
 			foreach (var b in dominoComments)
@@ -1570,8 +1574,8 @@ namespace DominoVisualizer
 			foreach (var b in lines)
 				b.UI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
 
-			foreach (var b in dominoBorders)
-				b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
+			/*foreach (var b in dominoBorders)
+				b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;*/
 		}
 
 		private void HandleMoved()
@@ -2365,7 +2369,8 @@ namespace DominoVisualizer
 			if (!isOut)
 				w.list.Children.Add(DrawBtn("Add new exec box", conn.ID, AddExecBox));
 
-			w.list.Children.Add(DrawBtn("Add new set variable", conn.ID, AddConnVar));
+			if (!isIn)
+				w.list.Children.Add(DrawBtn("Add new set variable", conn.ID, AddConnVar));
 
 			foreach (var setVar in conn.SetVariables)
 			{

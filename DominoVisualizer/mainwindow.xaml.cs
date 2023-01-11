@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 
@@ -559,9 +560,29 @@ namespace DominoVisualizer
                 afterAccept();
             });
         }
-
+        
+        public static IEnumerable<T> FindVisualChilds<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj == null) yield return (T)Enumerable.Empty<T>();
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                DependencyObject ithChild = VisualTreeHelper.GetChild(depObj, i);
+                if (ithChild == null) continue;
+                if (ithChild is T t) yield return t;
+                foreach (T childOfChild in FindVisualChilds<T>(ithChild)) yield return childOfChild;
+            }
+        }
+        
 		private void Animation(bool fadeInOut, Grid grid)
 		{
+            foreach (var ch in FindVisualChilds<Button>(grid))
+            {
+                if (fadeInOut)
+                    (ch as Button).IsEnabled = true;
+                else
+                    (ch as Button).IsEnabled = false;
+            }
+
 			if (fadeInOut)
 			{
 				grid.Opacity = 0;

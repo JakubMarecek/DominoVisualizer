@@ -399,7 +399,7 @@
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Visible">
+            <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit border" Style="{StaticResource Header}" />

@@ -5450,6 +5450,7 @@ namespace DominoVisualizer
 					xBorders.Add(new XElement("Border",
 						new XAttribute("Style", b.Style),
 						new XAttribute("Color", b.Color),
+						new XAttribute("BackgroundColor", b.BackgroundColor),
 						new XAttribute("EnableMovingChilds", b.ContainerUI.EnableMovingChilds ? "true" : "false"),
 						new XAttribute("DrawX", a.X.ToString(CultureInfo.InvariantCulture)),
 						new XAttribute("DrawY", a.Y.ToString(CultureInfo.InvariantCulture)),
@@ -5897,6 +5898,7 @@ namespace DominoVisualizer
 				var b = new DominoBorder();
 				b.Style = int.Parse(xB.Attribute("Style").Value);
 				b.Color = int.Parse(xB.Attribute("Color").Value);
+				b.BackgroundColor = int.Parse(xB.Attribute("BackgroundColor").Value);
                 dominoBorders.Add(b);
 
 				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";

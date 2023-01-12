@@ -751,7 +751,7 @@ namespace DominoVisualizer
 
 		private void ParseAllBoxes()
 		{
-			ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib.zip");
+			ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib.bin");
 
             string zipFileStr = "";
             if (game == "fc5") zipFileStr = "FC5";

@@ -39,4 +39,10 @@
     <Resource Include="OpenSans.ttf" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="DominoLib.bin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

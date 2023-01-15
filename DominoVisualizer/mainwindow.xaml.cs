@@ -77,7 +77,7 @@ namespace DominoVisualizer
                         Animation(true, gridDialogSelGame);
 						break;
 					}
-					if (File.Exists(a) && a.EndsWith(".domino.xml"))
+					if (File.Exists(a) && (a.EndsWith(".domino.xml") || a.EndsWith(".domino")))
 					{
                 		OpenFile(OpenType.OpenParam, null, a);
 						break;
@@ -237,7 +237,7 @@ namespace DominoVisualizer
             {
                 OpenFileDialog ofdO = new OpenFileDialog();
                 ofdO.Title = "Select Domino Workspace";
-                ofdO.Filter = "Domino Workspace|*.domino.xml";
+                ofdO.Filter = "Domino Workspace|*.domino.xml;*.domino";
 
                 if (ofdO.ShowDialog() == true)
                 {

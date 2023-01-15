@@ -5594,7 +5594,7 @@ namespace DominoVisualizer
 			{
 				SaveFileDialog sfd = new();
 				sfd.Title = "Save Domino Workspace";
-				sfd.Filter = "Domino Workspace|*.domino.xml";
+				sfd.Filter = "Domino Workspace|*.domino.xml;*.domino";
 				sfd.FileName = workspaceName.Replace(" ", "_").ToLower();
                 if (sfd.ShowDialog() == true)
 				{

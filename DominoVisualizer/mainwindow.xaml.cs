@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -46,7 +47,8 @@ namespace DominoVisualizer
 		public MainWindow()
 		{
 			InitializeComponent();
-			Title = appName;
+			wndTitle.Content = Title = appName;
+			wndTitleW.Content = "";
 			Blur(true);
 		}
 
@@ -261,6 +263,7 @@ namespace DominoVisualizer
 			if (type == OpenType.Binary)
 			{
 				Title = appName + " - " + arguments["fn"];
+				wndTitleW.Content = " - " + arguments["fn"];
 
 				externalLaunch = true;
 
@@ -286,6 +289,7 @@ namespace DominoVisualizer
                 parser = new(this, directFile, canvas, game);
 
                 Title = appName + " - " + directFile;
+                wndTitleW.Content = " - " + directFile;
 
                 Loading();
             }
@@ -295,6 +299,7 @@ namespace DominoVisualizer
                 parser = new(this, directFile, canvas);
 
                 Title = appName + " - " + directFile;
+                wndTitleW.Content = " - " + directFile;
 
                 Loading();
             }
@@ -303,12 +308,14 @@ namespace DominoVisualizer
 			{
 				parser = new(this, directFile, canvas);
                 Title = appName + " - " + directFile;
+                wndTitleW.Content = " - " + directFile;
                 Loading();
 			}
 
 			if (type == OpenType.Create)
 			{
                 Title = appName + " - Unsaved workspace";
+                wndTitleW.Content = " - Unsaved workspace";
 
 				parser = new(this, canvas, game);
                 //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
@@ -552,6 +559,7 @@ namespace DominoVisualizer
                 GC.Collect();
 
                 Title = appName;
+                wndTitleW.Content = "";
 
                 Blur(true);
                 Animation(true, screen);
@@ -1232,6 +1240,67 @@ namespace DominoVisualizer
             }
 
             Animation(false, gridDialogEditName);
+        }
+
+        private void ButtonChrome_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "0")
+            {
+                Close();
+            }
+            if (tag == "1")
+            {
+                if (WindowState == WindowState.Maximized)
+                    WindowState = WindowState.Normal;
+                else
+                    WindowState = WindowState.Maximized;
+            }
+            if (tag == "2")
+            {
+                WindowState = WindowState.Minimized;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll")]
+        static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
+
+        [DllImport("user32.dll")]
+        static extern bool RemoveMenu(IntPtr hMenu, uint uPosition, uint uFlags);
+        
+        private void ShowSystemicMenu(object sender, MouseButtonEventArgs e)
+        {
+            Point mousePos = PointToScreen(Mouse.GetPosition(this));
+            IntPtr hWnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            //RECT pos;
+            //GetWindowRect(hWnd, out pos);
+            IntPtr hMenu = GetSystemMenu(hWnd, false);
+            //RemoveMenu(hMenu, 0xF030, 0x00000000);
+            //RemoveMenu(hMenu, 0xF120, 0x00000000);
+            int cmd = TrackPopupMenu(hMenu, 0x100, (int)mousePos.X, (int)mousePos.Y, 0, hWnd, IntPtr.Zero);
+            if (cmd > 0) SendMessage(hWnd, 0x112, (IntPtr)cmd, IntPtr.Zero);
+        }
+
+        private void MoveWnd(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        private void ChromeClick(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left)
+                if (WindowState == WindowState.Maximized)
+                    WindowState = WindowState.Normal;
+                else
+                    WindowState = WindowState.Maximized;
         }
 
         /*private void ExportPicture(object sender, RoutedEventArgs e)

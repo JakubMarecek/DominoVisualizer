@@ -1,6 +1,7 @@
 ﻿<Application x:Class="DominoVisualizer.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CustomControlsDV="clr-namespace:DominoVisualizer.CustomControls"
     xmlns:local="clr-namespace:DominoVisualizer" StartupUri="MainWindow.xaml">
     <Application.Resources>
 
@@ -412,6 +413,95 @@
                                 Data="M0 448c0 35.3 28.7 64 64 64H288c35.3 0 64-28.7 64-64V384H224c-53 0-96-43-96-96V160H64c-35.3 0-64 28.7-64 64V448zm224-96H448c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H224c-35.3 0-64 28.7-64 64V288c0 35.3 28.7 64 64 64z"
                                 Fill="White">
                             </Path>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseBtnWhite" TargetType="Button" BasedOn="{StaticResource EditBtn}">
+            <Setter Property="ToolTip" Value="Close" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="#01000000" />
+                            <Path
+                                Width="15"
+                                Height="15"
+                                x:Name="CheckMark"
+                                SnapsToDevicePixels="False"
+                                StrokeThickness="1"
+                                Stretch="Uniform"
+                                Data="M312.1 375c9.369 9.369 9.369 24.57 0 33.94s-24.57 9.369-33.94 0L160 289.9l-119 119c-9.369 9.369-24.57 9.369-33.94 0s-9.369-24.57 0-33.94L126.1 256L7.027 136.1c-9.369-9.369-9.369-24.57 0-33.94s24.57-9.369 33.94 0L160 222.1l119-119c9.369-9.369 24.57-9.369 33.94 0s9.369 24.57 0 33.94L193.9 256L312.1 375z"
+                                Fill="#ccc">
+                            </Path>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MaxBtnWhite" TargetType="Button" BasedOn="{StaticResource CloseBtnWhite}">
+            <Setter Property="ToolTip" Value="Maximize / restore" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="#01000000" />
+                            <Path
+                                Width="15"
+                                Height="15"
+                                x:Name="CheckMark"
+                                SnapsToDevicePixels="False"
+                                StrokeThickness="1"
+                                Stretch="Uniform"
+                                Data="M64 464H288C296.8 464 304 456.8 304 448V384H352V448C352 483.3 323.3 512 288 512H64C28.65 512 0 483.3 0 448V224C0 188.7 28.65 160 64 160H128V208H64C55.16 208 48 215.2 48 224V448C48 456.8 55.16 464 64 464zM160 64C160 28.65 188.7 0 224 0H448C483.3 0 512 28.65 512 64V288C512 323.3 483.3 352 448 352H224C188.7 352 160 323.3 160 288V64zM224 304H448C456.8 304 464 296.8 464 288V64C464 55.16 456.8 48 448 48H224C215.2 48 208 55.16 208 64V288C208 296.8 215.2 304 224 304z"
+                                Fill="#ccc">
+                            </Path>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MinBtnWhite" TargetType="Button" BasedOn="{StaticResource CloseBtnWhite}">
+            <Setter Property="ToolTip" Value="Minimize" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Rectangle Fill="#01000000" />
+                            <Path
+                                Width="15"
+                                Height="15"
+                                x:Name="CheckMark"
+                                SnapsToDevicePixels="False"
+                                StrokeThickness="1"
+                                Stretch="Uniform"
+                                Data="M0 456C0 442.7 10.75 432 24 432H488C501.3 432 512 442.7 512 456C512 469.3 501.3 480 488 480H24C10.75 480 0 469.3 0 456z"
+                                Fill="#ccc">
+                            </Path>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CustomControlsDV:BlurHost">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CustomControlsDV:BlurHost">
+                        <Grid ClipToBounds="True">
+                            <!-- Blur layer beneath the hosted element (ContentPresenter) -->
+                            <Border x:Name="PART_BlurDecorator"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}" Margin="-10" />
+                            <ContentPresenter />
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>

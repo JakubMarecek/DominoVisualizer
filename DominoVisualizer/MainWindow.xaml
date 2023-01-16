@@ -3,8 +3,24 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:CustomControlsDV="clr-namespace:DominoVisualizer.CustomControls"
     xmlns:CustomControls="clr-namespace:WpfPanAndZoom.CustomControls"
     xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown" WindowStartupLocation="CenterScreen" Icon="domino.ico" Closing="Window_Closing">
+
+    <Window.Style>
+        <Style TargetType="{x:Type local:MainWindow}">
+            <Setter Property="WindowChrome.WindowChrome">
+                <Setter.Value>
+                    <WindowChrome
+                          ResizeBorderThickness="5"
+                          CaptionHeight="0"
+                          CornerRadius="0"
+                          GlassFrameThickness="0,0,0,1"
+                          />
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Style>
 
     <Window.Resources>
         <Storyboard x:Key="gridNoticeNoteFadeIn">
@@ -45,38 +61,46 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden">
-                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
-                    <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
-                    <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
+            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden" Margin="0,40,0,0">
+                <Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
+                    <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
+                        <Grid Background="#77000000">
+                            <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
+                            <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
 
-                    <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 
-                    <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
-                    
-                    <ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                            <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
 
-                    <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                        </Grid>
+                    </CustomControlsDV:BlurHost>
                 </Grid>
-                <Grid Background="#99000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
-                    <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                <Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
+                    <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
+                        <Grid Background="#77000000">
+                            <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                        </Grid>
+                    </CustomControlsDV:BlurHost>
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
@@ -552,7 +576,7 @@
                 </Grid>
             </Grid>
 
-            <Grid Width="Auto" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0">
+            <Grid Width="Auto" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
                 <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
             </Grid>
             <Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
@@ -587,6 +611,18 @@
                 </Grid>
             </Grid>
             <!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
+        </Grid>
+
+        <Grid Background="Black" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
+                <Grid Background="#77000000" MouseRightButtonUp="ShowSystemicMenu" MouseDown="MoveWnd" PreviewMouseDown="ChromeClick">
+                    <Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
+                    <Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="280,0,130,0" />
+                    <Button Style="{StaticResource MinBtnWhite}" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
+                    <Button Style="{StaticResource MaxBtnWhite}" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
+                    <Button Style="{StaticResource CloseBtnWhite}" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
+                </Grid>
+            </CustomControlsDV:BlurHost>
         </Grid>
     </Grid>
 </Window>

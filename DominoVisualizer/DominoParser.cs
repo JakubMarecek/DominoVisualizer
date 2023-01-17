@@ -21,7 +21,6 @@ using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
 using WpfPanAndZoom.CustomControls;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
@@ -92,6 +91,9 @@ namespace DominoVisualizer
 		 * -in data type select							ok
 		 * -setting box param - show type				ok
 		 * -saving new doc - make name from workspace	ok
+		 * -copy paste check game
+		 * -edit wnd header *
+		 * -comments bg color
 		 */
 
 		string workspaceName = "";

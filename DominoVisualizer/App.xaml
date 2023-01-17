@@ -543,7 +543,6 @@
         <Style TargetType="CheckBox">
             <Setter Property="SnapsToDevicePixels" Value="true" />
             <Setter Property="OverridesDefaultStyle" Value="true" />
-            <Setter Property="FocusVisualStyle" Value="{DynamicResource CheckBoxFocusVisual}" />
             <Setter Property="FontFamily" Value="/DominoVisualizer;component/OpenSans.ttf#Open Sans" />
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="Foreground">
@@ -805,6 +804,19 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="ScrollbarRepeatButton2" TargetType="RepeatButton">
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Background="#b2ad9f" Opacity="0.5">
+                            <ContentPresenter />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="VerticalThumb" TargetType="{x:Type Thumb}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -852,10 +864,10 @@
                         <Thumb Style="{StaticResource VerticalThumb}" Height="8" />
                     </Track.Thumb>
                     <Track.IncreaseRepeatButton>
-                        <RepeatButton Style="{StaticResource ScrollbarRepeatButton}" />
+                        <RepeatButton Style="{StaticResource ScrollbarRepeatButton2}" />
                     </Track.IncreaseRepeatButton>
                     <Track.DecreaseRepeatButton>
-                        <RepeatButton Style="{StaticResource ScrollbarRepeatButton}" />
+                        <RepeatButton Style="{StaticResource ScrollbarRepeatButton2}" />
                     </Track.DecreaseRepeatButton>
                 </Track>
             </Grid>
@@ -876,6 +888,59 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        
+        <Style x:Key="{x:Type ScrollViewer}" TargetType="{x:Type ScrollViewer}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollViewer">
+                        <Border CornerRadius="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid Background="{TemplateBinding Background}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Rectangle x:Name="Corner"
+                                    Grid.Column="1" Grid.Row="1"
+                                    Fill="Transparent"/>
+                                
+                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                    Grid.Column="0" Grid.Row="0"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    Content="{TemplateBinding Content}"
+                                    Margin="{TemplateBinding Padding}"/>
+                                
+                                <ScrollBar x:Name="PART_VerticalScrollBar"
+                                    Grid.Column="1" Grid.Row="0"
+                                    AutomationProperties.AutomationId="VerticalScrollBar"
+                                    Cursor="Arrow"
+                                    Maximum="{TemplateBinding ScrollableHeight}" Minimum="0"
+                                    Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                    Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                    ViewportSize="{TemplateBinding ViewportHeight}"/>
+                                
+                                <ScrollBar x:Name="PART_HorizontalScrollBar"
+                                    AutomationProperties.AutomationId="HorizontalScrollBar"
+                                    Cursor="Arrow"
+                                    Grid.Column="0" Grid.Row="1"
+                                    Maximum="{TemplateBinding ScrollableWidth}"
+                                    Minimum="0"
+                                    Orientation="Horizontal"
+                                    Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                    Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                    ViewportSize="{TemplateBinding ViewportWidth}"/>
+
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Application.Resources>
 </Application>

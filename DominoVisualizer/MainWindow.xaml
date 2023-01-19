@@ -617,7 +617,7 @@
             <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
                 <Grid Background="#77000000" MouseRightButtonUp="ShowSystemicMenu" MouseDown="MoveWnd" PreviewMouseDown="ChromeClick">
                     <Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
-                    <Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="280,0,130,0" />
+                    <Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
                     <Button Style="{StaticResource MinBtnWhite}" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
                     <Button Style="{StaticResource MaxBtnWhite}" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
                     <Button Style="{StaticResource CloseBtnWhite}" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />

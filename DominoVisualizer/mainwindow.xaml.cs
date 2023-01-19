@@ -47,10 +47,23 @@ namespace DominoVisualizer
 		public MainWindow()
 		{
 			InitializeComponent();
-			wndTitle.Content = Title = appName;
-			wndTitleW.Content = "";
+			SetTitle(true);
 			Blur(true);
 		}
+
+        public void SetTitle(bool clean, string file = "", bool edit = false)
+        {
+            if (clean)
+            {
+			    wndTitle.Content = Title = appName;
+			    wndTitleW.Content = "";
+            }
+            else
+            {
+                Title = appName + " - " + (edit ? "*" : "") + file;
+                wndTitleW.Content = " - " + (edit ? "*" : "") + file;
+            }
+        }
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -262,8 +275,7 @@ namespace DominoVisualizer
 
 			if (type == OpenType.Binary)
 			{
-				Title = appName + " - " + arguments["fn"];
-				wndTitleW.Content = " - " + arguments["fn"];
+    			SetTitle(false, arguments["fn"]);
 
 				externalLaunch = true;
 
@@ -288,8 +300,7 @@ namespace DominoVisualizer
             {
                 parser = new(this, directFile, canvas, game);
 
-                Title = appName + " - " + directFile;
-                wndTitleW.Content = " - " + directFile;
+    			SetTitle(false, directFile);
 
                 Loading();
             }
@@ -298,8 +309,7 @@ namespace DominoVisualizer
             {
                 parser = new(this, directFile, canvas);
 
-                Title = appName + " - " + directFile;
-                wndTitleW.Content = " - " + directFile;
+    			SetTitle(false, directFile);
 
                 Loading();
             }
@@ -307,15 +317,13 @@ namespace DominoVisualizer
 			if (type == OpenType.SwapGraph)
 			{
 				parser = new(this, directFile, canvas);
-                Title = appName + " - " + directFile;
-                wndTitleW.Content = " - " + directFile;
+    			SetTitle(false, directFile);
                 Loading();
 			}
 
 			if (type == OpenType.Create)
 			{
-                Title = appName + " - Unsaved workspace";
-                wndTitleW.Content = " - Unsaved workspace";
+    			SetTitle(false, "Unsaved workspace");
 
 				parser = new(this, canvas, game);
                 //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
@@ -558,8 +566,7 @@ namespace DominoVisualizer
                 parser = null;
                 GC.Collect();
 
-                Title = appName;
-                wndTitleW.Content = "";
+    			SetTitle(true);
 
                 Blur(true);
                 Animation(true, screen);

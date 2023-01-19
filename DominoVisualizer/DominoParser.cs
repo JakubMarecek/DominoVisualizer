@@ -91,8 +91,8 @@ namespace DominoVisualizer
 		 * -in data type select							ok
 		 * -setting box param - show type				ok
 		 * -saving new doc - make name from workspace	ok
-		 * -copy paste check game
-		 * -edit wnd header *
+		 * -copy paste check game						ok
+		 * -edit wnd header *							ok
 		 * -comments bg color
 		 */
 
@@ -122,7 +122,7 @@ namespace DominoVisualizer
 		MemoryStream luaFile = null;
 		StreamReader reader = null;
 		PanAndZoomCanvas canvas;
-		Window wnd;
+		MainWindow wnd;
 
 		DominoBox tempBox = null;
 		List<string> processedBoxes = new();
@@ -174,7 +174,7 @@ namespace DominoVisualizer
 
 		public string CurrentDatPath { get { return datPath; } }
 
-		public DominoParser(Window window, PanAndZoomCanvas canvas, string game)
+		public DominoParser(MainWindow window, PanAndZoomCanvas canvas, string game)
 		{
 			this.wnd = window;
 			this.canvas = canvas;
@@ -186,7 +186,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(Window window, string dominoPath, PanAndZoomCanvas canvas)
+		public DominoParser(MainWindow window, string dominoPath, PanAndZoomCanvas canvas)
         {
             this.wnd = window;
             file = dominoPath;
@@ -197,7 +197,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(Window window, string dominoPath, PanAndZoomCanvas canvas, string game)
+		public DominoParser(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoPath;
@@ -212,7 +212,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(Window window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
+		public DominoParser(MainWindow window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoSearchFolder;
@@ -1427,10 +1427,10 @@ namespace DominoVisualizer
 			public ArrowLine UI { set; get; }
 		}
 
-		List<LinesVal> lines = new();
-		int width = 300;
-		int spaceX = 400;
-		private List<Color> linesColors = new();
+        private readonly List<LinesVal> lines = new();
+        private readonly int width = 300;
+        private readonly int spaceX = 400;
+		private readonly List<Color> linesColors = new();
 
 		private void AddColors()
 		{
@@ -3220,8 +3220,8 @@ namespace DominoVisualizer
 			EditExecBoxUIGetParams(paramsList);
 			execBoxEdit.Params = paramsEdit;
 
-			execBoxEdit.MainUI.Children.Clear();
-			DrawExecBoxChildren(connEdit, execBoxEdit, execBoxEdit.MainUI);
+			//execBoxEdit.MainUI.Children.Clear();
+			//DrawExecBoxChildren(connEdit, execBoxEdit, execBoxEdit.MainUI);
 
 			foreach (var c in dominoConnectors.Values)
 			{
@@ -4492,16 +4492,8 @@ namespace DominoVisualizer
 
 		private void WasEdited(bool clean = false)
 		{
-			if (clean)
-            {
-                wasEdited = false;
-                wnd.Title = MainWindow.appName + " - " + file;
-            }
-			else
-            {
-                wasEdited = true;
-                wnd.Title = MainWindow.appName + " - *" + file;
-            }
+			wasEdited = !clean;
+			wnd.SetTitle(clean, file, wasEdited);
         }
 
 		public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, string forceReload);
@@ -5412,6 +5404,10 @@ namespace DominoVisualizer
 			}
 
 			XElement xGraph = new("Graph");
+
+			if (UIList != null)
+				xGraph.Add(new XElement("Game", game));
+
 			if (!afterDelete)
 			{
 				double sX = double.MaxValue;
@@ -5719,6 +5715,14 @@ namespace DominoVisualizer
 
 		private void XMLToData(XElement xGraph, bool asNew = false)
 		{
+			var g = xGraph.Element("Game");
+			if (g != null)
+				if (g.Value != game)
+				{
+					openInfoDialog("Paste", "Copied data are from different game version. It's not possible to copy from different game versions due to different Domino boxes.");
+					return;
+				}
+
 			Dictionary<string, string> oldNewBoxes = new();
 			Dictionary<string, string> oldNewConns = new();
             Dictionary<string, DominoBox> boxes = new();

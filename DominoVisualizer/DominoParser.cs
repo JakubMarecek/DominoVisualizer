@@ -93,7 +93,9 @@ namespace DominoVisualizer
 		 * -saving new doc - make name from workspace	ok
 		 * -copy paste check game						ok
 		 * -edit wnd header *							ok
-		 * -comments bg color
+		 * -comments bg color							maybe
+		 * -edit border - load transparent checkbox
+		 * -save wnd file name
 		 */
 
 		string workspaceName = "";

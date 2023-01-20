@@ -399,7 +399,7 @@
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Visible">
+            <Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Edit comment" Style="{StaticResource Header}" />
@@ -576,8 +576,12 @@
                 </Grid>
             </Grid>
 
-            <Grid Width="Auto" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
-                <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
+            <Grid Width="Auto" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
+                <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
+                    <Grid Background="#77000000">
+                        <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
+                    </Grid>
+                </CustomControlsDV:BlurHost>
             </Grid>
             <Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
                 <Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />

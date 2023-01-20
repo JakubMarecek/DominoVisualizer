@@ -1012,6 +1012,8 @@ namespace DominoVisualizer
 
             if (selBgClr == -1)
                 addBorderBgTr.IsChecked = true;
+            else
+                addBorderBgTr.IsChecked = false;
 
             Animation(true, gridDialogAddBorder);
         }

@@ -94,8 +94,8 @@ namespace DominoVisualizer
 		 * -copy paste check game						ok
 		 * -edit wnd header *							ok
 		 * -comments bg color							maybe
-		 * -edit border - load transparent checkbox
-		 * -save wnd file name
+		 * -edit border - load transparent checkbox		ok
+		 * -save wnd file name							ok
 		 */
 
 		string workspaceName = "";
@@ -4492,10 +4492,10 @@ namespace DominoVisualizer
 
 
 
-		private void WasEdited(bool clean = false)
+		private void WasEdited(bool saved = false)
 		{
-			wasEdited = !clean;
-			wnd.SetTitle(clean, file, wasEdited);
+			wasEdited = !saved;
+			wnd.SetTitle(false, file, wasEdited);
         }
 
 		public delegate void SetWorkspaceName(string workspace, List<DominoGraph> graphs, int selGraph, string forceReload);

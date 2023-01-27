@@ -3434,7 +3434,7 @@ namespace DominoVisualizer
 			openAddBoxConnectorDialog(boxFuncs, connectors);
 		}
 
-		public void AddBoxConnectorCreate(string selBoxFnc, string selConn, bool? addAsArray, string arrayKey)
+		public string AddBoxConnectorCreate(string selBoxFnc, string selConn, bool? addAsArray, string arrayKey)
 		{
 			//canvas.ResetZoom();
 
@@ -3522,6 +3522,11 @@ namespace DominoVisualizer
 				var ec = boxEdit.Connections.Where(a => a.UniqueID == selBoxFnc && a.FromBoxConnectID == i).SingleOrDefault();
 				if (a[i].UniqueID == selBoxFnc && ec == null)
 				{
+					if (a[i].AnchorDynType > 0 && addAsArray != true)
+					{
+						return "Selected output is dynamic, so you must select \"Add as array value\".";
+					}
+
 					boxEdit.Connections.Add(add(i, a[i].Name)); //add new root
 				}
 				if (ec != null)
@@ -3537,6 +3542,8 @@ namespace DominoVisualizer
 			canvas.RefreshChilds();
 
             WasEdited();
+
+			return "";
         }
 
 

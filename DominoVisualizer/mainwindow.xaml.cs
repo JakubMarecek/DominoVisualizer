@@ -774,7 +774,12 @@ namespace DominoVisualizer
 					OpenInfoDialog("Add box connector", "No output selected or missing connector.");
 					return;
                 }
-                parser.AddBoxConnectorCreate(((ExecEntry)addBoxConnectorB.SelectedItem).Num, ((ExecEntry)addBoxConnectorC.SelectedItem).Name, addBoxConnectorArray.IsChecked, addBoxConnectorArrayKey.Text);
+                var a = parser.AddBoxConnectorCreate(((ExecEntry)addBoxConnectorB.SelectedItem).Num, ((ExecEntry)addBoxConnectorC.SelectedItem).Name, addBoxConnectorArray.IsChecked, addBoxConnectorArrayKey.Text);
+                if (a != "")
+                {
+                    OpenInfoDialog("Add box connector", a);
+                    return;
+                }
             }
 
             Animation(false, gridDialogAddBoxConnector);

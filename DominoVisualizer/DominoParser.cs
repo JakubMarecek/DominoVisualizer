@@ -4498,6 +4498,24 @@ namespace DominoVisualizer
 
 
 
+		private string MakeDebugFunction()
+		{
+			// write box input data - as array, table via func param
+			// param - current func name, to box name + exec box func
+
+			string func =
+				"function export:WriteDebugToFile()" +
+				"" +
+				"" +
+				"" +
+				"" +
+				"" +
+                "end";
+
+			return func;
+		}
+
+
 
 		private void WasEdited(bool saved = false)
 		{

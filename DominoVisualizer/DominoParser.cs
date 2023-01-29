@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -96,6 +97,7 @@ namespace DominoVisualizer
 		 * -comments bg color							maybe
 		 * -edit border - load transparent checkbox		ok
 		 * -save wnd file name							ok
+		 * -new execbox - str missing
 		 */
 
 		string workspaceName = "";
@@ -4498,21 +4500,87 @@ namespace DominoVisualizer
 
 
 
-		private string MakeDebugFunction()
+		private string MakeDebugFunction(string luaFile)
 		{
 			// write box input data - as array, table via func param
-			// param - current func name, to box name + exec box func
+			// param - from box name + out func, to box name + exec box func
 
+			string nl = Environment.NewLine;
 			string func =
-				"function export:WriteDebugToFile()" +
-				"" +
-				"" +
-				"" +
-				"" +
-				"" +
-                "end";
+                $"function export:WriteDebugToFile(params, frombox, tobox, infunc, vars)" + nl +
+                $"  local buffer = \"\"" + nl +
+                $"  buffer = buffer .. \"[\" .. tostring(os.date()) .. \"] \"" + nl +
+                $"  buffer = buffer .. \"Workspace: {workspaceName}, \"" + nl +
+                $"  buffer = buffer .. \"Graph: {dominoGraphs[selGraph].Name}, \"" + nl +
+                $"  buffer = buffer .. \"Script: {luaFile}, \"" + nl +
+                $"" + nl +
+                $"  if frombox ~= \"\" then" + nl +
+                $"    buffer = buffer .. \"FromBox: \" .. frombox .. \", \"" + nl +
+                $"  end" + nl +
+                $"" + nl +
+                $"  if tobox ~= \"\" then" + nl +
+                $"    buffer = buffer .. \"ToBox: \" .. tobox .. \", \"" + nl +
+                $"  end" + nl +
+                $"" + nl +
+                $"  buffer = buffer .. \"InFunc: \" .. infunc .. \", \"" + nl +
+                $"" + nl +
+                $"  if tobox ~= \"\" then" + nl +
+                $"    buffer = buffer .. \"ExecBoxParams: \" .. self:WriteDebugToFileParams(params)" + nl +
+                $"  end" + nl +
+                $"" + nl +
+                $"  if vars ~= \"\" then" + nl +
+                $"    buffer = buffer .. \"Set to variable \" .. vars .. \": \" .. self:WriteDebugToFileParams(params)" + nl +
+                $"  end" + nl +
+                $"" + nl +
+                $"  local file, err = io.open(\"DominoDebug.log\", \"a+\")" + nl +
+                $"  if file ~= nil and err == nil then" + nl +
+                $"    io.output(file)" + nl +
+                $"    io.write(buffer .. \"\\n\")" + nl +
+                $"    file:flush()" + nl +
+                $"    file:close()" + nl +
+                $"    file = nil" + nl +
+                $"  end" + nl +
+                $"end" + nl +
+                $"function export:WriteDebugToFileVal(value)" + nl +
+                $"  local isStr = type(value) == \"string\"" + nl +
+                $"  local buffer = (isStr and \"\\\"\" or \"\") .. tostring(value) .. (isStr and \"\\\"\" or \"\")" + nl +
+                $"  if isStr then" + nl +
+                $"    if (value):match(\"^%-?%d+$\") ~= nil then" + nl +
+                $"      if tonumber(value) > 10000000000 then" + nl +
+                $"        buffer = buffer .. \" (\" .. CAPI_Entity.GetName(value) .. \")\"" + nl +
+                $"      end" + nl +
+                $"    end" + nl +
+                $"  end" + nl +
+                $"  return buffer" + nl +
+                $"end" + nl +
+                $"function export:WriteDebugToFileParams(params)" + nl +
+                $"  local buffer = \"\"" + nl +
+                $"" + nl +
+                $"  if type(params) == \"table\" then" + nl +
+                $"    buffer = buffer .. \"{{\"" + nl +
+                $"    for key,value in pairs(params) do" + nl +
+                $"      local kn = \"\"" + nl +
+                $"      if type(key) == \"number\" then" + nl +
+                $"        kn = string.format(\"%.0f\",key)" + nl +
+                $"      else" + nl +
+                $"        kn = \"\\\"\" .. key .. \"\\\"\"" + nl +
+                $"      end" + nl +
+                $"      if type(value) == \"table\" then" + nl +
+                $"        buffer = buffer .. \"[\" .. kn .. \"] = \" .. self:WriteDebugToFileParams(value)" + nl +
+                $"      else" + nl +
+                $"        buffer = buffer .. \"[\" .. kn .. \"] = \" .. self:WriteDebugToFileVal(value)" + nl +
+                $"      end" + nl +
+                $"      buffer = buffer .. \", \"" + nl +
+                $"    end" + nl +
+                $"    buffer = buffer .. \"}}\"" + nl +
+                $"  else" + nl +
+                $"    buffer = buffer .. self:WriteDebugToFileVal(params)" + nl +
+                $"  end" + nl +
+                $"" + nl +
+                $"  return buffer" + nl +
+                $"end";
 
-			return func;
+            return func;
 		}
 
 
@@ -4908,15 +4976,56 @@ namespace DominoVisualizer
 					else
 						streamWriter.WriteLine($"  l0 = {exec.Box.ID}");
 
-					streamWriter.WriteLine($"  l0:Exec{(exec.Type == ExecType.ExecDynInt ? "DynInt" : "")}({exec.Exec}, {(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}{(exec.Type == ExecType.ExecDynInt ? ", " + exec.DynIntExec : "")})");
+
+
+
+					/*
+
+					string frombox = "";
+                    (bool, string) findBox(List<DominoConnector> cns, string s = "")
+                    {
+                        foreach (var c in cns)
+                        {
+                            if (c.ID == conn.Value.ID)
+                                return (true, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
+                        }
+                        foreach (var c in cns)
+                        {
+                            if (c.SubConnections != null)
+							{
+								var a = findBox(c.SubConnections, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
+								if (a.Item1)
+									return a;
+                            }
+                        }
+                        return (false, s);
+					}
+                    foreach (var db in dominoBoxes.Values)
+                    {
+						var rd = findBox(db.Connections);
+                        if (rd.Item1)
+							frombox = db.ID + rd.Item2;
+                    }
+
+                    streamWriter.WriteLine($"  self:WriteDebugToFile({(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}, \"{frombox}\", \"{exec.Box.ID}.{exec.ExecStr}{(exec.Type == ExecType.ExecDynInt ? "[" + exec.DynIntExec.ToString() + "]" : "")}\", \"{conn.Value.ID}\", \"\")");
+
+					*/
+
+
+
+
+
+
+                    streamWriter.WriteLine($"  l0:Exec{(exec.Type == ExecType.ExecDynInt ? "DynInt" : "")}({exec.Exec}, {(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}{(exec.Type == ExecType.ExecDynInt ? ", " + exec.DynIntExec : "")})");
 
 					if (wasLocalBox)
 						streamWriter.WriteLine($"  l0:SetParentGraph(nil)");
 				}
 
 				foreach (var otf in conn.Value.OutFuncName)
-				{
-					streamWriter.WriteLine($"  self:{otf}()");
+                {
+                    streamWriter.WriteLine($"  self:WriteDebugToFile(\"\", \"\", \"\", \"{otf}\", \"\")");
+                    streamWriter.WriteLine($"  self:{otf}()");
 
 					if (!outFncs.Contains(otf))
 						outFncs.Add(otf);
@@ -5106,7 +5215,8 @@ namespace DominoVisualizer
 			{
 				if (conn.Value.SetVariables.Count > 0)
 				{
-					streamWriter.WriteLine($"function export:{conn.Value.ID.Replace("f_", "ex_")}()");
+					var ncf = conn.Value.ID.Replace("f_", "ex_");
+                    streamWriter.WriteLine($"function export:{ncf}()");
 
 					Dictionary<string, string> tmpVars = new();
 					List<string> tmpVarsSets = new();
@@ -5206,10 +5316,16 @@ namespace DominoVisualizer
 						}
 
 						streamWriter.WriteLine($"  {tmpVar.Value} = {bb}");
-					}
+                    }
 
-					foreach (var tmpVarSet in tmpVarsSets)
-						streamWriter.WriteLine($"  {tmpVarSet}");
+                    foreach (var tmpVarSet in tmpVarsSets)
+                    {
+                        streamWriter.WriteLine($"  {tmpVarSet}");
+						/*
+						var aaa = tmpVarSet.Split('=', 2);
+                        streamWriter.WriteLine($"  self:WriteDebugToFile({aaa[0].Trim()}, \"\", \"\", \"{ncf}\", \"{aaa[0].Trim()}\")");
+						*/
+                    }
 
 					streamWriter.WriteLine("end");
 				}
@@ -5219,9 +5335,11 @@ namespace DominoVisualizer
 			{
 				streamWriter.WriteLine($"function export:{otf}()");
 				streamWriter.WriteLine("end");
-			}
+            }
 
-			streamWriter.WriteLine("_compilerVersion = 60");
+            //streamWriter.WriteLine(MakeDebugFunction(Path.GetFileName(exportPath)));
+
+            streamWriter.WriteLine("_compilerVersion = 60");
 			streamWriter.Close();
 
 			XDocument doc = new();

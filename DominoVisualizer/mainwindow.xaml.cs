@@ -196,6 +196,7 @@ namespace DominoVisualizer
 				        	parser.openEditConnectorDialog = OpenEditConnectorDialog;
                             parser.openInfoDialog = OpenInfoDialog;
                             parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
+                            parser.openNotice = ShowNotice;
 
                             loaded = true;
 				        	Animation(true, gridMainClose);
@@ -646,18 +647,7 @@ namespace DominoVisualizer
 
 		private void ButtonExport_Click(object sender, RoutedEventArgs e)
 		{
-			var a = parser.Export();
-            if (a == "r")
-            {
-            }
-            else if (a != "")
-            {
-				OpenInfoDialog("Export", a);
-            }
-			else
-			{
-				ShowNotice("Domino has been successfully exported to LUA.");
-			}
+            parser.Export();
         }
 
 		private void ButtonSave_Click(object sender, RoutedEventArgs e)

@@ -97,7 +97,7 @@ namespace DominoVisualizer
 		 * -comments bg color							maybe
 		 * -edit border - load transparent checkbox		ok
 		 * -save wnd file name							ok
-		 * -new execbox - str missing
+		 * -new execbox - str missing					not err
 		 */
 
 		string workspaceName = "";
@@ -4629,7 +4629,7 @@ namespace DominoVisualizer
 				}
 
 				// todo check if box exists in other graphs
-				var gbp = BuildGraphName(g, true);
+				var gbp = BuildGraphName(g, true, false);
 				var ge = dominoGraphs.Any(a => a.ContainsBoxes.Contains(gbp));
 				if (ge)
 				{
@@ -4648,9 +4648,9 @@ namespace DominoVisualizer
 			});
 		}
 
-		private string BuildGraphName(DominoGraph graph, bool inDatPath)
+		private string BuildGraphName(DominoGraph graph, bool inDatPath, bool debug)
 		{
-			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".debug" : "") + ".lua";
 
 			if (inDatPath)
 				f = datPath + f;
@@ -4660,7 +4660,7 @@ namespace DominoVisualizer
 			return f;
 		}
 
-		private string BuildGraphName(string boxName)
+		private string BuildGraphName(string boxName, bool debug)
 		{
 			if (regBoxesAll.ContainsKey(boxName))
 				if (regBoxesAll[boxName].INT_Graph)
@@ -4669,7 +4669,7 @@ namespace DominoVisualizer
 
 					DominoGraph graph = dominoGraphs.Where(a => a.Name == boxName.Replace("GRAPH: ", "")).Single();
 
-					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".debug" : "") + ".lua";
 					boxName = boxName.Replace("\\", "/").ToLower();
 				}
 			
@@ -4727,14 +4727,36 @@ namespace DominoVisualizer
 			return "";
 		}
 
-		public string Export()
+        public delegate void OpenNotice(string text);
+        public OpenNotice openNotice;
+
+		public void Export()
+		{
+			var a = ExportWrite(false);
+			if (a == "r")
+			{
+			}
+			else if (a != "")
+				openInfoDialog("Export", a);
+			else
+				openNotice("Domino has been successfully exported to LUA.");
+
+			AskDialog("Export", "Export also debug files? To use debug you must export all graphs with debug.", () =>
+			{
+				string r = ExportWrite(true);
+				if (a != "")
+					openInfoDialog("Export", a);
+			});
+		}
+
+		private string ExportWrite(bool debug)
 		{
 			var acb = CheckConnBox();
 			if (acb != "")
 				return acb;
 
 			string exportPath = "";
-			string fileName = BuildGraphName(dominoGraphs[selGraph], false);
+			string fileName = BuildGraphName(dominoGraphs[selGraph], false, debug);
 
 			if (file == "" || file.EndsWith(".lua"))
 			{
@@ -4776,6 +4798,14 @@ namespace DominoVisualizer
 			streamWriter.WriteLine("--   Workspace:     " + workspaceName);
 			streamWriter.WriteLine("--   Graph:         " + dominoGraphs[selGraph].Name);
 			streamWriter.WriteLine("--");
+
+			if (debug)
+			{
+				streamWriter.WriteLine("-- This is a debug file. It's not recommended to use it in production,");
+				streamWriter.WriteLine("-- because it prints a lot of data, it can slow down the game.");
+				streamWriter.WriteLine("--");
+			}
+
 			streamWriter.WriteLine("-- DO NOT EDIT MANUALLY THIS FILE OR YOUR CHANGES WILL BE LOST!");
 			streamWriter.WriteLine("-- Please modify the original Domino script instead. You have been warned.");
             streamWriter.WriteLine("");
@@ -4798,7 +4828,7 @@ namespace DominoVisualizer
 			var usedBoxes = regBoxesAll.Where(a => usedBoxesN.Contains(a.Key)).ToList().Distinct();
 			foreach (var usedBox in usedBoxes)
             {
-				var bn = BuildGraphName(usedBox.Key);
+				var bn = BuildGraphName(usedBox.Key, debug);
                 streamWriter.WriteLine($"    cboxRes:RegisterBox(\"{bn}\")");
 				exportDepData.Add(bn, "CDominoBoxResource");
             }
@@ -4819,7 +4849,7 @@ namespace DominoVisualizer
 
 				foreach (var regBox in usedBoxes)
 				{
-					streamWriter.WriteLine($"  metadataTable[GetPathID(\"{BuildGraphName(regBox.Key)}\")] = {{");
+					streamWriter.WriteLine($"  metadataTable[GetPathID(\"{BuildGraphName(regBox.Key, debug)}\")] = {{");
 					streamWriter.WriteLine($"    stateless = {(regBox.Value.IsStateless ? "true" : "false")},");
 
 					streamWriter.Write($"    controlIn = {{");
@@ -4916,7 +4946,7 @@ namespace DominoVisualizer
 			{
 				if (box.Value.ID.StartsWith("self["))
 				{
-					string bn = BuildGraphName(box.Value.Name);
+					string bn = BuildGraphName(box.Value.Name, debug);
 
 					if (game == "fc6")
 						streamWriter.WriteLine($"  {box.Value.ID} = cbox:CreateBox_PathID(\"{CRC64.Hash(bn.ToLower().Replace("/", "\\"))}\")");
@@ -4966,7 +4996,7 @@ namespace DominoVisualizer
 					{
 						wasLocalBox = true;
 
-						string bn = BuildGraphName(exec.Box.Name);
+						string bn = BuildGraphName(exec.Box.Name, debug);
 
 						if (game == "fc6")
 							streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(bn.ToLower().Replace("/", "\\"))}\"]");
@@ -4976,45 +5006,36 @@ namespace DominoVisualizer
 					else
 						streamWriter.WriteLine($"  l0 = {exec.Box.ID}");
 
+					if (debug)
+					{
+						string frombox = "";
+                    	(bool, string) findBox(List<DominoConnector> cns, string s = "")
+                    	{
+                    	    foreach (var c in cns)
+                    	    {
+                    	        if (c.ID == conn.Value.ID)
+                    	            return (true, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
+                    	    }
+                    	    foreach (var c in cns)
+                    	    {
+                    	        if (c.SubConnections != null)
+								{
+									var a = findBox(c.SubConnections, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
+									if (a.Item1)
+										return a;
+                    	        }
+                    	    }
+                    	    return (false, s);
+						}
+                    	foreach (var db in dominoBoxes.Values)
+                    	{
+							var rd = findBox(db.Connections);
+                    	    if (rd.Item1)
+								frombox = db.ID + rd.Item2;
+                    	}
 
-
-
-					/*
-
-					string frombox = "";
-                    (bool, string) findBox(List<DominoConnector> cns, string s = "")
-                    {
-                        foreach (var c in cns)
-                        {
-                            if (c.ID == conn.Value.ID)
-                                return (true, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
-                        }
-                        foreach (var c in cns)
-                        {
-                            if (c.SubConnections != null)
-							{
-								var a = findBox(c.SubConnections, s + (c.FromBoxConnectIDStr != "" ? ("." + c.FromBoxConnectIDStr) : ("[" + c.FromBoxConnectID.ToString() + "]")));
-								if (a.Item1)
-									return a;
-                            }
-                        }
-                        return (false, s);
+                    	streamWriter.WriteLine($"  self:WriteDebugToFile({(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}, \"{frombox}\", \"{exec.Box.ID}.{exec.ExecStr}{(exec.Type == ExecType.ExecDynInt ? "[" + exec.DynIntExec.ToString() + "]" : "")}\", \"{conn.Value.ID}\", \"\")");
 					}
-                    foreach (var db in dominoBoxes.Values)
-                    {
-						var rd = findBox(db.Connections);
-                        if (rd.Item1)
-							frombox = db.ID + rd.Item2;
-                    }
-
-                    streamWriter.WriteLine($"  self:WriteDebugToFile({(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}, \"{frombox}\", \"{exec.Box.ID}.{exec.ExecStr}{(exec.Type == ExecType.ExecDynInt ? "[" + exec.DynIntExec.ToString() + "]" : "")}\", \"{conn.Value.ID}\", \"\")");
-
-					*/
-
-
-
-
-
 
                     streamWriter.WriteLine($"  l0:Exec{(exec.Type == ExecType.ExecDynInt ? "DynInt" : "")}({exec.Exec}, {(exec.Params.Count > 0 || wasLocalBox ? "params" : "{}")}{(exec.Type == ExecType.ExecDynInt ? ", " + exec.DynIntExec : "")})");
 
@@ -5072,7 +5093,7 @@ namespace DominoVisualizer
 
 										if (dominoBoxes.ContainsKey(bN) && bN.StartsWith("en_"))
 										{
-											string bn = BuildGraphName(dominoBoxes[bN].Name);
+											string bn = BuildGraphName(dominoBoxes[bN].Name, debug);
 
 											if (game == "fc6")
 												bN = "Boxes[\"" + CRC64.Hash(bn.ToLower().Replace("/", "\\")) + "\"]";
@@ -5100,7 +5121,7 @@ namespace DominoVisualizer
 
 						if (wasLocalBox)
 						{
-							string bn = BuildGraphName(exec.Box.Name);
+							string bn = BuildGraphName(exec.Box.Name, debug);
 
 							if (game == "fc6")
 								streamWriter.WriteLine($"  l0 = Boxes[\"{CRC64.Hash(bn.ToLower().Replace("/", "\\"))}\"]");
@@ -5307,7 +5328,7 @@ namespace DominoVisualizer
 
 						if (dominoBoxes.ContainsKey(tmpVar.Key) && tmpVar.Key.StartsWith("en_"))
 						{
-							string bn = BuildGraphName(dominoBoxes[tmpVar.Key].Name);
+							string bn = BuildGraphName(dominoBoxes[tmpVar.Key].Name, debug);
 
 							if (game == "fc6")
 								bb = "Boxes[\"" + CRC64.Hash(bn.ToLower().Replace("/", "\\")) + "\"]";
@@ -5321,10 +5342,12 @@ namespace DominoVisualizer
                     foreach (var tmpVarSet in tmpVarsSets)
                     {
                         streamWriter.WriteLine($"  {tmpVarSet}");
-						/*
-						var aaa = tmpVarSet.Split('=', 2);
-                        streamWriter.WriteLine($"  self:WriteDebugToFile({aaa[0].Trim()}, \"\", \"\", \"{ncf}\", \"{aaa[0].Trim()}\")");
-						*/
+
+						if (debug)
+						{
+							var aaa = tmpVarSet.Split('=', 2);
+                       		streamWriter.WriteLine($"  self:WriteDebugToFile({aaa[0].Trim()}, \"\", \"\", \"{ncf}\", \"{aaa[0].Trim()}\")");
+						}
                     }
 
 					streamWriter.WriteLine("end");
@@ -5337,7 +5360,8 @@ namespace DominoVisualizer
 				streamWriter.WriteLine("end");
             }
 
-            //streamWriter.WriteLine(MakeDebugFunction(Path.GetFileName(exportPath)));
+			if (debug)
+            	streamWriter.WriteLine(MakeDebugFunction(Path.GetFileName(exportPath)));
 
             streamWriter.WriteLine("_compilerVersion = 60");
 			streamWriter.Close();

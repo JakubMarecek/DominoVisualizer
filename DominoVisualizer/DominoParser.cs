@@ -1537,24 +1537,14 @@ namespace DominoVisualizer
         }
 
 		private void HandleMoving(string id, double x, double y)
-		{
-			/*foreach (var line in lines)
-			{
-				if (line.Point1 == id + "-P1" || line.Point1 == id + "-P2")
-				{
-					line.UI.X1 = x + width;
-					line.UI.Y1 = y;
-				}
-				if (line.Point2 == id + "-P2" || line.Point2 == id + "-P1")
-				{
-					line.UI.X2 = x;
-					line.UI.Y2 = y;
-				}
-			}*/
+        {
+            dominoConnectors.TryGetValue(id, out var conn);
+            if (conn != null)
+                AddConnectorLines(conn, 1);
 
-			dominoBoxes.TryGetValue(id, out var box);
+            dominoBoxes.TryGetValue(id, out var box);
 			if (box != null)
-				AddBoxLines(box, false);
+				AddBoxLines(box, 1);
 
 			WasEdited();
         }
@@ -1918,10 +1908,10 @@ namespace DominoVisualizer
 				DrawChilds(inConn, 0, staticBoxesHeight + inConn.DrawY);
 
             foreach (var c in dominoConnectors.Values)
-                AddConnectorLines(c);
+                AddConnectorLines(c, 0);
 
             foreach (var b in dominoBoxes.Values)
-                AddBoxLines(b, true);
+                AddBoxLines(b, 0);
 
             HandleMoved();
 
@@ -2267,7 +2257,7 @@ namespace DominoVisualizer
 			return sp;
 		}
 
-		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", bool addLine = true, int selClr = -1)
+		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1)
 		{
 			string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
 			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
@@ -2293,11 +2283,6 @@ namespace DominoVisualizer
 				box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
-
-				if (addLine)
-				{
-					//AddConnectorLines(c);
-				}
 			}
 
 			foreach (var sc in c.SubConnections)
@@ -2475,16 +2460,16 @@ namespace DominoVisualizer
 			wiMetaControlOut.list.Children.Add(b2);
 		}
 
-		private void RemoveLine(string a, string b)
+		private void RemoveLine(string a, string b = "")
 		{
 			foreach (var i in lines)
-				if (i.Point1 == a && i.Point2 == b)
+				if (i.Point1 == a || i.Point2 == a)
 				{
 					canvas.Children.Remove(i.UI);
 					break;
 				}
 
-			lines.RemoveAll(aa => aa.Point1 == a && aa.Point2 == b);
+			lines.RemoveAll(aa => aa.Point1 == a || aa.Point2 == a);
 		}
 
 		private void RemoveConector(object sender, RoutedEventArgs e)
@@ -2829,7 +2814,7 @@ namespace DominoVisualizer
 		}
 
 
-        private void AddConnectorLines(DominoConnector conn)
+        private void AddConnectorLines(DominoConnector conn, int draw)
         {
             double posYCo = 32;
 
@@ -2851,15 +2836,40 @@ namespace DominoVisualizer
                     var a = canvas.Transform2(new(Canvas.GetLeft(execBox.Box.Widget), Canvas.GetTop(execBox.Box.Widget)));
                     var b = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
 
-                    DrawLine(
-                        b.X + width,
-                        b.Y + posYCo,
-                        a.X,
-                        a.Y,
-                        conn.ID + "-OUT" + "-" + execBox.Box.ID,
-                        execBox.Box.ID + "-IN",
-						linesColors.FindIndex(a => a == execBox.INT_clr)
-                    );
+					if (draw == 0 || draw == 2)
+                    {
+						string p1 = conn.ID + "-OUT-" + execBox.Box.ID;
+						string p2 = execBox.Box.ID + "-IN";
+
+						if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
+							DrawLine(
+								b.X + width,
+								b.Y + posYCo,
+								a.X,
+								a.Y,
+								p1,
+								p2,
+								linesColors.FindIndex(a => a == execBox.INT_clr)
+							);
+                    }
+					
+					if (draw == 1 || draw == 2)
+                    {
+                        foreach (var line in lines)
+                        {
+                            if (line.Point1 == conn.ID + "-OUT-" + execBox.Box.ID && line.Point2 == execBox.Box.ID + "-IN")
+                            {
+                                line.UI.X1 = b.X + width;
+                                line.UI.Y1 = b.Y + posYCo;
+                            }
+
+                            if (line.Point2 == conn.ID + "-IN")
+                            {
+                                line.UI.X2 = b.X;
+                                line.UI.Y2 = b.Y;
+                            }
+                        }
+                    }
 
                     posYCo += 22;
                     for (int bbb = 0; bbb < execBox.Params.Count; bbb++)
@@ -2868,7 +2878,7 @@ namespace DominoVisualizer
             }
         }
 
-		private void AddBoxLines(DominoBox box, bool draw)
+		private void AddBoxLines(DominoBox box, int draw)
         {
             double posYCo = 52;
 
@@ -2883,19 +2893,24 @@ namespace DominoVisualizer
                             var a = canvas.Transform2(new(Canvas.GetLeft(c.Widget), Canvas.GetTop(c.Widget)));
                             var b = canvas.Transform2(new(Canvas.GetLeft(box.Widget), Canvas.GetTop(box.Widget)));
 
-							if (draw)
+							if (draw == 0 || draw == 2)
                             {
-                                DrawLine(
-                                    b.X + width,
-                                    b.Y + posYCo,
-                                    a.X,
-                                    a.Y,
-                                    box.ID + "-OUT" + "-" + c.ID,
-                                    c.ID + "-IN",
-                                    c.INT_clr
-                                );
+                                string p1 = box.ID + "-OUT" + "-" + c.ID;
+                                string p2 = c.ID + "-IN";
+
+								if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
+									DrawLine(
+										b.X + width,
+										b.Y + posYCo,
+										a.X,
+										a.Y,
+										p1,
+										p2,
+										c.INT_clr
+									);
                             }
-							else
+							
+							if (draw == 1 || draw == 2)
                             {
                                 foreach (var line in lines)
                                 {
@@ -2903,6 +2918,12 @@ namespace DominoVisualizer
                                     {
                                         line.UI.X1 = b.X + width;
                                         line.UI.Y1 = b.Y + posYCo;
+                                    }
+
+									if (line.Point2 == box.ID + "-IN")
+                                    {
+                                        line.UI.X2 = b.X;
+                                        line.UI.Y2 = b.Y;
                                     }
                                 }
                             }
@@ -3277,6 +3298,7 @@ namespace DominoVisualizer
 						ceb.Params = paramsEdit;
 						ceb.MainUI.Children.Clear();
 						DrawExecBoxChildren(c, ceb, ceb.MainUI);
+						AddConnectorLines(c, 1);
 					}
 				}
 			}
@@ -3297,7 +3319,9 @@ namespace DominoVisualizer
 				c.Widget.list.Children.Remove(eb.ContainerUI);
 				c.ExecBoxes.RemoveAll(a => a.Box.ID == ids[1]);
 
-				RemoveLine(ids[0] + "-P1", ids[1] + "-P1");
+				RemoveLine(ids[0] + "-OUT-" + eb.Box.ID);
+
+                AddConnectorLines(c, 1);
 
                 WasEdited();
             });
@@ -3367,18 +3391,7 @@ namespace DominoVisualizer
 
 			DrawExecBoxContainerUI(connEdit, eb, linesColors[clr]);
 
-			var a = canvas.Transform2(new(Canvas.GetLeft(connEdit.Widget), Canvas.GetTop(connEdit.Widget)));
-			var b = canvas.Transform2(new(Canvas.GetLeft(eb.Box.Widget), Canvas.GetTop(eb.Box.Widget)));
-
-			DrawLine(
-				a.X + width,
-				a.Y,
-				b.X,
-				b.Y,
-				connEdit.ID + "-P1",
-				eb.Box.ID + "-P1",
-				clr
-			);
+			AddConnectorLines(connEdit, 2);
 
 			canvas.RefreshChilds();
 
@@ -3736,7 +3749,7 @@ namespace DominoVisualizer
 
 			if (b != null)
 			{
-				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), false, editConnector.INT_clr);
+				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), editConnector.INT_clr);
 			}
 
             WasEdited();
@@ -4011,6 +4024,8 @@ namespace DominoVisualizer
 
 				c.Widget.list.Children.Remove(v.ContainerUI);
 				DrawConnVariable(c, v);
+
+				AddConnectorLines(c, 1);
 			}
 
             WasEdited();
@@ -4027,6 +4042,8 @@ namespace DominoVisualizer
 				var m = c.SetVariables.Where(a => a.UniqueID == tags[1]).Single();
 				c.Widget.list.Children.Remove(m.ContainerUI);
 				c.SetVariables.RemoveAll(a => a.UniqueID == tags[1]);
+
+                AddConnectorLines(c, 1);
 
                 WasEdited();
             });

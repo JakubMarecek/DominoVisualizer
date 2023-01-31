@@ -90,7 +90,7 @@ namespace DominoVisualizer
 
         public Widget Widget { set; get; }
 
-        public int Height { set; get; }
+        public double Height { set; get; }
 
         public string FromBoxConnectIDStr { set; get; }
 

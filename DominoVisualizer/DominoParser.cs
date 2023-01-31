@@ -6,6 +6,7 @@ using Petzold.Media2D;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -1537,7 +1538,7 @@ namespace DominoVisualizer
 
 		private void HandleMoving(string id, double x, double y)
 		{
-			foreach (var line in lines)
+			/*foreach (var line in lines)
 			{
 				if (line.Point1 == id + "-P1" || line.Point1 == id + "-P2")
 				{
@@ -1549,7 +1550,11 @@ namespace DominoVisualizer
 					line.UI.X2 = x;
 					line.UI.Y2 = y;
 				}
-			}
+			}*/
+
+			dominoBoxes.TryGetValue(id, out var box);
+			if (box != null)
+				AddBoxLines(box, false);
 
 			WasEdited();
         }
@@ -1760,8 +1765,6 @@ namespace DominoVisualizer
 			canvas.Moved += new MovedEventHandler(HandleMoved);
 
 			List<Point> selectedPoints = new();
-			Dictionary<string, Point> linesPoints = new();
-			List<Tuple<string, string, int>> linesJoin = new();
 
 			int staticBoxesHeight = 0;
 			int staticBoxesHeightT = 0;
@@ -1788,8 +1791,6 @@ namespace DominoVisualizer
 			}
 			staticBoxesHeight = Math.Max(staticBoxesHeight, staticBoxesHeightT);
 
-			linesPoints.Add("ControlsIn-P1", new(width, 0));
-
 			// ==============================================================================
 
 			wiMetaControlOut = new Widget();
@@ -1811,8 +1812,6 @@ namespace DominoVisualizer
 				staticBoxesHeightT += 50;
 			}
 			staticBoxesHeight = Math.Max(staticBoxesHeight, staticBoxesHeightT);
-
-			linesPoints.Add("ControlsOut-P2", new(spaceX, 0));
 
 			// ==============================================================================
 
@@ -1918,23 +1917,13 @@ namespace DominoVisualizer
 			foreach (var inConn in inConns)
 				DrawChilds(inConn, 0, staticBoxesHeight + inConn.DrawY);
 
-			foreach (var lineJoin in linesJoin)
-			{
-				if (linesPoints.ContainsKey(lineJoin.Item1) && linesPoints.ContainsKey(lineJoin.Item2))
-				{
-					DrawLine(
-						linesPoints[lineJoin.Item1].X,
-						linesPoints[lineJoin.Item1].Y,
-						linesPoints[lineJoin.Item2].X,
-						linesPoints[lineJoin.Item2].Y,
-						lineJoin.Item1,
-						lineJoin.Item2,
-						lineJoin.Item3
-					);
-				}
-			}
+            foreach (var c in dominoConnectors.Values)
+                AddConnectorLines(c);
 
-			HandleMoved();
+            foreach (var b in dominoBoxes.Values)
+                AddBoxLines(b, true);
+
+            HandleMoved();
 
 			// ==============================================================================
 
@@ -1981,7 +1970,7 @@ namespace DominoVisualizer
 						currY = (int)pos.Y;
 					}
 
-					DrawConnector(conn, currX, currY, linesJoin, linesPoints);
+					DrawConnector(conn, currX, currY);
 				}
 				else
 				{
@@ -2026,7 +2015,7 @@ namespace DominoVisualizer
 
 							foreach (var subConn in execBox.Box.Connections)
 							{
-								DrawBoxConnectors(execBox.Box, subConn, "", linesJoin);
+								DrawBoxConnectors(execBox.Box, subConn, "");
 
 								/*if (subConn.ID != null && subConn.ID != "")
 								{
@@ -2108,14 +2097,6 @@ namespace DominoVisualizer
 							hadX = execBox.Box.DrawX;
 							hadY = execBox.Box.DrawY;
 						}*/
-
-						if (!linesPoints.ContainsKey(execBox.Box.ID + "-P1"))
-							linesPoints.Add(execBox.Box.ID + "-P1", new(execBox.Box.DrawX, execBox.Box.DrawY));
-
-						if (!linesPoints.ContainsKey(execBox.Box.ID + "-P2"))
-							linesPoints.Add(execBox.Box.ID + "-P2", new(execBox.Box.DrawX + width, execBox.Box.DrawY));
-
-						linesJoin.Add(new(conn.ID + "-P1", execBox.Box.ID + "-P1", colorBoxSel));
 
 						if (execBoxNull)
 							selectedPoints.Add(new(execBox.Box.DrawX, execBox.Box.DrawY + execBox.Box.Height));
@@ -2286,7 +2267,7 @@ namespace DominoVisualizer
 			return sp;
 		}
 
-		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", List<Tuple<string, string, int>> linesJoin = null, bool addLine = true, int selClr = -1)
+		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", bool addLine = true, int selClr = -1)
 		{
 			string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
 			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
@@ -2313,34 +2294,19 @@ namespace DominoVisualizer
 
 				c.ContainerUI = b2;
 
-				box.Height += 20;
-
-				if (linesJoin != null)
-					linesJoin.Add(new(box.ID + "-P2", c.ID + "-P2", colorConnSel));
-				else if (addLine)
+				if (addLine)
 				{
-					var a = canvas.Transform2(new(Canvas.GetLeft(box.Widget), Canvas.GetTop(box.Widget)));
-					var b = canvas.Transform2(new(Canvas.GetLeft(c.Widget), Canvas.GetTop(c.Widget)));
-
-					DrawLine(
-						a.X + width,
-						a.Y,
-						b.X,
-						b.Y,
-						box.ID + "-P2",
-						c.ID + "-P2",
-						colorConnSel
-					);
+					//AddConnectorLines(c);
 				}
 			}
 
 			foreach (var sc in c.SubConnections)
 			{
-				DrawBoxConnectors(box, sc, name + " > ", linesJoin);
+				DrawBoxConnectors(box, sc, name + " > ");
 			}
 		}
 
-		private void DrawConnector(DominoConnector conn, double currX, double currY, List<Tuple<string, string, int>> linesJoin = null, Dictionary<string, Point> linesPoints = null)
+		private void DrawConnector(DominoConnector conn, double currX, double currY)
 		{
 			bool isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
 			bool isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
@@ -2397,22 +2363,6 @@ namespace DominoVisualizer
 				w.list.Children.Add(b2);
 
 				conn.Height += 34;
-
-				if (linesJoin != null)
-					linesJoin.Add(new(conn.ID + "-P1", "ControlsOut-P2", -1));
-			}
-
-			if (linesJoin != null)
-				if (isIn)
-					linesJoin.Add(new("ControlsIn-P1", conn.ID + "-P2", -1));
-
-			if (linesPoints != null)
-			{
-				if (!linesPoints.ContainsKey(conn.ID + "-P1"))
-					linesPoints.Add(conn.ID + "-P1", new(conn.DrawX + w.Width, currY));
-
-				if (!linesPoints.ContainsKey(conn.ID + "-P2"))
-					linesPoints.Add(conn.ID + "-P2", new(conn.DrawX, currY));
 			}
 		}
 
@@ -2879,7 +2829,98 @@ namespace DominoVisualizer
 		}
 
 
-		public delegate void OpenAskDialog(string name, string desc);
+        private void AddConnectorLines(DominoConnector conn)
+        {
+            double posYCo = 32;
+
+            bool isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
+			if (!isIn)
+				posYCo += 20;
+
+            bool isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
+            if (!isOut)
+                posYCo += 20;
+
+            for (int aaa = 0; aaa < conn.SetVariables.Count; aaa++)
+                posYCo += 38.5;
+
+            foreach (var execBox in conn.ExecBoxes)
+            {
+                if (conn.Widget != null)
+                {
+                    var a = canvas.Transform2(new(Canvas.GetLeft(execBox.Box.Widget), Canvas.GetTop(execBox.Box.Widget)));
+                    var b = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
+
+                    DrawLine(
+                        b.X + width,
+                        b.Y + posYCo,
+                        a.X,
+                        a.Y,
+                        conn.ID + "-OUT" + "-" + execBox.Box.ID,
+                        execBox.Box.ID + "-IN",
+						linesColors.FindIndex(a => a == execBox.INT_clr)
+                    );
+
+                    posYCo += 22;
+                    for (int bbb = 0; bbb < execBox.Params.Count; bbb++)
+                        posYCo += 30;
+                }
+            }
+        }
+
+		private void AddBoxLines(DominoBox box, bool draw)
+        {
+            double posYCo = 52;
+
+            foreach (var conn in box.Connections)
+            {
+                if (box.Widget != null)
+                {
+					void aa(DominoConnector c)
+                    {
+						if (c.Widget != null)
+                        {
+                            var a = canvas.Transform2(new(Canvas.GetLeft(c.Widget), Canvas.GetTop(c.Widget)));
+                            var b = canvas.Transform2(new(Canvas.GetLeft(box.Widget), Canvas.GetTop(box.Widget)));
+
+							if (draw)
+                            {
+                                DrawLine(
+                                    b.X + width,
+                                    b.Y + posYCo,
+                                    a.X,
+                                    a.Y,
+                                    box.ID + "-OUT" + "-" + c.ID,
+                                    c.ID + "-IN",
+                                    c.INT_clr
+                                );
+                            }
+							else
+                            {
+                                foreach (var line in lines)
+                                {
+                                    if (line.Point1 == box.ID + "-OUT" + "-" + c.ID && line.Point2 == c.ID + "-IN")
+                                    {
+                                        line.UI.X1 = b.X + width;
+                                        line.UI.Y1 = b.Y + posYCo;
+                                    }
+                                }
+                            }
+
+                            posYCo += 22;
+                        }
+
+                        foreach (var subC in c.SubConnections)
+                            aa(subC);
+                    }
+
+					aa(conn);
+                }
+            }
+        }
+
+
+        public delegate void OpenAskDialog(string name, string desc);
 		public OpenAskDialog openAskDialog;
 		private Action dialogAskAction;
 		private Action dialogAskActionCancel;
@@ -3695,7 +3736,7 @@ namespace DominoVisualizer
 
 			if (b != null)
 			{
-				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), null, false, editConnector.INT_clr);
+				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), false, editConnector.INT_clr);
 			}
 
             WasEdited();
@@ -4756,6 +4797,7 @@ namespace DominoVisualizer
 				return acb;
 
 			string exportPath = "";
+			string exportPathDep = "";
 			string fileName = BuildGraphName(dominoGraphs[selGraph], false, debug);
 
 			if (file == "" || file.EndsWith(".lua"))
@@ -4768,6 +4810,7 @@ namespace DominoVisualizer
 				if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
 					exportPath = folderBrowserDialog.SelectedPath + "\\" + fileName;
+					exportPathDep = folderBrowserDialog.SelectedPath + "\\" + workspaceName.Replace(" ", "_").ToLowerInvariant();
 				}
 				else
 					return "r";
@@ -4783,8 +4826,13 @@ namespace DominoVisualizer
 					return "";*/
 			}
 			else
+			{
 				exportPath = file.Replace(Path.GetFileName(file), "") + fileName;
+				exportPathDep = file.Replace(Path.GetFileName(file), "") + workspaceName.Replace(" ", "_").ToLowerInvariant();
+			}
 
+			exportPathDep += "_depload.xml";
+			
 			Dictionary<string, string> exportDepData = new();
 
 			string nl = Environment.NewLine;
@@ -5385,8 +5433,28 @@ namespace DominoVisualizer
 			fileStream.WriteBytes(meta);
 			fileStream.Close();
 
-			XDocument xDepload = new();
-			XElement xCRes = new("CBinaryResourceContainer", new XAttribute("ID", datPath + Path.GetFileName(exportPath)), new XAttribute("addNode", "1"));
+			XDocument xDepload;
+			XElement xRoot;
+
+			if (File.Exists(exportPathDep))
+			{
+				xDepload = XDocument.Load(exportPathDep);
+				xRoot = xDepload.Element("Root");
+			}
+			else
+			{
+				xDepload = new();
+				xRoot = new("Root");
+				xDepload.Add(xRoot);
+			}
+
+			string depFile = datPath + Path.GetFileName(exportPath);
+
+			XElement xCResE = xRoot.Elements("CBinaryResourceContainer").Where(a => a.Attribute("ID").Value == depFile).SingleOrDefault();
+			if (xCResE != null)
+				xCResE.Remove();
+
+			XElement xCRes = new("CBinaryResourceContainer", new XAttribute("ID", depFile), new XAttribute("addNode", "1"));
 			
 			foreach (var a in exportDepData)
 			{
@@ -5398,8 +5466,8 @@ namespace DominoVisualizer
                 xCRes.Add(new XElement(a.Value, new XAttribute("ID", v.Replace("/", "\\"))));
             }
 
-			xDepload.Add(xCRes);
-            xDepload.Save(exportPath.Replace(".lua", "_depload.xml"));
+			xRoot.Add(xCRes);
+            xDepload.Save(exportPathDep);
 
 			return "";
 		}

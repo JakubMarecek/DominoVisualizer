@@ -2460,7 +2460,7 @@ namespace DominoVisualizer
 			wiMetaControlOut.list.Children.Add(b2);
 		}
 
-		private void RemoveLine(string a, string b = "")
+		private void RemoveLine(string a)
 		{
 			foreach (var i in lines)
 				if (i.Point1 == a || i.Point2 == a)
@@ -2481,18 +2481,17 @@ namespace DominoVisualizer
 				var conn = dominoConnectors[tag];
 
 				foreach (var execBox in conn.ExecBoxes)
-					RemoveLine(tag + "-P1", execBox.Box.ID + "-P1");
+					RemoveLine(tag + "-OUT-" + execBox.Box.ID);
 
 				foreach (var box in dominoBoxes.Values)
 				{
 					RemoveBoxConnS(box, box.Connections, tag);
-					//RemoveLine(box.ID + "-P2", tag + "-P2");
 				}
 
 				var ci = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).SingleOrDefault();
 				if (ci != null)
 				{
-					RemoveLine("ControlsIn-P1", conn.ID + "-P2");
+					RemoveLine("ControlsIn-P1");
 					wiMetaControlIn.list.Children.Remove(ci.ContainerUI);
 					dominoGraphs[selGraph].Metadata.ControlsIn.Remove(ci);
 				}
@@ -2502,7 +2501,7 @@ namespace DominoVisualizer
 					var co = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == sof).SingleOrDefault();
 					if (co != null)
 					{
-						RemoveLine(conn.ID + "-P1", "ControlsOut-P2");
+						RemoveLine(conn.ID + "-P1");
 						wiMetaControlOut.list.Children.Remove(co.ContainerUI);
 						dominoGraphs[selGraph].Metadata.ControlsOut.Remove(co);
 					}
@@ -2510,31 +2509,39 @@ namespace DominoVisualizer
 
 				canvas.Children.Remove(conn.Widget);
 				dominoConnectors.Remove(tag);
+
+				AddConnectorLines(conn, 1);
 			});
 		}
 
-		private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
+        private StackPanel DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
+        {
+            string pv = ParamsAsString(setVar);
+
+            StackPanel sp2 = new();
+
+            Grid g = new() { Height = 18 };
+            g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+            Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
+            btn.Click += EditMetadataInfo;
+            g.Children.Add(btn);
+
+            Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
+            btn2.Click += RemoveConnVar;
+            g.Children.Add(btn2);
+
+            sp2.Children.Add(g);
+
+            sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+			return sp2;
+        }
+
+        private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
 		{
-			string pv = ParamsAsString(setVar);
-
-			StackPanel sp2 = new();
-
-			Grid g = new() { Height = 18 };
-			g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
-
-			Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditMetadataInfo;
-			g.Children.Add(btn);
-
-			Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
-			btn2.Click += RemoveConnVar;
-			g.Children.Add(btn2);
-
-			sp2.Children.Add(g);
-
-			sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
-
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+			var sp2 = DrawConnVariableChild(conn, setVar);
+            Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
 			setVar.ContainerUI = b2;
 			conn.Widget.list.Children.Add(b2);
 		}
@@ -2588,7 +2595,7 @@ namespace DominoVisualizer
                             c.Widget.list.Children.Remove(ebf.ContainerUI);
                             c.ExecBoxes.RemoveAll(a => a.Box.ID == tag);
 
-                            RemoveLine(c.ID + "-P1", tag + "-P1");
+                            RemoveLine(c.ID + "-OUT-" + ebf.Box.ID);
                         }
 					}
 				}
@@ -2599,7 +2606,7 @@ namespace DominoVisualizer
 					{
 						cc.FromBoxConnectID = -1;
 						cc.FromBoxConnectIDStr = "MISSING BOX";
-						RemoveLine(tag + "-P2", cc.ID + "-P2");
+						RemoveLine(cc.ID + "-IN");
 					}
 
 					foreach (var cc in c)
@@ -2692,8 +2699,7 @@ namespace DominoVisualizer
 				foreach (var v in c.SetVariables)
 					if (a(v))
 					{
-						c.Widget.list.Children.Remove(v.ContainerUI);
-						DrawConnVariable(c, v);
+                        v.ContainerUI.Child = DrawConnVariableChild(c, v);
 					}
 
 				foreach (var ee in c.ExecBoxes)
@@ -2862,12 +2868,6 @@ namespace DominoVisualizer
                                 line.UI.X1 = b.X + width;
                                 line.UI.Y1 = b.Y + posYCo;
                             }
-
-                            if (line.Point2 == conn.ID + "-IN")
-                            {
-                                line.UI.X2 = b.X;
-                                line.UI.Y2 = b.Y;
-                            }
                         }
                     }
 
@@ -2876,9 +2876,23 @@ namespace DominoVisualizer
                         posYCo += 30;
                 }
             }
+
+            if (draw == 1 || draw == 2)
+            {
+                var b = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
+
+                foreach (var line in lines)
+                {
+                    if (line.Point2 == conn.ID + "-IN")
+                    {
+                        line.UI.X2 = b.X;
+                        line.UI.Y2 = b.Y;
+                    }
+                }
+            }
         }
 
-		private void AddBoxLines(DominoBox box, int draw)
+        private void AddBoxLines(DominoBox box, int draw)
         {
             double posYCo = 52;
 
@@ -2919,12 +2933,6 @@ namespace DominoVisualizer
                                         line.UI.X1 = b.X + width;
                                         line.UI.Y1 = b.Y + posYCo;
                                     }
-
-									if (line.Point2 == box.ID + "-IN")
-                                    {
-                                        line.UI.X2 = b.X;
-                                        line.UI.Y2 = b.Y;
-                                    }
                                 }
                             }
 
@@ -2936,6 +2944,20 @@ namespace DominoVisualizer
                     }
 
 					aa(conn);
+                }
+            }
+
+            if (draw == 1 || draw == 2)
+            {
+                var b = canvas.Transform2(new(Canvas.GetLeft(box.Widget), Canvas.GetTop(box.Widget)));
+
+                foreach (var line in lines)
+                {
+                    if (line.Point2 == box.ID + "-IN")
+                    {
+                        line.UI.X2 = b.X;
+                        line.UI.Y2 = b.Y;
+                    }
                 }
             }
         }
@@ -3407,14 +3429,16 @@ namespace DominoVisualizer
 				conn.FromBoxConnectIDStr = "MISSING BOX";
 				box.Widget.list.Children.Remove(conn.ContainerUI);
 				c.RemoveAll(a => a.ID == connID);
-				RemoveLine(box.ID + "-P2", conn.ID + "-P2");
+				RemoveLine(conn.ID + "-IN");
 			}
 
 			foreach (var cc in c)
 				RemoveBoxConnS(box, cc.SubConnections, connID);
 
 			c.RemoveAll(a => a.ID == null && !a.SubConnections.Any());
-		}
+
+            AddBoxLines(box, 1);
+        }
 
 		private void RemoveBoxConn(object sender, RoutedEventArgs e)
 		{
@@ -3538,7 +3562,7 @@ namespace DominoVisualizer
 					o.FromBoxConnectIDStr = a;
 
 					DrawBoxConnectors(boxEdit, o, parentName);
-					added = true;
+                    added = true;
 				}
 
 				return o;
@@ -3595,7 +3619,9 @@ namespace DominoVisualizer
 			if (!added)
 				subs(boxEdit.Connections); //add to any subconnections
 
-			canvas.RefreshChilds();
+            AddBoxLines(boxEdit, 2);
+
+            canvas.RefreshChilds();
 
             WasEdited();
 
@@ -4021,9 +4047,7 @@ namespace DominoVisualizer
 				v.Value = paramsEdit[0].Value;
 				v.ValueArray = paramsEdit[0].ValueArray;
 				v.UniqueID = paramsEdit[0].UniqueID;
-
-				c.Widget.list.Children.Remove(v.ContainerUI);
-				DrawConnVariable(c, v);
+                v.ContainerUI.Child = DrawConnVariableChild(c, v);
 
 				AddConnectorLines(c, 1);
 			}

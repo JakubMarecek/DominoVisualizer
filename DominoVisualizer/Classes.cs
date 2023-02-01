@@ -28,6 +28,8 @@ namespace DominoVisualizer
 
         //public Dictionary<string, string> SetVariables { set; get; }
 
+        public bool INT_open { set; get; }
+
         public List<DominoConnector> Connections { set; get; }
     }
 
@@ -62,7 +64,7 @@ namespace DominoVisualizer
 
         public Border ContainerUI { set; get; }
 
-        public Color INT_clr { set; get; }
+        public int INT_clr { set; get; }
     }
 
     public class DominoConnector
@@ -109,6 +111,10 @@ namespace DominoVisualizer
         public string UniqueID { get; }
 
         public int INT_clr { set; get; }
+
+        public bool INT_isIn { set; get; }
+
+        public bool INT_isOut { set; get; }
 
     }
 

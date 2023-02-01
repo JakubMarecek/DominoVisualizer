@@ -62,25 +62,6 @@ namespace Petzold.Media2D
         }
 
         /// <summary>
-        ///     Identifies the ArrowEnds dependency property.
-        /// </summary>
-        public static readonly DependencyProperty ArrowEndsProperty =
-            DependencyProperty.Register("ArrowEnds",
-                typeof(ArrowEnds), typeof(ArrowLineBase),
-                new FrameworkPropertyMetadata(ArrowEnds.End,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
-
-        /// <summary>
-        ///     Gets or sets the property that determines which ends of the
-        ///     line have arrows.
-        /// </summary>
-        public ArrowEnds ArrowEnds
-        {
-            set { SetValue(ArrowEndsProperty, value); }
-            get { return (ArrowEnds)GetValue(ArrowEndsProperty); }
-        }
-
-        /// <summary>
         ///     Identifies the IsArrowClosed dependency property.
         /// </summary>
         public static readonly DependencyProperty IsArrowClosedProperty =
@@ -154,15 +135,15 @@ namespace Petzold.Media2D
                 if (bezsegLine != null)
                 {
                     // Draw the arrow at the start of the line.
-                    if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
                     {
                         Point pt1 = pathfigLine.StartPoint;
                         Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Point1, bezsegLine.Point2, bezsegLine.Point3, 0.03);
-                        pathgeo.Figures.Add(CalculateArrow(pathfigHead1, pt2, pt1));
+                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
                     }
 
                     // Draw the arrow at the end of the line.
-                    if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
                     {
                         Point pt1 = GetPos(pathfigLine.StartPoint, bezsegLine.Point1, bezsegLine.Point2, bezsegLine.Point3, 0.97);
                         Point pt2 = bezsegLine.Point3;
@@ -176,15 +157,15 @@ namespace Petzold.Media2D
                     if (count > 0)
                     {
                         // Draw the arrow at the start of the line.
-                        if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                        //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
                         {
                             Point pt1 = pathfigLine.StartPoint;
                             Point pt2 = polysegLine.Points[0];
-                            pathgeo.Figures.Add(CalculateArrow(pathfigHead1, pt2, pt1));
+                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
                         }
 
                         // Draw the arrow at the end of the line.
-                        if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                        //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
                         {
                             Point pt1 = count == 1 ? pathfigLine.StartPoint :
                                                      polysegLine.Points[count - 2];
@@ -213,6 +194,27 @@ namespace Petzold.Media2D
             matx.Rotate(-ArrowAngle);
             polyseg.Points.Add(pt2 + vect * matx);
             pathfig.IsClosed = IsArrowClosed;
+
+            return pathfig;
+        }
+
+        PathFigure CalculateDot(PathFigure pathfig, Point pt1, Point pt2)
+        {
+            pathfig.StartPoint = pt2;
+            
+            PolyLineSegment polyseg = pathfig.Segments[0] as PolyLineSegment;
+            polyseg.Points.Clear();
+            polyseg.Points.Add(new(pt2.X - 2, pt2.Y - 5));
+            polyseg.Points.Add(new(pt2.X + 3, pt2.Y - 5));
+            polyseg.Points.Add(new(pt2.X + 3, pt2.Y + 5));
+            polyseg.Points.Add(new(pt2.X - 2, pt2.Y + 5));
+            
+            polyseg.Points.Add(new(pt2.X - 2, pt2.Y - 3));
+            polyseg.Points.Add(new(pt2.X + 1, pt2.Y - 3));
+            polyseg.Points.Add(new(pt2.X + 1, pt2.Y + 3));
+            polyseg.Points.Add(new(pt2.X - 1, pt2.Y + 3));
+            
+            polyseg.Points.Add(new(pt2.X - 1, pt2.Y - 3));
 
             return pathfig;
         }

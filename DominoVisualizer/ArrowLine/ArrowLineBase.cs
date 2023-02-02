@@ -17,7 +17,7 @@ namespace Petzold.Media2D
     {
         protected PathGeometry pathgeo;
         protected PathFigure pathfigLine;
-        protected BezierSegment bezsegLine;
+        protected PolyBezierSegment bezsegLine;
         protected PolyLineSegment polysegLine;
 
         PathFigure pathfigHead1;
@@ -100,7 +100,7 @@ namespace Petzold.Media2D
 
         public void MakeBezier()
         {
-            bezsegLine = new BezierSegment();
+            bezsegLine = new PolyBezierSegment();
             pathfigLine.Segments.Add(bezsegLine);
         }
 
@@ -134,20 +134,25 @@ namespace Petzold.Media2D
             {
                 if (bezsegLine != null)
                 {
-                    // Draw the arrow at the start of the line.
-                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
-                    {
-                        Point pt1 = pathfigLine.StartPoint;
-                        Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Point1, bezsegLine.Point2, bezsegLine.Point3, 0.03);
-                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
-                    }
+                    int count = bezsegLine.Points.Count;
 
-                    // Draw the arrow at the end of the line.
-                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    if (count > 0)
                     {
-                        Point pt1 = GetPos(pathfigLine.StartPoint, bezsegLine.Point1, bezsegLine.Point2, bezsegLine.Point3, 0.97);
-                        Point pt2 = bezsegLine.Point3;
-                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                        // Draw the arrow at the start of the line.
+                        //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                        {
+                            Point pt1 = pathfigLine.StartPoint;
+                            Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.03);
+                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                        }
+
+                        // Draw the arrow at the end of the line.
+                        //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                        {
+                            Point pt1 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.97);
+                            Point pt2 = bezsegLine.Points[^1];
+                            pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                        }
                     }
                 }
                 else

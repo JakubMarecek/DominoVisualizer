@@ -1,11 +1,36 @@
 ﻿using DominoVisualizer.CustomControls;
+using Petzold.Media2D;
 using System.Collections.Generic;
 using System.Windows.Controls;
-using System.Windows.Media;
 using WpfPanAndZoom.CustomControls;
 
 namespace DominoVisualizer
 {
+    class LinesVal
+    {
+        public LinesVal(string point1, string point2, ArrowLine ui)
+        {
+            Point1 = point1;
+            Point2 = point2;
+            UI = ui;
+        }
+
+        public string Point1 { set; get; }
+
+        public string Point2 { set; get; }
+
+        public ArrowLine UI { set; get; }
+
+        public List<LinesPoint> Points { set; get; }
+    }
+
+    public class LinesPoint : Grid
+    {
+        public System.Windows.Point Point { set; get; }
+
+        public int Index { set; get; }
+    }
+
     public class DominoBox
     {
         public DominoBox()

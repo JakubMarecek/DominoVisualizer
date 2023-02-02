@@ -1418,22 +1418,6 @@ namespace DominoVisualizer
 			}
 		}
 
-		class LinesVal
-		{
-			public LinesVal(string point1, string point2, ArrowLine ui)
-			{
-				Point1 = point1;
-				Point2 = point2;
-				UI = ui;
-			}
-
-			public string Point1 { set; get; }
-
-			public string Point2 { set; get; }
-
-			public ArrowLine UI { set; get; }
-		}
-
         private readonly List<LinesVal> lines = new();
         private readonly int width = 300;
         private readonly int spaceX = 400;
@@ -1641,7 +1625,7 @@ namespace DominoVisualizer
 
 		private void W_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
-			if (e.ClickCount == 2)
+			if (e.ClickCount == 2 && e.LeftButton == MouseButtonState.Pressed)
 			{
 				var except = (UIElement)e.Source;
 
@@ -1672,7 +1656,37 @@ namespace DominoVisualizer
 					}
 				}
 			}
-		}
+
+            if (e.ClickCount == 1 && e.MiddleButton == MouseButtonState.Pressed)
+            {
+                if (e.Source is ArrowLine)
+                {
+                    foreach (var line in lines)
+                    {
+                        if (line.UI == e.Source)
+                        {
+                            var a = canvas.Transform3(Mouse.GetPosition(canvas));
+                            var b = canvas.Transform(Mouse.GetPosition(canvas));
+
+							var ui = new LinesPoint()
+							{
+								Point = b,
+								Index = line.UI.Points.Count,
+								Background = line.UI.Stroke,
+								Height = 15,
+								Width = 15
+							};
+
+                            line.UI.Points.Add(ui);
+                            canvas.Children.Add(ui);
+                            Canvas.SetLeft(ui, a.X - 7.5);
+                            Canvas.SetTop(ui, a.Y - 7.5);
+                            canvas.RefreshChilds();
+                        }
+                    }
+                }
+            }
+        }
 
 		public string Search(string input)
 		{
@@ -1736,7 +1750,7 @@ namespace DominoVisualizer
 		{
 			canvas.Moving += new MovingEventHandler(HandleMoving);
 			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
-			canvas.MouseLeftButtonDown += W_MouseDoubleClick;
+			canvas.MouseDown += W_MouseDoubleClick;
 			canvas.Moved += new MovedEventHandler(HandleMoved);
 
 			List<Point> selectedPoints = new();

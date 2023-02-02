@@ -1,8 +1,11 @@
 //------------------------------------------
 // ArrowLine.cs (c) 2007 by Charles Petzold
 //------------------------------------------
+using DominoVisualizer;
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace Petzold.Media2D
@@ -118,6 +121,22 @@ namespace Petzold.Media2D
         }
 
         /// <summary>
+        /// </summary>
+        public static readonly DependencyProperty PointsProperty =
+            DependencyProperty.Register("Points",
+                typeof(List<LinesPoint>), typeof(ArrowLine),
+                new FrameworkPropertyMetadata(new List<LinesPoint>(),
+                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        /// <summary>
+        /// </summary>
+        public List<LinesPoint> Points
+        {
+            set { SetValue(PointsProperty, value); }
+            get { return (List<LinesPoint>)GetValue(PointsProperty); }
+        }
+
+        /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
         /// </summary>
         protected override Geometry DefiningGeometry
@@ -134,10 +153,19 @@ namespace Petzold.Media2D
                     var lineLen = Point.Subtract(p2, p1).Length;
 
                     // Define a single PathFigure with the points.
-                    pathfigLine.StartPoint = p1;
-                    bezsegLine.Point1 = new Point(X1 + Math.Min(100, lineLen / 3), Y1); // (lineLen / 5)
-                    bezsegLine.Point2 = new Point(X2 - Math.Min(100, lineLen / 3), Y2); // (lineLen / 5)
-                    bezsegLine.Point3 = p2;
+                    pathfigLine.StartPoint = new Point(X1, Y1);
+                    bezsegLine.Points.Clear();
+                    bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen / 3), Y1)); // (lineLen / 5)
+
+                    foreach (var p in Points)
+                    {
+                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
+                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
+                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
+                    }
+
+                    bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen / 3), Y2)); // (lineLen / 5)
+                    bezsegLine.Points.Add(p2);
                 }
                 else
                 {

@@ -1534,10 +1534,22 @@ namespace DominoVisualizer
 
 			AddControlOutLines(1);
 
-			WasEdited();
+            foreach (var line in lines)
+			{
+				foreach (var p in line.UI.Points)
+				{
+					if (p.Key == id)
+					{
+						line.UI.Points[id].Point.X = x;
+                        line.UI.Points[id].Point.Y = y;
+                    }
+				}
+			}
+
+            WasEdited();
         }
 
-		private void HandleZoomed(int zoom)
+        private void HandleZoomed(int zoom)
 		{
 			foreach (var b in dominoBoxes.Values)
 			{
@@ -1671,16 +1683,19 @@ namespace DominoVisualizer
 							var ui = new LinesPoint()
 							{
 								Point = b,
-								Index = line.UI.Points.Count,
 								Background = line.UI.Stroke,
 								Height = 15,
 								Width = 15
 							};
 
-                            line.UI.Points.Add(ui);
+                            line.UI.Points.Add(ui.ID, ui);
+
+							line.UI.Measure(new(1, 1));
+
                             canvas.Children.Add(ui);
                             Canvas.SetLeft(ui, a.X - 7.5);
                             Canvas.SetTop(ui, a.Y - 7.5);
+
                             canvas.RefreshChilds();
                         }
                     }
@@ -2182,6 +2197,7 @@ namespace DominoVisualizer
 			};
 			l.MakeBezier();
 			l.Cursor = Cursors.Hand;
+			l.Points = new();
 
 			canvas.Children.Add(l);
 			Panel.SetZIndex(l, 40);

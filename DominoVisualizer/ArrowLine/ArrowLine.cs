@@ -88,53 +88,7 @@ namespace Petzold.Media2D
             get { return (double)GetValue(Y2Property); }
         }
 
-        /// <summary>
-        /// </summary>
-        public static readonly DependencyProperty X1TangentProperty =
-            DependencyProperty.Register("X1Tangent",
-                typeof(double), typeof(ArrowLine),
-                new FrameworkPropertyMetadata(0.0,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
-
-        /// <summary>
-        /// </summary>
-        public double X1Tangent
-        {
-            set { SetValue(X1TangentProperty, value); }
-            get { return (double)GetValue(X1TangentProperty); }
-        }
-
-        /// <summary>
-        /// </summary>
-        public static readonly DependencyProperty X2TangentProperty =
-            DependencyProperty.Register("X2Tangent",
-                typeof(double), typeof(ArrowLine),
-                new FrameworkPropertyMetadata(0.0,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
-
-        /// <summary>
-        /// </summary>
-        public double X2Tangent
-        {
-            set { SetValue(X2TangentProperty, value); }
-            get { return (double)GetValue(X2TangentProperty); }
-        }
-
-        /// <summary>
-        /// </summary>
-        public static readonly DependencyProperty PointsProperty =
-            DependencyProperty.Register("Points",
-                typeof(List<LinesPoint>), typeof(ArrowLine),
-                new FrameworkPropertyMetadata(new List<LinesPoint>(),
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
-
-        /// <summary>
-        /// </summary>
-        public List<LinesPoint> Points
-        {
-            set { SetValue(PointsProperty, value); }
-            get { return (List<LinesPoint>)GetValue(PointsProperty); }
-        }
+        public Dictionary<string, LinesPoint> Points { set; get; }
 
         /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
@@ -157,12 +111,13 @@ namespace Petzold.Media2D
                     bezsegLine.Points.Clear();
                     bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen / 3), Y1)); // (lineLen / 5)
 
-                    foreach (var p in Points)
-                    {
-                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
-                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
-                        bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y)); // (lineLen / 5)
-                    }
+                    if (Points != null)
+                        foreach (var p in Points)
+                        {
+                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
+                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
+                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
+                        }
 
                     bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen / 3), Y2)); // (lineLen / 5)
                     bezsegLine.Points.Add(p2);

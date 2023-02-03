@@ -26,9 +26,14 @@ namespace DominoVisualizer
 
     public class LinesPoint : Grid
     {
+        public LinesPoint()
+        {
+            ID = Helpers.RandomString();
+        }
+
         public System.Windows.Point Point { set; get; }
 
-        public int Index { set; get; }
+        public string ID { set; get; }
     }
 
     public class DominoBox

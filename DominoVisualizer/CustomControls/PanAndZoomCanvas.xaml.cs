@@ -1,4 +1,5 @@
-﻿using DominoVisualizer.CustomControls;
+﻿using DominoVisualizer;
+using DominoVisualizer.CustomControls;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -491,6 +492,12 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         var b = Transform5(_selectedElement);
                         Moving(widget.ID, b.X, b.Y);
+                    }
+
+                    if (_selectedElement is LinesPoint lp)
+                    {
+                        var b = Transform5(_selectedElement);
+                        Moving(lp.ID, b.X, b.Y);
                     }
 
                     if (_borderChilds.Any())

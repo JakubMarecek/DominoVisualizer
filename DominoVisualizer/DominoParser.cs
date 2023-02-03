@@ -6,13 +6,12 @@ using Petzold.Media2D;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Reflection;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -1534,16 +1533,21 @@ namespace DominoVisualizer
 
 			AddControlOutLines(1);
 
-            foreach (var line in lines)
+			foreach (var line in lines)
 			{
-				foreach (var p in line.UI.Points)
-				{
-					if (p.Key == id)
+				if (line.UI.Points != null)
+					foreach (var point in line.UI.Points)
 					{
-						line.UI.Points[id].Point.X = x;
-                        line.UI.Points[id].Point.Y = y;
-                    }
-				}
+						if (point.ID == id)
+						{
+							var p = point.Point;
+							p.X = x + 7.5;
+							p.Y = y + 7.5;
+							point.Point = p;
+
+                            line.UI.Measure(new(1, 1));
+                        }
+					}
 			}
 
             WasEdited();
@@ -1688,15 +1692,35 @@ namespace DominoVisualizer
 								Width = 15
 							};
 
-                            line.UI.Points.Add(ui.ID, ui);
+                            line.UI.Points.Add(ui);
 
 							line.UI.Measure(new(1, 1));
 
                             canvas.Children.Add(ui);
                             Canvas.SetLeft(ui, a.X - 7.5);
                             Canvas.SetTop(ui, a.Y - 7.5);
+                            Panel.SetZIndex(ui, 50);
 
                             canvas.RefreshChilds();
+                        }
+                    }
+                }
+
+				if (e.Source is LinesPoint)
+                {
+					var lp = e.Source as LinesPoint;
+
+                    canvas.Children.Remove(lp);
+
+                    foreach (var line in lines)
+                    {
+						if (line.UI.Points != null)
+                        {
+                            int rem = line.UI.Points.RemoveAll(a => a.ID == lp.ID);
+							if (rem > 0)
+							{
+                                line.UI.Measure(new(1, 1));
+                            }
                         }
                     }
                 }

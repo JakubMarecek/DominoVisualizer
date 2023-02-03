@@ -20,8 +20,6 @@ namespace DominoVisualizer
         public string Point2 { set; get; }
 
         public ArrowLine UI { set; get; }
-
-        public List<LinesPoint> Points { set; get; }
     }
 
     public class LinesPoint : Grid

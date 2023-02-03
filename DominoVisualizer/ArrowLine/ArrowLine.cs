@@ -88,7 +88,7 @@ namespace Petzold.Media2D
             get { return (double)GetValue(Y2Property); }
         }
 
-        public Dictionary<string, LinesPoint> Points { set; get; }
+        public List<LinesPoint> Points { set; get; }
 
         /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
@@ -114,9 +114,9 @@ namespace Petzold.Media2D
                     if (Points != null)
                         foreach (var p in Points)
                         {
-                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
-                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
-                            bezsegLine.Points.Add(new Point(p.Value.Point.X, p.Value.Point.Y)); // (lineLen / 5)
+                            bezsegLine.Points.Add(new Point(p.Point.X - Math.Min(100, lineLen / 3), p.Point.Y));
+                            bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
+                            bezsegLine.Points.Add(new Point(p.Point.X + Math.Min(100, lineLen / 3), p.Point.Y));
                         }
 
                     bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen / 3), Y2)); // (lineLen / 5)

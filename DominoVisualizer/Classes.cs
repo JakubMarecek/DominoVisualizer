@@ -34,6 +34,17 @@ namespace DominoVisualizer
         public string ID { set; get; }
     }
 
+    public class LinePointCl
+    {
+        public string From { set; get; }
+
+        public string To { set; get; }
+
+        public double DrawX { set; get; }
+
+        public double DrawY { set; get; }
+    }
+
     public class DominoBox
     {
         public DominoBox()

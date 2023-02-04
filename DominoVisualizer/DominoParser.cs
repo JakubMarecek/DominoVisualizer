@@ -11,7 +11,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -119,6 +118,7 @@ namespace DominoVisualizer
 		List<DominoBorder> dominoBorders = new();
 		//DominoBoxMetadata thisMetadata = new();
 		Dictionary<int, bool> testUniqueBoxID = new();
+		List<LinePointCl> loadPoints = new();
 
 		byte[] fileBytes = null;
 		string runPath = "";
@@ -1681,27 +1681,15 @@ namespace DominoVisualizer
                     {
                         if (line.UI == e.Source)
                         {
-                            var a = canvas.Transform3(Mouse.GetPosition(canvas));
-                            var b = canvas.Transform(Mouse.GetPosition(canvas));
+							var mp = Mouse.GetPosition(canvas);
+                            var a = canvas.Transform3(mp);
+                            var b = canvas.Transform(mp);
 
-							var ui = new LinesPoint()
-							{
-								Point = b,
-								Background = line.UI.Stroke,
-								Height = 15,
-								Width = 15
-							};
-
-                            line.UI.Points.Add(ui);
-
-							line.UI.Measure(new(1, 1));
-
-                            canvas.Children.Add(ui);
-                            Canvas.SetLeft(ui, a.X - 7.5);
-                            Canvas.SetTop(ui, a.Y - 7.5);
-                            Panel.SetZIndex(ui, 50);
+							DrawLinePoint(line, b.X, b.Y, a.X, a.Y, true);
 
                             canvas.RefreshChilds();
+
+                            WasEdited();
                         }
                     }
                 }
@@ -1723,6 +1711,8 @@ namespace DominoVisualizer
                             }
                         }
                     }
+
+                    WasEdited();
                 }
             }
         }
@@ -2871,6 +2861,56 @@ namespace DominoVisualizer
 			res.ContainerUI = b2;
 			wiResources.list.Children.Add(b2);
 		}
+
+		private void DrawLinePoint(LinesVal line, double pntX, double pntY, double drawX, double drawY, bool insert = false)
+		{
+            var c = canvas.Transform4(new(-7.5, -7.5));
+
+            var ui = new LinesPoint()
+            {
+                Point = new(pntX, pntY),
+                Background = line.UI.Stroke,
+                Height = 15,
+                Width = 15
+			};
+
+            if (insert)
+            {
+                int nIdx = line.UI.Points.Count;
+
+                for (int i = 0; i < line.UI.Points.Count; i++)
+                {
+                    Point p1 = i == 0 ? new Point(line.UI.X1, line.UI.Y1) : line.UI.Points[i - 1].Point;
+                    Point p2 = line.UI.Points[i].Point;
+                    Point pn = new(pntX, pntY);
+
+                    double angleEx = Math.Atan2(p2.X - p1.X, p2.Y - p1.Y) * (180 / Math.PI);
+                    double angleNe = Math.Atan2(pn.X - p1.X, pn.Y - p1.Y) * (180 / Math.PI);
+
+                    double distanceEx = Point.Subtract(p2, p1).Length;
+                    double distanceNe = Point.Subtract(pn, p1).Length;
+
+                    if (
+                        (angleEx < angleNe + 1 && angleEx > angleNe - 1) &&
+                        (distanceEx > distanceNe)
+                        )
+                    {
+                        nIdx = i;
+                    }
+                }
+
+                line.UI.Points.Insert(nIdx, ui);
+            }
+			else
+				line.UI.Points.Add(ui);
+
+            line.UI.Measure(new(1, 1));
+
+            canvas.Children.Add(ui);
+            Canvas.SetLeft(ui, drawX + c.X);
+            Canvas.SetTop(ui, drawY + c.Y);
+            Panel.SetZIndex(ui, 50);
+        }
 
 
         private void AddControlInLines()
@@ -5885,7 +5925,23 @@ namespace DominoVisualizer
                 }
 				xGraph.Add(xBorders);
 
-				XElement xBoxes = new("Boxes");
+                XElement xPoints = new("Points");
+                foreach (var line in lines)
+                {
+					if (line.UI.Points != null)
+                        foreach (var point in line.UI.Points)
+                        {
+                            xPoints.Add(new XElement("Point",
+                                new XAttribute("From", line.Point1),
+                                new XAttribute("To", line.Point2),
+                                new XAttribute("DrawX", point.Point.X.ToString(CultureInfo.InvariantCulture)),
+                                new XAttribute("DrawY", point.Point.Y.ToString(CultureInfo.InvariantCulture))
+                                ));
+                        }
+                }
+                xGraph.Add(xPoints);
+
+                XElement xBoxes = new("Boxes");
 				foreach (var c in dominoBoxes)
 				{
 					if (UIList != null && !UIList.Contains(c.Value.Widget))
@@ -6394,19 +6450,13 @@ namespace DominoVisualizer
 
 				if (asNew)
                 {
-                    if (asNew)
-                    {
-                        box.DrawX -= sX;
-                        box.DrawY -= sY;
-                    }
+                    box.DrawX -= sX;
+                    box.DrawY -= sY;
 
                     var np = canvas.Transform4(new(box.DrawX, box.DrawY));
 
-                    if (asNew)
-                    {
-                        np.X += mX;
-                        np.Y += mY;
-                    }
+                    np.X += mX;
+                    np.Y += mY;
 
                     DrawBox(box, np.X, np.Y);
                 }
@@ -6452,19 +6502,13 @@ namespace DominoVisualizer
 
                 if (asNew)
                 {
-                    if (asNew)
-                    {
-                        conn.DrawX -= sX;
-                        conn.DrawY -= sY;
-                    }
+                    conn.DrawX -= sX;
+                    conn.DrawY -= sY;
 
                     var np = canvas.Transform4(new(conn.DrawX, conn.DrawY));
 
-                    if (asNew)
-                    {
-                        np.X += mX;
-                        np.Y += mY;
-                    }
+                    np.X += mX;
+                    np.Y += mY;
 
                     DrawConnector(conn, np.X, np.Y);
 
@@ -6509,19 +6553,6 @@ namespace DominoVisualizer
                                 int clr = conn.ExecBoxes.Count - 1;
 
                                 DrawExecBoxContainerUI(conn, execBox, clr);
-
-                                var a = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
-                                var b = canvas.Transform2(new(Canvas.GetLeft(execBox.Box.Widget), Canvas.GetTop(execBox.Box.Widget)));
-
-                                DrawLine(
-                                    a.X + width,
-                                    a.Y,
-                                    b.X,
-                                    b.Y,
-                                    conn.ID + "-P1",
-                                    execBox.Box.ID + "-P1",
-                                    clr
-                                );
                             }
 						}
 					}
@@ -6530,9 +6561,68 @@ namespace DominoVisualizer
 
             foreach (var a in connectors)
                 dominoConnectors.Add(a.Key, a.Value);
-		}
 
-		public string Load(string loadGraphID = "")
+			if (asNew)
+            {
+                foreach (var c in dominoConnectors.Values)
+                    AddConnectorLines(c, 0);
+
+                foreach (var b in dominoBoxes.Values)
+                    AddBoxLines(b, 0);
+            }
+
+            var xPoints = xGraph.Element("Points")?.Elements("Point");
+			if (xPoints != null)
+				foreach (var xPoint in xPoints)
+				{
+					string from = xPoint.Attribute("From").Value;
+					string to = xPoint.Attribute("To").Value;
+
+					if (asNew)
+                    {
+                        foreach (var a in oldNewBoxes)
+                        {
+                            from = from.Replace(a.Key, a.Value);
+                            to = to.Replace(a.Key, a.Value);
+                        }
+
+                        foreach (var a in oldNewConns)
+                        {
+                            from = from.Replace(a.Key, a.Value);
+                            to = to.Replace(a.Key, a.Value);
+                        }
+                    }
+
+                    loadPoints.Add(new()
+					{
+						From = from,
+						To = to,
+						DrawX = double.Parse(xPoint.Attribute("DrawX").Value, CultureInfo.InvariantCulture),
+						DrawY = double.Parse(xPoint.Attribute("DrawY").Value, CultureInfo.InvariantCulture)
+					});
+                }
+
+			if (asNew)
+            {
+                foreach (var lp in loadPoints)
+                {
+                    var np = canvas.Transform4(new(lp.DrawX - sX, lp.DrawY - sY));
+
+                    np.X += mX;
+                    np.Y += mY;
+
+					var npp = canvas.Transform2(np);
+	
+                    foreach (var line in lines)
+                        if (line.Point1 == lp.From && line.Point2 == lp.To)
+                            DrawLinePoint(line, npp.X, npp.Y, np.X, np.Y);
+                }
+
+                loadPoints.Clear();
+            }
+        }
+
+        public string Load(string loadGraphID = "")
 		{
 			XDocument xDoc = XDocument.Load(file);
 			XElement xRoot = xDoc.Element("DominoDocument");
@@ -6622,8 +6712,9 @@ namespace DominoVisualizer
 
 				testUniqueBoxID.Add(int.Parse(box.Value.ID.Replace("self[", "").Replace("]", "").Replace("en_", "")), true);
             }
+			testUniqueBoxID.Clear();
 
-			foreach (var c in dominoConnectors)
+            foreach (var c in dominoConnectors)
 			{
 				foreach (var e in c.Value.ExecBoxes)
 				{
@@ -6634,7 +6725,14 @@ namespace DominoVisualizer
 
             Draw(true);
 
-			SetWorkspaceNameAndGraphs();
+			foreach (var lp in loadPoints)
+                foreach (var line in lines)
+                    if (line.Point1 == lp.From && line.Point2 == lp.To)
+						DrawLinePoint(line, lp.DrawX, lp.DrawY, lp.DrawX, lp.DrawY);
+
+			loadPoints.Clear();
+
+            SetWorkspaceNameAndGraphs();
 
 			if (errFilesB)
 				return errFiles;

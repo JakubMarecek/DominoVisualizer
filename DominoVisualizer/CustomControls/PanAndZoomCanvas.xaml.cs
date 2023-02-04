@@ -419,6 +419,9 @@ namespace WpfPanAndZoom.CustomControls
                 if (c.GetType() == typeof(Border))
                     (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
 
+                if (c.GetType() == typeof(LinesPoint))
+                    (c as LinesPoint).Children.Clear();
+
                 if (_selectRect.Width > 10 && _selectRect.Height > 10)
                 {
                     var widSize = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
@@ -448,6 +451,9 @@ namespace WpfPanAndZoom.CustomControls
 
                         if (c.GetType() == typeof(Border))
                             (c as Border).Background = _selectRect.Fill;
+
+                        if (c.GetType() == typeof(LinesPoint))
+                            (c as LinesPoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff")), StrokeThickness = 2 });
 
                         _selectionItems.Add(c);
                     }
@@ -520,6 +526,12 @@ namespace WpfPanAndZoom.CustomControls
                                 var c = Transform5(_borderChilds[i]);
                                 Moving(widgetC.ID, c.X, c.Y);
                             }
+
+                            if (_borderChilds[i] is LinesPoint lpC)
+                            {
+                                var b = Transform5(_borderChilds[i]);
+                                Moving(lpC.ID, b.X, b.Y);
+                            }
                         }
                     }
                 }
@@ -538,6 +550,9 @@ namespace WpfPanAndZoom.CustomControls
 
                     if (_selectionItems[i] is Widget w)
                         Moving(w.ID, b.X, b.Y);
+
+                    if (_selectionItems[i] is LinesPoint lp)
+                        Moving(lp.ID, b.X, b.Y);
                 }
             }
             else if (!_dragging && e.LeftButton == MouseButtonState.Pressed && _selecting)

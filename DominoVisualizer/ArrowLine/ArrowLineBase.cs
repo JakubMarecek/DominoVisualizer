@@ -142,14 +142,14 @@ namespace Petzold.Media2D
                         //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
                         {
                             Point pt1 = pathfigLine.StartPoint;
-                            Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.03);
+                            Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[1], bezsegLine.Points[2], 0.03);
                             pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
                         }
 
                         // Draw the arrow at the end of the line.
                         //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
                         {
-                            Point pt1 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.97);
+                            Point pt1 = GetPos(bezsegLine.Points.Count > 4 ? bezsegLine.Points[^4] : pathfigLine.StartPoint, bezsegLine.Points[^3], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.97);
                             Point pt2 = bezsegLine.Points[^1];
                             pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
                         }

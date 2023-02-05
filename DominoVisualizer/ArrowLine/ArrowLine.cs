@@ -102,14 +102,27 @@ namespace Petzold.Media2D
 
                 if (bezsegLine != null)
                 {
-                    var p1 = new Point(X1, Y1);
-                    var p2 = new Point(X2, Y2);
-                    var lineLen = Point.Subtract(p2, p1).Length;
+                    double lineLen1;
+                    double lineLen2;
+
+                    if (Points != null && Points.Count > 0)
+                    {
+                        lineLen1 = Point.Subtract(Points[0].Point, new Point(X1, Y1)).Length;
+                        lineLen2 = Point.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
+                    }
+                    else
+                    {
+                        var p1 = new Point(X1, Y1);
+                        var p2 = new Point(X2, Y2);
+
+                        lineLen1 = Point.Subtract(p2, p1).Length;
+                        lineLen2 = Point.Subtract(p2, p1).Length;
+                    }
 
                     // Define a single PathFigure with the points.
                     pathfigLine.StartPoint = new Point(X1, Y1);
                     bezsegLine.Points.Clear();
-                    bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen / 3), Y1)); // (lineLen / 5)
+                    bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen1 / 3), Y1)); // (lineLen / 5)
 
                     //Point lastPoint = pathfigLine.StartPoint;
 
@@ -162,14 +175,19 @@ namespace Petzold.Media2D
                             bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
                         }
 
-                    bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen / 3), Y2)); // (lineLen / 5)
-                    bezsegLine.Points.Add(p2);
+                    bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen2 / 3), Y2)); // (lineLen / 5)
+                    bezsegLine.Points.Add(new Point(X2, Y2));
                 }
                 else
                 {
                     // Define a single PathFigure with the points.
                     pathfigLine.StartPoint = new Point(X1, Y1);
                     polysegLine.Points.Clear();
+
+                    if (Points != null)
+                        foreach (var p in Points)
+                            polysegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
+
                     polysegLine.Points.Add(new Point(X2, Y2));
                 }
 

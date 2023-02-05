@@ -99,6 +99,7 @@ namespace DominoVisualizer
 		 * -new execbox - str missing					not err
 		 * -list height add								ok
 		 * -clean up arrowline							ok
+		 * -selected - delete key
 		 */
 
 		string workspaceName = "";
@@ -1731,7 +1732,8 @@ namespace DominoVisualizer
 					}*/
 
 			foreach (var child in canvas.Children)
-				((UIElement)child).Opacity = 0.25;
+				if (!(child is System.Windows.Shapes.Line))
+					((UIElement)child).Opacity = 0.25;
 
 			foreach (var b in dominoBoxes.Values)
 				if (b.ID.Contains(input))

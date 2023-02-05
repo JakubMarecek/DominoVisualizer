@@ -25,7 +25,7 @@ using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
 {
-	internal class DominoParser
+	internal class DominoVisualizerClass
 	{
 		/* TODO
 		 * -param lua file open							ok / maybe
@@ -181,7 +181,7 @@ namespace DominoVisualizer
 
 		public string CurrentDatPath { get { return datPath; } }
 
-		public DominoParser(MainWindow window, PanAndZoomCanvas canvas, string game)
+		public DominoVisualizerClass(MainWindow window, PanAndZoomCanvas canvas, string game)
 		{
 			this.wnd = window;
 			this.canvas = canvas;
@@ -193,7 +193,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(MainWindow window, string dominoPath, PanAndZoomCanvas canvas)
+		public DominoVisualizerClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas)
         {
             this.wnd = window;
             file = dominoPath;
@@ -204,7 +204,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
+		public DominoVisualizerClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoPath;
@@ -219,7 +219,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public DominoParser(MainWindow window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
+		public DominoVisualizerClass(MainWindow window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoSearchFolder;

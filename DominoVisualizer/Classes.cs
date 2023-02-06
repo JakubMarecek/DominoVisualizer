@@ -22,18 +22,6 @@ namespace DominoVisualizer
         public ArrowLine UI { set; get; }
     }
 
-    public class LinesPoint : Grid
-    {
-        public LinesPoint()
-        {
-            ID = Helpers.RandomString();
-        }
-
-        public System.Windows.Point Point { set; get; }
-
-        public string ID { set; get; }
-    }
-
     public class LinePointCl
     {
         public string From { set; get; }
@@ -61,7 +49,7 @@ namespace DominoVisualizer
 
         public double DrawY { set; get; }
 
-        public Widget Widget { set; get; }
+        public DominoUIBox Widget { set; get; }
 
         public int Height { set; get; }
 
@@ -129,7 +117,7 @@ namespace DominoVisualizer
 
         public double DrawY { set; get; }
 
-        public Widget Widget { set; get; }
+        public DominoUIConnector Widget { set; get; }
 
         public double Height { set; get; }
 
@@ -284,7 +272,7 @@ namespace DominoVisualizer
 
         public int Color { get; set; }
 
-        public Border ContainerUI { set; get; }
+        public DominoUIComment ContainerUI { set; get; }
     }
 
     public class DominoBorder
@@ -302,7 +290,7 @@ namespace DominoVisualizer
 
         public int Style { get; set; }
 
-        public BorderD ContainerUI { set; get; }
+        public DominoUIBorder ContainerUI { set; get; }
     }
 
     public class DominoGraph

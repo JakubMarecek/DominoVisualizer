@@ -99,7 +99,10 @@ namespace DominoVisualizer
 		 * -new execbox - str missing					not err
 		 * -list height add								ok
 		 * -clean up arrowline							ok
-		 * -selected - delete key
+		 * -selected - delete key						ok
+		 * -delete line - delete points					ok
+		 * -select - grid overlay
+		 * -delete sel - conn execbox point pos
 		 */
 
 		string workspaceName = "";
@@ -115,8 +118,8 @@ namespace DominoVisualizer
 		List<DominoDict> globalVariables = new();
 		Dictionary<string, string> lastBoxesAssign = new();
 		List<DominoDict> dominoResources = new();
-		List<DominoComment> dominoComments = new();
-		List<DominoBorder> dominoBorders = new();
+		Dictionary<string, DominoComment> dominoComments = new();
+		Dictionary<string, DominoBorder> dominoBorders = new();
 		//DominoBoxMetadata thisMetadata = new();
 		Dictionary<int, bool> testUniqueBoxID = new();
 		List<LinePointCl> loadPoints = new();
@@ -730,7 +733,10 @@ namespace DominoVisualizer
 		private void LoadReqBoxes(string line)
 		{
 			string f = line.Replace("cboxRes:RegisterBox(", "").Replace(")", "").Replace("\"", "").ToLower();
-			regBoxesCRC64.Add(CRC64.Hash(f.Replace("/", "\\")), f);
+			var fcrc = CRC64.Hash(f.Replace("/", "\\"));
+
+            if (!regBoxesCRC64.ContainsKey(fcrc))
+				regBoxesCRC64.Add(fcrc, f);
 
 			if (f.ToLower().StartsWith("domino/user/"))
             {
@@ -1574,7 +1580,7 @@ namespace DominoVisualizer
 				b.Widget.Border.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 			}
 
-			foreach (var b in dominoComments)
+			foreach (var b in dominoComments.Values)
 				b.ContainerUI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
 
 			foreach (var b in lines)
@@ -1695,23 +1701,11 @@ namespace DominoVisualizer
                     }
                 }
 
-				if (e.Source is LinesPoint)
+				if (e.Source is DominoUILinePoint)
                 {
-					var lp = e.Source as LinesPoint;
+					var lp = e.Source as DominoUILinePoint;
 
-                    canvas.Children.Remove(lp);
-
-                    foreach (var line in lines)
-                    {
-						if (line.UI.Points != null)
-                        {
-                            int rem = line.UI.Points.RemoveAll(a => a.ID == lp.ID);
-							if (rem > 0)
-							{
-                                line.UI.Measure(new(1, 1));
-                            }
-                        }
-                    }
+                    RemoveLinePoint(lp);
 
                     WasEdited();
                 }
@@ -1768,6 +1762,47 @@ namespace DominoVisualizer
 				startInfo.Arguments = "-fcver=" + game + " -fileFolder=" + file.Replace(Path.GetFileName(file), runPath + "\\tmp") + " -bytes=" + runPath + "\\tmp" + " -fn=" + openParam;
 				Process.Start(startInfo);
 			});
+		}
+
+		public void SelectedDelete()
+		{
+			bool del = false;
+
+			foreach (var ctrl in canvas.SelectedItems)
+			{
+				if (ctrl is DominoUIBorder bUI)
+				{
+					RemoveBorder(dominoBorders[bUI.ID]);
+					del = true;
+				}
+
+				if (ctrl is DominoUIComment cUI)
+				{
+					RemoveComment(dominoComments[cUI.ID]);
+					del = true;
+				}
+
+				if (ctrl is DominoUIBox boxUI)
+				{
+					RemoveBox(dominoBoxes[boxUI.ID]);
+					del = true;
+				}
+
+				if (ctrl is DominoUIConnector connUI)
+				{
+					RemoveConector(dominoConnectors[connUI.ID]);
+					del = true;
+				}
+
+				if (ctrl is DominoUILinePoint lpUI)
+				{
+					RemoveLinePoint(lpUI);
+					del = true;
+				}
+			}
+
+			if (del)
+				WasEdited();
 		}
 
 		private Widget wiMetaDataIn = null;
@@ -2334,7 +2369,7 @@ namespace DominoVisualizer
 			if (conn.INT_isIn) brsh = Brushes.Red;
 			if (conn.INT_isOut) brsh = Brushes.Orange;
 
-			var w = new Widget();
+			var w = new DominoUIConnector();
 			w.Header.Text = (conn.INT_isIn ? "ControlIn - " : "") + conn.ID;
 			//w.Height = 30;
 			w.Width = width;
@@ -2343,7 +2378,15 @@ namespace DominoVisualizer
 			canvas.Children.Add(w);
 
 			w.delBtn.Tag = conn.ID;
-			w.delBtn.Click += RemoveConector;
+			w.delBtn.Click += (sender, e) => {
+
+				AskDialog("Remove connector", "Do you want to remove the connector?", () =>
+				{
+					string tag = (string)(sender as Button).Tag;
+					var conn = dominoConnectors[tag];
+					RemoveConector(conn);
+				});
+			};
 
 			w.editBtn.Visibility = Visibility.Visible;
 			w.editBtn.Tag = conn.ID;
@@ -2393,7 +2436,7 @@ namespace DominoVisualizer
 
 		private void DrawBox(DominoBox box, double currX, double currYBox)
 		{
-			Widget wb = new Widget();
+			var wb = new DominoUIBox();
 			wb.Header.Text = box.ID + " - " + box.Name;
 			wb.Header.Margin = new(0, 0, 40, 0);
 			//wb.Height = 30;
@@ -2403,7 +2446,14 @@ namespace DominoVisualizer
 			canvas.Children.Add(wb);
 
 			wb.delBtn.Tag = box.ID;
-			wb.delBtn.Click += RemoveBox;
+			wb.delBtn.Click += (sender, e) => {
+				AskDialog("Remove box", "Do you want to remove the box?", () =>
+				{
+					string tag = (string)(sender as Button).Tag;
+					var b = dominoBoxes[tag];
+					RemoveBox(b);
+				});
+			};
 
 			wb.swapBtn.Visibility = Visibility.Visible;
 			wb.swapBtn.Tag = box.ID;
@@ -2507,52 +2557,52 @@ namespace DominoVisualizer
 				if (i.Point1 == a || i.Point2 == a)
 				{
 					canvas.Children.Remove(i.UI);
+
+					if (i.UI.Points != null)
+						foreach (var lp in i.UI.Points)
+						{
+							canvas.Children.Remove(lp);
+						}
+
 					break;
 				}
 
 			lines.RemoveAll(aa => aa.Point1 == a || aa.Point2 == a);
 		}
 
-		private void RemoveConector(object sender, RoutedEventArgs e)
+		private void RemoveConector(DominoConnector conn)
 		{
-			AskDialog("Remove connector", "Do you want to remove the connector?", () =>
+			foreach (var execBox in conn.ExecBoxes)
+				RemoveLine(conn.ID + "-OUT-" + execBox.Box.ID);
+
+			foreach (var box in dominoBoxes.Values)
 			{
-				string tag = (string)(sender as Button).Tag;
+				RemoveBoxConnS(box, box.Connections, conn.ID);
+			}
 
-				var conn = dominoConnectors[tag];
+			var ci = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).SingleOrDefault();
+			if (ci != null)
+			{
+				RemoveLine(conn.ID + "-IN");
+				wiMetaControlIn.list.Children.Remove(ci.ContainerUI);
+				dominoGraphs[selGraph].Metadata.ControlsIn.Remove(ci);
+			}
 
-				foreach (var execBox in conn.ExecBoxes)
-					RemoveLine(tag + "-OUT-" + execBox.Box.ID);
-
-				foreach (var box in dominoBoxes.Values)
+			foreach (var sof in conn.OutFuncName)
+			{
+				var co = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == sof).SingleOrDefault();
+				if (co != null)
 				{
-					RemoveBoxConnS(box, box.Connections, tag);
+					RemoveLine("MetadataControlOut-IN-" + conn.ID);
+					wiMetaControlOut.list.Children.Remove(co.ContainerUI);
+					dominoGraphs[selGraph].Metadata.ControlsOut.Remove(co);
 				}
+			}
 
-				var ci = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).SingleOrDefault();
-				if (ci != null)
-				{
-					RemoveLine(conn.ID + "-IN");
-					wiMetaControlIn.list.Children.Remove(ci.ContainerUI);
-					dominoGraphs[selGraph].Metadata.ControlsIn.Remove(ci);
-				}
+			canvas.Children.Remove(conn.Widget);
+			dominoConnectors.Remove(conn.ID);
 
-				foreach (var sof in conn.OutFuncName)
-				{
-					var co = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => a.Name == sof).SingleOrDefault();
-					if (co != null)
-					{
-						RemoveLine("MetadataControlOut-IN-" + conn.ID);
-						wiMetaControlOut.list.Children.Remove(co.ContainerUI);
-						dominoGraphs[selGraph].Metadata.ControlsOut.Remove(co);
-					}
-				}
-
-				canvas.Children.Remove(conn.Widget);
-				dominoConnectors.Remove(tag);
-
-				AddConnectorLines(conn, 1);
-			});
+			AddConnectorLines(conn, 1);
 		}
 
         private StackPanel DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
@@ -2622,47 +2672,40 @@ namespace DominoVisualizer
 			wiGlobalVars.list.Children.Add(b2);
 		}
 
-		private void RemoveBox(object sender, RoutedEventArgs e)
+		private void RemoveBox(DominoBox box)
 		{
-			AskDialog("Remove box", "Do you want to remove the box?", () =>
+			foreach (var c in dominoConnectors.Values)
 			{
-				string tag = (string)(sender as Button).Tag;
-
-				var b = dominoBoxes[tag];
-
-				foreach (var c in dominoConnectors.Values)
+				var eb = c.ExecBoxes.Where(a => a.Box.ID == box.ID).ToList();
+				if (eb != null)
 				{
-					var eb = c.ExecBoxes.Where(a => a.Box.ID == tag).ToList();
-					if (eb != null)
-					{
-						foreach (var ebf in eb)
-                        {
-                            c.Widget.list.Children.Remove(ebf.ContainerUI);
-                            c.ExecBoxes.RemoveAll(a => a.Box.ID == tag);
+					foreach (var ebf in eb)
+                    {
+                        c.Widget.list.Children.Remove(ebf.ContainerUI);
+                        c.ExecBoxes.RemoveAll(a => a.Box.ID == box.ID);
 
-                            RemoveLine(c.ID + "-OUT-" + ebf.Box.ID);
-                        }
-					}
+                        RemoveLine(c.ID + "-OUT-" + ebf.Box.ID);
+                    }
+				}
+			}
+
+			void a(List<DominoConnector> c)
+			{
+				foreach (var cc in c)
+				{
+					cc.FromBoxConnectID = -1;
+					cc.FromBoxConnectIDStr = "MISSING BOX";
+					RemoveLine(cc.ID + "-IN");
 				}
 
-				void a(List<DominoConnector> c)
-				{
-					foreach (var cc in c)
-					{
-						cc.FromBoxConnectID = -1;
-						cc.FromBoxConnectIDStr = "MISSING BOX";
-						RemoveLine(cc.ID + "-IN");
-					}
+				foreach (var cc in c)
+					a(cc.SubConnections);
+			}
 
-					foreach (var cc in c)
-						a(cc.SubConnections);
-				}
+			a(box.Connections);
 
-				a(b.Connections);
-
-				canvas.Children.Remove(b.Widget);
-				dominoBoxes.Remove(tag);
-			});
+			canvas.Children.Remove(box.Widget);
+			dominoBoxes.Remove(box.ID);
 		}
 
 		private void SwapBox(object sender, RoutedEventArgs e)
@@ -2774,7 +2817,8 @@ namespace DominoVisualizer
 			btnDel.Click += EditCommentDialog;
 			g.Children.Add(btnDel);
 
-			Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g };
+			DominoUIComment b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g };
+			b2.ID = c.UniqueID;
 			c.ContainerUI = b2;
 
 			canvas.Children.Add(b2);
@@ -2819,7 +2863,7 @@ namespace DominoVisualizer
                 clr.Color = Color.FromArgb(50, clr.Color.R, clr.Color.G, clr.Color.B);
             }
 
-			BorderD b2 = new()
+			DominoUIBorder b2 = new()
 			{
 				//BorderBrush = new SolidColorBrush(linesColors[b.Color]),
 				Background = clr,
@@ -2829,7 +2873,8 @@ namespace DominoVisualizer
 				Width = w,
 				EnableMove = true,
 				Child = g,
-				EnableMovingChilds = moveChilds == true
+				EnableMovingChilds = moveChilds == true,
+				ID = b.UniqueID
 			};
 			b.ContainerUI = b2;
 
@@ -2868,7 +2913,7 @@ namespace DominoVisualizer
 		{
             var c = canvas.Transform4(new(-7.5, -7.5));
 
-            var ui = new LinesPoint()
+            var ui = new DominoUILinePoint()
             {
                 Point = new(pntX, pntY),
                 Background = line.UI.Stroke,
@@ -2913,6 +2958,35 @@ namespace DominoVisualizer
             Canvas.SetTop(ui, drawY + c.Y);
             Panel.SetZIndex(ui, 50);
         }
+
+		private void RemoveComment(DominoComment c)
+		{
+			canvas.Children.Remove(c.ContainerUI);
+			dominoComments.Remove(c.UniqueID);
+		}
+
+		private void RemoveBorder(DominoBorder b)
+		{
+			canvas.Children.Remove(b.ContainerUI);
+			dominoBorders.Remove(b.UniqueID);
+		}
+
+		private void RemoveLinePoint(DominoUILinePoint lp)
+		{
+            canvas.Children.Remove(lp);
+
+            foreach (var line in lines)
+            {
+				if (line.UI.Points != null)
+                {
+                    int rem = line.UI.Points.RemoveAll(a => a.ID == lp.ID);
+					if (rem > 0)
+					{
+                        line.UI.Measure(new(1, 1));
+                    }
+                }
+            }
+		}
 
 
         private void AddControlInLines()
@@ -4280,7 +4354,7 @@ namespace DominoVisualizer
 			pnt = canvas.Transform3(pnt);
 
 			DrawComment(c, (int)pnt.X, (int)pnt.Y);
-			dominoComments.Add(c);
+			dominoComments.Add(c.UniqueID, c);
 
 			canvas.RefreshChilds();
 
@@ -4295,7 +4369,7 @@ namespace DominoVisualizer
 		{
 			string[] tags = ((string)((Button)sender).Tag).Split('|');
 
-			editComment = dominoComments.Where(a => a.UniqueID == tags[1]).Single();
+			editComment = dominoComments[tags[1]];
 
 			if (tags[0] == "edit")
 			{
@@ -4310,8 +4384,7 @@ namespace DominoVisualizer
 			{
 				AskDialog("Remove comment", "Do you want to remove the comment?", () =>
 				{
-					canvas.Children.Remove(editComment.ContainerUI);
-					dominoComments.Remove(editComment);
+					RemoveComment(editComment);
 
                     WasEdited();
                 });
@@ -4350,7 +4423,7 @@ namespace DominoVisualizer
 			pnt = canvas.Transform3(pnt);
 
 			DrawBorder(b, (int)pnt.X, (int)pnt.Y, 50, 50, true);
-			dominoBorders.Add(b);
+			dominoBorders.Add(b.UniqueID, b);
 
 			canvas.RefreshChilds();
 
@@ -4365,7 +4438,7 @@ namespace DominoVisualizer
 		{
 			string[] tags = ((string)((Button)sender).Tag).Split('|');
 
-			editBorder = dominoBorders.Where(a => a.UniqueID == tags[1]).Single();
+			editBorder = dominoBorders[tags[1]];
 
 			if (tags[0] == "edit")
 			{
@@ -4380,8 +4453,7 @@ namespace DominoVisualizer
 			{
 				AskDialog("Remove border", "Do you want to remove the border?", () =>
 				{
-					canvas.Children.Remove(editBorder.ContainerUI);
-					dominoBorders.Remove(editBorder);
+					RemoveBorder(editBorder);
 
                     WasEdited();
                 });
@@ -5891,7 +5963,7 @@ namespace DominoVisualizer
 				}
 
 				XElement xComments = new("Comments");
-				foreach (var c in dominoComments)
+				foreach (var c in dominoComments.Values)
 				{
 					if (UIList != null && !UIList.Contains(c.ContainerUI))
 						continue;
@@ -5905,7 +5977,7 @@ namespace DominoVisualizer
 				xGraph.Add(xComments);
 
 				XElement xBorders = new("Borders");
-				foreach (var b in dominoBorders)
+				foreach (var b in dominoBorders.Values)
 				{
 					if (UIList != null && !UIList.Contains(b.ContainerUI))
 						continue;
@@ -6358,7 +6430,7 @@ namespace DominoVisualizer
 				var c = new DominoComment();
 				c.Name = xC.Attribute("Name").Value;
 				c.Color = int.Parse(xC.Attribute("Color").Value);
-                dominoComments.Add(c);
+                dominoComments.Add(c.UniqueID, c);
 
 				double x = double.Parse(xC.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
 				double y = double.Parse(xC.Attribute("DrawY").Value, CultureInfo.InvariantCulture);
@@ -6387,7 +6459,7 @@ namespace DominoVisualizer
 				b.Style = int.Parse(xB.Attribute("Style").Value);
 				b.Color = int.Parse(xB.Attribute("Color").Value);
 				b.BackgroundColor = int.Parse(xB.Attribute("BackgroundColor").Value);
-                dominoBorders.Add(b);
+                dominoBorders.Add(b.UniqueID, b);
 
 				bool moveChilds = xB.Attribute("EnableMovingChilds").Value == "true";
 

@@ -2,6 +2,7 @@
 // ArrowLine.cs (c) 2007 by Charles Petzold
 //------------------------------------------
 using DominoVisualizer;
+using DominoVisualizer.CustomControls;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -88,7 +89,7 @@ namespace Petzold.Media2D
             get { return (double)GetValue(Y2Property); }
         }
 
-        public List<LinesPoint> Points { set; get; }
+        public List<DominoUILinePoint> Points { set; get; }
 
         /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.

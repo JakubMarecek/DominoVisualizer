@@ -300,7 +300,7 @@ namespace WpfPanAndZoom.CustomControls
                     Point elementPosition = new Point(x, y);
                     _draggingDelta = elementPosition - mousePosition;
 
-                    if (e.Source is BorderD borderD)
+                    if (e.Source is DominoUIBorder borderD)
                     {
                         if (borderD.EnableMovingChilds)
                             foreach (UIElement child in this.Children)
@@ -357,7 +357,7 @@ namespace WpfPanAndZoom.CustomControls
 
             if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Shift)
                 if (this.Children.Contains((UIElement)e.Source))
-                    if (e.Source is BorderD borderD)
+                    if (e.Source is DominoUIBorder borderD)
                         if (borderD.EnableMove)
                         {
                             Cursor = Cursors.SizeNWSE;
@@ -413,14 +413,14 @@ namespace WpfPanAndZoom.CustomControls
                     w.Border.StrokeThickness = 2;
                 }
 
-                if (c.GetType() == typeof(BorderD))
-                    (c as BorderD).Background = (c as BorderD).BackgroundColor; //new SolidColorBrush(Colors.Transparent);
+                if (c.GetType() == typeof(DominoUIBorder))
+                    (c as DominoUIBorder).Background = (c as DominoUIBorder).BackgroundColor; //new SolidColorBrush(Colors.Transparent);
 
                 if (c.GetType() == typeof(Border))
                     (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
 
-                if (c.GetType() == typeof(LinesPoint))
-                    (c as LinesPoint).Children.Clear();
+                if (c.GetType() == typeof(DominoUILinePoint))
+                    (c as DominoUILinePoint).Children.Clear();
 
                 if (_selectRect.Width > 10 && _selectRect.Height > 10)
                 {
@@ -446,14 +446,14 @@ namespace WpfPanAndZoom.CustomControls
                             w.Border.StrokeThickness = 4;
                         }
 
-                        if (c.GetType() == typeof(BorderD))
-                            (c as BorderD).Background = _selectRect.Fill;
+                        if (c.GetType() == typeof(DominoUIBorder))
+                            (c as DominoUIBorder).Background = _selectRect.Fill;
 
                         if (c.GetType() == typeof(Border))
                             (c as Border).Background = _selectRect.Fill;
 
-                        if (c.GetType() == typeof(LinesPoint))
-                            (c as LinesPoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff")), StrokeThickness = 2 });
+                        if (c.GetType() == typeof(DominoUILinePoint))
+                            (c as DominoUILinePoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff")), StrokeThickness = 2 });
 
                         _selectionItems.Add(c);
                     }
@@ -500,7 +500,7 @@ namespace WpfPanAndZoom.CustomControls
                         Moving(widget.ID, b.X, b.Y);
                     }
 
-                    if (_selectedElement is LinesPoint lp)
+                    if (_selectedElement is DominoUILinePoint lp)
                     {
                         var b = Transform5(_selectedElement);
                         Moving(lp.ID, b.X, b.Y);
@@ -527,7 +527,7 @@ namespace WpfPanAndZoom.CustomControls
                                 Moving(widgetC.ID, c.X, c.Y);
                             }
 
-                            if (_borderChilds[i] is LinesPoint lpC)
+                            if (_borderChilds[i] is DominoUILinePoint lpC)
                             {
                                 var b = Transform5(_borderChilds[i]);
                                 Moving(lpC.ID, b.X, b.Y);
@@ -551,7 +551,7 @@ namespace WpfPanAndZoom.CustomControls
                     if (_selectionItems[i] is Widget w)
                         Moving(w.ID, b.X, b.Y);
 
-                    if (_selectionItems[i] is LinesPoint lp)
+                    if (_selectionItems[i] is DominoUILinePoint lp)
                         Moving(lp.ID, b.X, b.Y);
                 }
             }
@@ -594,7 +594,7 @@ namespace WpfPanAndZoom.CustomControls
             }
 
             if (_dragging && e.LeftButton == MouseButtonState.Pressed && Keyboard.Modifiers == ModifierKeys.Shift)
-                if (_selectedElement is BorderD borderD)
+                if (_selectedElement is DominoUIBorder borderD)
                     if (borderD.EnableMove)
                     {
                         if (_selectedElement != null)

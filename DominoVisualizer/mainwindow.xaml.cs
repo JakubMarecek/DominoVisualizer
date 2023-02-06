@@ -21,7 +21,7 @@ namespace DominoVisualizer
     /// </summary>
     public partial class MainWindow : Window
 	{
-		DominoParser parser;
+		DominoVisualizerClass parser;
 		//string fileSel = "";
 		bool loaded = false;
 		bool externalLaunch = false;
@@ -522,6 +522,11 @@ namespace DominoVisualizer
 			{
 				if (loaded)
                     parser.CopyingPaste();
+			}
+			if (e.Key == Key.Delete)
+			{
+				if (loaded)
+                    parser.SelectedDelete();
 			}
 		}
 

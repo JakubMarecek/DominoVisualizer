@@ -591,11 +591,14 @@
                 <Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
                 <TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
             </Grid>
-            <Grid Background="#99000000" Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,0" Width="500" Height="90" Visibility="Hidden">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stroke="#F28C28" RadiusX="3" RadiusY="3" StrokeThickness="1" />
-                <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,25,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
-                <Button Style="{StaticResource CBtn}" Content="Search" Click="ButtonSearch_Click" Margin="270,25,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonX_Click" Margin="380,25,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+            <Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" Visibility="Hidden">
+                <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
+                    <Grid Background="#77000000">
+                        <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
+                        <Button Style="{StaticResource CBtn}" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                        <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                    </Grid>
+                </CustomControlsDV:BlurHost>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">

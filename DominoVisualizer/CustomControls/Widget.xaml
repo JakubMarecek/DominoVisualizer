@@ -58,6 +58,8 @@
                     </StackPanel>
                 </Border>-->
             </StackPanel>
+            
+            <Rectangle Fill="#882979ff" Grid.RowSpan="2" Name="selected" Visibility="Hidden" />
         </Grid>
     </Border>
 </UserControl>

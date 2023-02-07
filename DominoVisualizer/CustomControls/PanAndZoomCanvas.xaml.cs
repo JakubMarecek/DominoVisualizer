@@ -411,13 +411,14 @@ namespace WpfPanAndZoom.CustomControls
                     w.Border.Stroke = new SolidColorBrush(Colors.Black);
                     w.Border.StrokeDashArray = new() { 1, 0 };
                     w.Border.StrokeThickness = 2;
+                    w.selected.Visibility = Visibility.Hidden;
                 }
 
                 if (c.GetType() == typeof(DominoUIBorder))
                     (c as DominoUIBorder).Background = (c as DominoUIBorder).BackgroundColor; //new SolidColorBrush(Colors.Transparent);
 
-                if (c.GetType() == typeof(Border))
-                    (c as Border).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
+                if (c.GetType() == typeof(DominoUIComment))
+                    (c as DominoUIComment).Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150));
 
                 if (c.GetType() == typeof(DominoUILinePoint))
                     (c as DominoUILinePoint).Children.Clear();
@@ -444,13 +445,14 @@ namespace WpfPanAndZoom.CustomControls
                             w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
                             w.Border.StrokeDashArray = new() { 4, 2 };
                             w.Border.StrokeThickness = 4;
+                            w.selected.Visibility = Visibility.Visible;
                         }
 
                         if (c.GetType() == typeof(DominoUIBorder))
-                            (c as DominoUIBorder).Background = _selectRect.Fill;
+                            (c as DominoUIBorder).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#882979ff"));
 
-                        if (c.GetType() == typeof(Border))
-                            (c as Border).Background = _selectRect.Fill;
+                        if (c.GetType() == typeof(DominoUIComment))
+                            (c as DominoUIComment).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#882979ff"));
 
                         if (c.GetType() == typeof(DominoUILinePoint))
                             (c as DominoUILinePoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff")), StrokeThickness = 2 });

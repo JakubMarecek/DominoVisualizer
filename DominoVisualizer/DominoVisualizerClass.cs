@@ -101,8 +101,10 @@ namespace DominoVisualizer
 		 * -clean up arrowline							ok
 		 * -selected - delete key						ok
 		 * -delete line - delete points					ok
-		 * -select - grid overlay
-		 * -delete sel - conn execbox point pos
+		 * -select - grid overlay						ok
+		 * -delete sel - conn execbox point pos			ok
+		 * -selection - points - copy
+		 * -stick to grid
 		 */
 
 		string workspaceName = "";
@@ -1802,7 +1804,10 @@ namespace DominoVisualizer
 			}
 
 			if (del)
+			{
 				WasEdited();
+				canvas.ResetSelection();
+			}
 		}
 
 		private Widget wiMetaDataIn = null;
@@ -1978,7 +1983,7 @@ namespace DominoVisualizer
             foreach (var b in dominoBoxes.Values)
                 AddBoxLines(b, 0);
 
-			AddControlInLines();
+			AddControlInLines(0);
 			AddControlOutLines(0);
 
             HandleMoved();
@@ -2586,6 +2591,8 @@ namespace DominoVisualizer
 				RemoveLine(conn.ID + "-IN");
 				wiMetaControlIn.list.Children.Remove(ci.ContainerUI);
 				dominoGraphs[selGraph].Metadata.ControlsIn.Remove(ci);
+
+				AddControlInLines(1);
 			}
 
 			foreach (var sof in conn.OutFuncName)
@@ -2596,6 +2603,8 @@ namespace DominoVisualizer
 					RemoveLine("MetadataControlOut-IN-" + conn.ID);
 					wiMetaControlOut.list.Children.Remove(co.ContainerUI);
 					dominoGraphs[selGraph].Metadata.ControlsOut.Remove(co);
+
+					AddControlOutLines(1);
 				}
 			}
 
@@ -2686,6 +2695,8 @@ namespace DominoVisualizer
 
                         RemoveLine(c.ID + "-OUT-" + ebf.Box.ID);
                     }
+
+                	AddConnectorLines(c, 1);
 				}
 			}
 
@@ -2989,7 +3000,7 @@ namespace DominoVisualizer
 		}
 
 
-        private void AddControlInLines()
+        private void AddControlInLines(int draw)
         {
             double posYCo = 32;
 
@@ -3005,16 +3016,32 @@ namespace DominoVisualizer
 					string p1 = "MetadataControlIn-OUT-" + conn.ID;
 					string p2 = conn.ID + "-IN";
 
-					if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
-						DrawLine(
-							a.X + width,
-							a.Y + posYCo + 11,
-							b.X,
-							b.Y + 17,
-							p1,
-							p2,
-							-1
-						);
+                    if (draw == 0)
+                    {
+						if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
+							DrawLine(
+								0,
+								0,
+								0,
+								0,
+								p1,
+								p2,
+								-1
+							);
+					}
+
+                    {
+                        foreach (var line in lines)
+                        {
+                            if (line.Point1 == p1 && line.Point2 == p2)
+                            {
+                                line.UI.X1 = a.X + width;
+                                line.UI.Y1 = a.Y + posYCo + 11;
+                                line.UI.X2 = b.X;
+                                line.UI.Y2 = b.Y + 17;
+                            }
+                        }
+                    }
 
                     posYCo += 55;
                 }
@@ -3048,17 +3075,16 @@ namespace DominoVisualizer
                         {
                             if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
                                 DrawLine(
-                                    b.X + width,
-                                    b.Y + posYCoC + 11,
-                                    a.X,
-                                    a.Y + posYCo + 11,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
                                     p1,
                                     p2,
                                     -1
                                 );
                         }
 
-                        if (draw == 1)
                         {
                             foreach (var line in lines)
                             {
@@ -3066,6 +3092,8 @@ namespace DominoVisualizer
                                 {
                                     line.UI.X1 = b.X + width;
                                     line.UI.Y1 = b.Y + posYCoC + 11;
+                                    line.UI.X2 = a.X;
+                                    line.UI.Y2 = a.Y + posYCo + 11;
                                 }
                             }
                         }
@@ -3935,7 +3963,7 @@ namespace DominoVisualizer
 			DrawConnector(c, (int)pntc.X, (int)pntc.Y);
 
 			if (isIn == true)
-				AddControlInLines();
+				AddControlInLines(0);
 
 			if (isOut == true)
 				AddControlOutLines(0);
@@ -6589,6 +6617,11 @@ namespace DominoVisualizer
 					DominoBox pb = getFromBox(cID);
 					if (pb != null)
 						DrawBoxConnectors(pb, conn);
+					else
+					{
+						conn.FromBoxConnectID = -1;
+						conn.FromBoxConnectIDStr = "";
+					}
                 }
 
                 var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");

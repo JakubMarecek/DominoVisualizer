@@ -61,7 +61,7 @@ namespace DominoVisualizer
             else
             {
                 Title = appName + " - " + (edit ? "*" : "") + file;
-                wndTitleW.Content = " - " + (edit ? "*" : "") + file;
+                wndTitleW.Content = " - " + (edit ? "*" : "") + file.Replace("_", "__");
             }
         }
 

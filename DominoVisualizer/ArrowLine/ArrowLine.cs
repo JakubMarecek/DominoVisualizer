@@ -171,6 +171,7 @@ namespace Petzold.Media2D
                             bezsegLine.Points.Add(new Point(p.Point.X + alX1, p.Point.Y + alY1));
                             bezsegLine.Points.Add(currPoint);
                             bezsegLine.Points.Add(new Point(p.Point.X + alX2, p.Point.Y + alY2));*/
+
                             bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
                             bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
                             bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));

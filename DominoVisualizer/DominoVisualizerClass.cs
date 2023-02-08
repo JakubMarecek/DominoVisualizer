@@ -11,6 +11,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -2252,6 +2253,7 @@ namespace DominoVisualizer
 				Y2 = y2
 			};
 			l.MakeBezier();
+			//l.MakePoly();
 			l.Cursor = Cursors.Hand;
 			l.Points = new();
 
@@ -6033,6 +6035,9 @@ namespace DominoVisualizer
 					if (line.UI.Points != null)
                         foreach (var point in line.UI.Points)
                         {
+                            if (UIList != null && !UIList.Contains(point))
+                                continue;
+
                             xPoints.Add(new XElement("Point",
                                 new XAttribute("From", line.Point1),
                                 new XAttribute("To", line.Point2),
@@ -6381,7 +6386,7 @@ namespace DominoVisualizer
 					conn.FromBoxConnectIDStr = xConn.Attribute("FromBoxConnectIDStr").Value;
 					conn.ID = replaceConnID(id, box);
 
-					if (!asNew || (asNew && xConnsIDs.Contains(id)))
+					if (!asNew || (asNew && xConnsIDs.Contains(id)) || (asNew && id == null))
                     {
                         if (conn.ID != null)
                             connectors.Add(conn.ID, conn);
@@ -6582,7 +6587,15 @@ namespace DominoVisualizer
                 if (connectors.ContainsKey(cID))
 					conn = connectors[cID];
 				else
-					conn = new();
+                {
+                    conn = new();
+
+					if (asNew)
+					{
+                        conn.FromBoxConnectID = -1;
+                        conn.FromBoxConnectIDStr = "";
+                    }
+                }
 
 				conn.ID = cID;
 				conn.DrawX = double.Parse(xConnector.Attribute("DrawX").Value, CultureInfo.InvariantCulture);
@@ -6613,15 +6626,6 @@ namespace DominoVisualizer
                     np.Y += mY;
 
                     DrawConnector(conn, np.X, np.Y);
-
-					DominoBox pb = getFromBox(cID);
-					if (pb != null)
-						DrawBoxConnectors(pb, conn);
-					else
-					{
-						conn.FromBoxConnectID = -1;
-						conn.FromBoxConnectIDStr = "";
-					}
                 }
 
                 var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
@@ -6671,6 +6675,14 @@ namespace DominoVisualizer
 
 			if (asNew)
             {
+				foreach (var b in boxes.Values)
+				{
+					foreach (var c in b.Connections)
+                    {
+                        DrawBoxConnectors(b, c);
+                    }
+				}
+
                 foreach (var c in dominoConnectors.Values)
                     AddConnectorLines(c, 0);
 

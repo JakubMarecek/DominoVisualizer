@@ -28,7 +28,7 @@ namespace DominoVisualizer
 {
 	internal class DominoVisualizerClass
 	{
-		/* TODO
+        /* TODO
 		 * -param lua file open							ok / maybe
 		 * -all delete ask dialog						ok
 		 * -styles comboboxes							ok
@@ -104,11 +104,12 @@ namespace DominoVisualizer
 		 * -delete line - delete points					ok
 		 * -select - grid overlay						ok
 		 * -delete sel - conn execbox point pos			ok
-		 * -selection - points - copy
-		 * -stick to grid
+		 * -selection - points - copy					ok
+		 * -stick to grid								ok		https://stackoverflow.com/questions/1892474/c-sharp-create-snap-to-grid-functionality
+		 * -setting window - open in workspace
 		 */
 
-		string workspaceName = "";
+        string workspaceName = "";
 		int selGraph = 0;
 		List<DominoGraph> dominoGraphs = new();
 		string datPath = "";

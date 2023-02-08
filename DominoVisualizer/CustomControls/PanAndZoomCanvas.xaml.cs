@@ -52,6 +52,8 @@ namespace WpfPanAndZoom.CustomControls
 
         int zoom = 0;
 
+        public bool SnapToGrid { set; get; } = false;
+
         public PanAndZoomCanvas()
         {
             InitializeComponent();
@@ -493,8 +495,17 @@ namespace WpfPanAndZoom.CustomControls
                     double x = Mouse.GetPosition(this).X;
                     double y = Mouse.GetPosition(this).Y;
 
-                    Canvas.SetLeft(_selectedElement, x + _draggingDelta.X);
-                    Canvas.SetTop(_selectedElement, y + _draggingDelta.Y);
+                    x += _draggingDelta.X;
+                    y += _draggingDelta.Y;
+
+                    if (SnapToGrid)
+                    {
+                        x -= x % 100;
+                        y -= y % 100;
+                    }
+
+                    Canvas.SetLeft(_selectedElement, x);
+                    Canvas.SetTop(_selectedElement, y);
 
                     if (_selectedElement is Widget widget)
                     {

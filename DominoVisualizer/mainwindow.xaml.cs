@@ -1264,7 +1264,7 @@ namespace DominoVisualizer
                 var s = parser.GetSettings;
                 s["useBezier"] = settingsBezier.IsChecked == true;
                 s["snapToGrid"] = settingsSnap.IsChecked == true;
-                parser.UseSettings();
+                parser.UseSettings(true);
             }
 
             Animation(false, gridDialogSettings);

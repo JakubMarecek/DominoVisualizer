@@ -500,8 +500,10 @@ namespace WpfPanAndZoom.CustomControls
 
                     if (SnapToGrid)
                     {
-                        x -= x % 100;
-                        y -= y % 100;
+                        var a = Transform4(new(100, 100));
+
+                        x -= x % a.X;
+                        y -= y % a.Y;
                     }
 
                     Canvas.SetLeft(_selectedElement, x);

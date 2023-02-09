@@ -130,8 +130,9 @@ namespace DominoVisualizer
 
 		byte[] fileBytes = null;
 		string runPath = "";
+		const string settFile = "DominoVisualizer.xml";
 
-		string game = "";
+        string game = "";
 		string file = "";
 		MemoryStream luaFile = null;
 		StreamReader reader = null;
@@ -4621,7 +4622,7 @@ namespace DominoVisualizer
 
 
 
-		public void UseSettings()
+		public void UseSettings(bool save)
 		{
 			canvas.SnapToGrid = (bool)settings["snapToGrid"];
 
@@ -4634,12 +4635,33 @@ namespace DominoVisualizer
 
                 l.UI.Measure(new(1, 1));
             }
+
+			if (save)
+			{
+				XElement xSettRoot = new("Settings");
+				xSettRoot.Add(new XElement("SnapToGrid", (bool)settings["snapToGrid"] ? "true" : "false"));
+				xSettRoot.Add(new XElement("UseBezier", (bool)settings["useBezier"] ? "true" : "false"));
+
+                XDocument xSettDoc = new();
+				xSettDoc.Add(xSettRoot);
+				xSettDoc.Save(runPath + "\\" + settFile);
+            }
         }
 
 		private void LoadSettings()
 		{
 			settings.Add("useBezier", true);
 			settings.Add("snapToGrid", false);
+
+			if (File.Exists(runPath + "\\" + settFile))
+			{
+				XDocument xSettDoc = XDocument.Load(runPath + "\\" + settFile);
+				XElement xSettRoot = xSettDoc.Element("Settings");
+				settings["snapToGrid"] = xSettRoot.Element("SnapToGrid").Value == "true";
+				settings["useBezier"] = xSettRoot.Element("UseBezier").Value == "true";
+            }
+
+			UseSettings(false);
         }
 
 		public string RenameWorkspace(string type, string name)

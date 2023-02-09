@@ -142,13 +142,13 @@ namespace Petzold.Media2D
                             {
                                 alX1 = 0;
                                 alX2 = 0;
-                                alY1 = +Math.Min(100, lineLen / 3);
-                                alY2 = -Math.Min(100, lineLen / 3);
+                                alY1 = +Math.Min(100, lineLen1 / 3);
+                                alY2 = -Math.Min(100, lineLen1 / 3);
                             }
                             if (angle < -45 && angle >= -135)
                             {
-                                alX1 = -Math.Min(100, lineLen / 3);
-                                alX2 = +Math.Min(100, lineLen / 3);
+                                alX1 = -Math.Min(100, lineLen1 / 3);
+                                alX2 = +Math.Min(100, lineLen1 / 3);
                                 alY1 = 0;
                                 alY2 = 0;
                             }
@@ -156,13 +156,13 @@ namespace Petzold.Media2D
                             {
                                 alX1 = 0;
                                 alX2 = 0;
-                                alY1 = -Math.Min(100, lineLen / 3);
-                                alY2 = +Math.Min(100, lineLen / 3);
+                                alY1 = -Math.Min(100, lineLen1 / 3);
+                                alY2 = +Math.Min(100, lineLen1 / 3);
                             }
                             if (angle > 45 && angle <= 135)
                             {
-                                alX1 = +Math.Min(100, lineLen / 3);
-                                alX2 = -Math.Min(100, lineLen / 3);
+                                alX1 = +Math.Min(100, lineLen1 / 3);
+                                alX2 = -Math.Min(100, lineLen1 / 3);
                                 alY1 = 0;
                                 alY2 = 0;
                             }

@@ -5044,7 +5044,7 @@ namespace DominoVisualizer
 
 		private string BuildGraphName(DominoGraph graph, bool inDatPath, bool debug)
 		{
-			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".debug" : "") + ".lua";
+			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
 
 			if (inDatPath)
 				f = datPath + f;
@@ -5063,7 +5063,7 @@ namespace DominoVisualizer
 
 					DominoGraph graph = dominoGraphs.Where(a => a.Name == boxName.Replace("GRAPH: ", "")).Single();
 
-					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".debug" : "") + ".lua";
+					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
 					boxName = boxName.Replace("\\", "/").ToLower();
 				}
 			

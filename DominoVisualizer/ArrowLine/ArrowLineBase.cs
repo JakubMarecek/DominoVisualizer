@@ -100,12 +100,18 @@ namespace Petzold.Media2D
 
         public void MakeBezier()
         {
+            pathfigLine.Segments.Clear();
+            polysegLine = null;
+
             bezsegLine = new PolyBezierSegment();
             pathfigLine.Segments.Add(bezsegLine);
         }
 
         public void MakePoly()
         {
+            pathfigLine.Segments.Clear();
+            bezsegLine = null;
+
             polysegLine = new PolyLineSegment();
             pathfigLine.Segments.Add(polysegLine);
         }

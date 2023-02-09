@@ -11,7 +11,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -127,6 +126,7 @@ namespace DominoVisualizer
 		//DominoBoxMetadata thisMetadata = new();
 		Dictionary<int, bool> testUniqueBoxID = new();
 		List<LinePointCl> loadPoints = new();
+		Dictionary<string, object> settings = new();
 
 		byte[] fileBytes = null;
 		string runPath = "";
@@ -188,6 +188,8 @@ namespace DominoVisualizer
 
 		public string CurrentDatPath { get { return datPath; } }
 
+		public Dictionary<string, object> GetSettings { get { return settings; } }
+
 		public DominoVisualizerClass(MainWindow window, PanAndZoomCanvas canvas, string game)
 		{
 			this.wnd = window;
@@ -196,7 +198,8 @@ namespace DominoVisualizer
 
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-			ParseAllBoxes();
+			LoadSettings();
+            ParseAllBoxes();
 			AddColors();
 		}
 
@@ -208,7 +211,8 @@ namespace DominoVisualizer
 
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-			AddColors();
+            LoadSettings();
+            AddColors();
 		}
 
 		public DominoVisualizerClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
@@ -222,7 +226,8 @@ namespace DominoVisualizer
 
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-			ParseAllBoxes();
+            LoadSettings();
+            ParseAllBoxes();
 			AddColors();
 		}
 
@@ -239,7 +244,8 @@ namespace DominoVisualizer
 
 			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-			ParseAllBoxes();
+            LoadSettings();
+            ParseAllBoxes();
 			AddColors();
 		}
 
@@ -1975,9 +1981,9 @@ namespace DominoVisualizer
 
 			staticBoxesHeight = staticBoxesHeight + (300 - (staticBoxesHeight % 300));
 
-			var inConns = dominoConnectors.Values.Where(c => dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == c.ID).Any());
-			foreach (var inConn in inConns)
-				DrawChilds(inConn, 0, staticBoxesHeight + inConn.DrawY);
+            var inConns = dominoConnectors.Values.Where(c => dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == c.ID).Any());
+            foreach (var inConn in inConns)
+                DrawChilds(inConn, 0, staticBoxesHeight + inConn.DrawY);
 
             foreach (var c in dominoConnectors.Values)
                 AddConnectorLines(c, 0);
@@ -1985,8 +1991,8 @@ namespace DominoVisualizer
             foreach (var b in dominoBoxes.Values)
                 AddBoxLines(b, 0);
 
-			AddControlInLines(0);
-			AddControlOutLines(0);
+            AddControlInLines(0);
+            AddControlOutLines(0);
 
             HandleMoved();
 
@@ -2253,9 +2259,13 @@ namespace DominoVisualizer
 				X2 = x2,
 				Y2 = y2
 			};
-			l.MakeBezier();
-			//l.MakePoly();
-			l.Cursor = Cursors.Hand;
+
+			if ((bool)settings["useBezier"])
+                l.MakeBezier();
+			else
+				l.MakePoly();
+
+            l.Cursor = Cursors.Hand;
 			l.Points = new();
 
 			canvas.Children.Add(l);
@@ -2578,7 +2588,7 @@ namespace DominoVisualizer
 			lines.RemoveAll(aa => aa.Point1 == a || aa.Point2 == a);
 		}
 
-		private void RemoveConector(DominoConnector conn)
+        private void RemoveConector(DominoConnector conn)
 		{
 			foreach (var execBox in conn.ExecBoxes)
 				RemoveLine(conn.ID + "-OUT-" + execBox.Box.ID);
@@ -4610,6 +4620,28 @@ namespace DominoVisualizer
 
 
 
+
+		public void UseSettings()
+		{
+			canvas.SnapToGrid = (bool)settings["snapToGrid"];
+
+			foreach (var l in lines)
+			{
+				if ((bool)settings["useBezier"])
+					l.UI.MakeBezier();
+				else
+					l.UI.MakePoly();
+
+                l.UI.Measure(new(1, 1));
+            }
+        }
+
+		private void LoadSettings()
+		{
+			settings.Add("useBezier", true);
+			settings.Add("snapToGrid", false);
+        }
+
 		public string RenameWorkspace(string type, string name)
         {
             if (type == "workspace")
@@ -4644,8 +4676,6 @@ namespace DominoVisualizer
 
 			return "";
         }
-
-
 
 		/*private void DuplicateBorder(object sender, RoutedEventArgs e)
 		{
@@ -4866,8 +4896,6 @@ namespace DominoVisualizer
             canvas.RefreshChilds();
 		}
 
-
-
 		private string MakeDebugFunction(string luaFile)
 		{
 			// write box input data - as array, table via func param
@@ -4950,8 +4978,6 @@ namespace DominoVisualizer
 
             return func;
 		}
-
-
 
 		private void WasEdited(bool saved = false)
 		{

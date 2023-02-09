@@ -198,6 +198,8 @@ namespace DominoVisualizer
                             parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
                             parser.openNotice = ShowNotice;
 
+                            chromeBtnSettings.Visibility = Visibility.Visible;
+
                             loaded = true;
 				        	Animation(true, gridMainClose);
 				        }
@@ -573,6 +575,8 @@ namespace DominoVisualizer
                 GC.Collect();
 
     			SetTitle(true);
+
+                chromeBtnSettings.Visibility = Visibility.Hidden;
 
                 Blur(true);
                 Animation(true, screen);
@@ -1251,6 +1255,21 @@ namespace DominoVisualizer
             Animation(false, gridDialogEditName);
         }
 
+        private void ButtonDialogSettings_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+
+            if (tag == "1")
+            {
+                var s = parser.GetSettings;
+                s["useBezier"] = settingsBezier.IsChecked == true;
+                s["snapToGrid"] = settingsSnap.IsChecked == true;
+                parser.UseSettings();
+            }
+
+            Animation(false, gridDialogSettings);
+        }
+
         private void ButtonChrome_Click(object sender, RoutedEventArgs e)
         {
             string tag = (string)((Button)sender).Tag;
@@ -1269,6 +1288,13 @@ namespace DominoVisualizer
             if (tag == "2")
             {
                 WindowState = WindowState.Minimized;
+            }
+            if (tag == "3")
+            {
+                var s = parser.GetSettings;
+                settingsBezier.IsChecked = (bool)s["useBezier"];
+                settingsSnap.IsChecked = (bool)s["snapToGrid"];
+                Animation(true, gridDialogSettings);
             }
         }
 

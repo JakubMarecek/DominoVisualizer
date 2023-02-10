@@ -105,8 +105,8 @@ namespace DominoVisualizer
 		 * -delete sel - conn execbox point pos			ok
 		 * -selection - points - copy					ok
 		 * -stick to grid								ok		https://stackoverflow.com/questions/1892474/c-sharp-create-snap-to-grid-functionality
-		 * -setting window - open in workspace
-		 * -adding new box, execbox -> missing in debug
+		 * -setting window - open in workspace			ok
+		 * -adding new box, execbox -> missing in debug	ok
 		 * -stick to grid - borders
 		 * -lines points bezier
 		 */
@@ -2291,9 +2291,9 @@ namespace DominoVisualizer
 
 		private StackPanel DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
 		{
-			string name = "";
-			if (regBoxesAll.ContainsKey(execBox.Box.Name))
-				name = execBox.Exec < regBoxesAll[execBox.Box.Name].ControlsIn.Count ? regBoxesAll[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
+			string name = execBox.ExecStr;
+			//if (regBoxesAll.ContainsKey(execBox.Box.Name))
+			//	name = execBox.Exec < regBoxesAll[execBox.Box.Name].ControlsIn.Count ? regBoxesAll[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
 
 			string execStr = "Exec: " + "(" + execBox.Exec.ToString() + ") " + name;
 			if (execBox.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + execBox.DynIntExec.ToString();
@@ -3590,8 +3590,13 @@ namespace DominoVisualizer
 		}
 
 		public string EditExecBoxSave(List<ParamEntry> paramsList, int editExecBoxType, int editExecBoxExec, string editExecBoxDynInt)
-		{
-			var tt = (ExecType)editExecBoxType;
+        {
+            if (editExecBoxExec == -1)
+            {
+                return "Please select exec.";
+            }
+
+            var tt = (ExecType)editExecBoxType;
 
 			if (tt == ExecType.Exec)
 			{
@@ -3609,8 +3614,9 @@ namespace DominoVisualizer
 			execBoxEdit.Type = tt;
 			execBoxEdit.Exec = editExecBoxExec;
 			execBoxEdit.DynIntExec = int.Parse(editExecBoxDynInt);
+            execBoxEdit.ExecStr = regBoxesAll[execBoxEdit.Box.Name].ControlsIn[editExecBoxExec].Name;
 
-			EditExecBoxUIGetParams(paramsList);
+            EditExecBoxUIGetParams(paramsList);
 			execBoxEdit.Params = paramsEdit;
 
 			//execBoxEdit.MainUI.Children.Clear();
@@ -3712,6 +3718,8 @@ namespace DominoVisualizer
 			else
 				eb.Type = ExecType.Exec;
 
+            eb.ExecStr = regBoxesAll[eb.Box.Name].ControlsIn[0].Name;
+            
 			connEdit.ExecBoxes.Add(eb);
 
 			var clr = connEdit.ExecBoxes.Count - 1;

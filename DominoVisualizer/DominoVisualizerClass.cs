@@ -106,6 +106,9 @@ namespace DominoVisualizer
 		 * -selection - points - copy					ok
 		 * -stick to grid								ok		https://stackoverflow.com/questions/1892474/c-sharp-create-snap-to-grid-functionality
 		 * -setting window - open in workspace
+		 * -adding new box, execbox -> missing in debug
+		 * -stick to grid - borders
+		 * -lines points bezier
 		 */
 
         string workspaceName = "";
@@ -494,7 +497,7 @@ namespace DominoVisualizer
 							tempBoxName = regBoxesCRC64[ulong.Parse(tempBoxName)];
 						}
 						else
-							tempBoxName = tempBoxName.Replace("GetPathID(", "").Replace(")", "");
+							tempBoxName = tempBoxName.Replace("getpathid(", "").Replace(")", "");
 
 						tempBox = new();
 						tempBox.ID = func; //newBoxID.ToString();
@@ -3068,52 +3071,55 @@ namespace DominoVisualizer
 
             foreach (var outCtrl in dominoGraphs[selGraph].Metadata.ControlsOut)
             {
-				var conn = dominoConnectors.Values.Where(a => a.OutFuncName.Contains(outCtrl.Name)).SingleOrDefault();
+				var conns = dominoConnectors.Values.Where(a => a.OutFuncName.Contains(outCtrl.Name));
 
-				if (conn != null)
+				if (conns != null)
                 {
-                    double posYCoC = 52;
-
-                    for (int aaa = 0; aaa < conn.SetVariables.Count; aaa++)
-                        posYCoC += 38.5;
-
-                    if (conn.Widget != null)
+					foreach (var conn in conns)
                     {
-                        var a = canvas.Transform2(new(Canvas.GetLeft(wiMetaControlOut), Canvas.GetTop(wiMetaControlOut)));
-                        var b = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
+                        double posYCoC = 52;
 
-                        string p1 = conn.ID + "-OUT-" + outCtrl.Name;
-                        string p2 = "MetadataControlOut-IN-" + conn.ID;
+                        for (int aaa = 0; aaa < conn.SetVariables.Count; aaa++)
+                            posYCoC += 38.5;
 
-                        if (draw == 0)
+                        if (conn.Widget != null)
                         {
-                            if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
-                                DrawLine(
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                    p1,
-                                    p2,
-                                    -1
-                                );
-                        }
+                            var a = canvas.Transform2(new(Canvas.GetLeft(wiMetaControlOut), Canvas.GetTop(wiMetaControlOut)));
+                            var b = canvas.Transform2(new(Canvas.GetLeft(conn.Widget), Canvas.GetTop(conn.Widget)));
 
-                        {
-                            foreach (var line in lines)
+                            string p1 = conn.ID + "-OUT-" + outCtrl.Name;
+                            string p2 = "MetadataControlOut-IN-" + conn.ID;
+
+                            if (draw == 0)
                             {
-                                if (line.Point1 == p1 && line.Point2 == p2)
+                                if (!lines.Any(x => x.Point1 == p1 && x.Point2 == p2))
+                                    DrawLine(
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        p1,
+                                        p2,
+                                        -1
+                                    );
+                            }
+
+                            {
+                                foreach (var line in lines)
                                 {
-                                    line.UI.X1 = b.X + width;
-                                    line.UI.Y1 = b.Y + posYCoC + 11;
-                                    line.UI.X2 = a.X;
-                                    line.UI.Y2 = a.Y + posYCo + 11;
+                                    if (line.Point1 == p1 && line.Point2 == p2)
+                                    {
+                                        line.UI.X1 = b.X + width;
+                                        line.UI.Y1 = b.Y + posYCoC + 11;
+                                        line.UI.X2 = a.X;
+                                        line.UI.Y2 = a.Y + posYCo + 11;
+                                    }
                                 }
                             }
                         }
-
-                        posYCo += 55;
                     }
+
+                    posYCo += 55;
                 }
             }
         }
@@ -5066,7 +5072,7 @@ namespace DominoVisualizer
 
 		private string BuildGraphName(DominoGraph graph, bool inDatPath, bool debug)
 		{
-			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+			string f = workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".dvdebug" : "") + ".lua";
 
 			if (inDatPath)
 				f = datPath + f;
@@ -5085,7 +5091,7 @@ namespace DominoVisualizer
 
 					DominoGraph graph = dominoGraphs.Where(a => a.Name == boxName.Replace("GRAPH: ", "")).Single();
 
-					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + ".lua";
+					boxName = datPath + workspaceName.Replace(" ", "_").ToLowerInvariant() + "." + graph.Name.Replace(" ", "_").ToLowerInvariant() + (debug ? ".dvdebug" : "") + ".lua";
 					boxName = boxName.Replace("\\", "/").ToLower();
 				}
 			

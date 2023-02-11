@@ -109,6 +109,7 @@ namespace DominoVisualizer
 		 * -adding new box, execbox -> missing in debug	ok
 		 * -stick to grid - borders
 		 * -lines points bezier
+		 * -export - markers as saved
 		 */
 
         string workspaceName = "";

@@ -1264,6 +1264,8 @@ namespace DominoVisualizer
                 var s = parser.GetSettings;
                 s["useBezier"] = settingsBezier.IsChecked == true;
                 s["snapToGrid"] = settingsSnap.IsChecked == true;
+                s["bytecode"] = settingsBytecode.IsChecked == true;
+                s["bytecodeDebug"] = settingsBytecodeDebug.IsChecked == true;
                 parser.UseSettings(true);
             }
 
@@ -1294,6 +1296,8 @@ namespace DominoVisualizer
                 var s = parser.GetSettings;
                 settingsBezier.IsChecked = (bool)s["useBezier"];
                 settingsSnap.IsChecked = (bool)s["snapToGrid"];
+                settingsBytecode.IsChecked = (bool)s["bytecode"];
+                settingsBytecodeDebug.IsChecked = (bool)s["bytecodeDebug"];
                 Animation(true, gridDialogSettings);
             }
         }

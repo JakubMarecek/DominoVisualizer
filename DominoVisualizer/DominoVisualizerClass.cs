@@ -11,6 +11,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -148,6 +149,9 @@ namespace DominoVisualizer
 		string errFiles = "Can't find / open these files:" + Environment.NewLine + Environment.NewLine;
 		bool errFilesB = false;
 		bool wasEdited = false;
+
+        [DllImport("luac51", EntryPoint = "Process", CallingConvention = CallingConvention.Cdecl)]
+        static extern void LuacLibProcess(string inPath, string outPath);
 
         List<string> resourcesTypes = new()
         {
@@ -4636,8 +4640,15 @@ namespace DominoVisualizer
 
 
 
+		private void LoadSettings()
+		{
+            settings.Add("useBezier", true);
+            settings.Add("snapToGrid", false);
+            settings.Add("bytecode", false);
+            settings.Add("bytecodeDebug", false);
+        }
 
-		public void UseSettings(bool save)
+        public void UseSettings(bool saved)
 		{
 			canvas.SnapToGrid = (bool)settings["snapToGrid"];
 
@@ -4651,32 +4662,8 @@ namespace DominoVisualizer
                 l.UI.Measure(new(1, 1));
             }
 
-			if (save)
-			{
-				XElement xSettRoot = new("Settings");
-				xSettRoot.Add(new XElement("SnapToGrid", (bool)settings["snapToGrid"] ? "true" : "false"));
-				xSettRoot.Add(new XElement("UseBezier", (bool)settings["useBezier"] ? "true" : "false"));
-
-                XDocument xSettDoc = new();
-				xSettDoc.Add(xSettRoot);
-				xSettDoc.Save(runPath + "\\" + settFile);
-            }
-        }
-
-		private void LoadSettings()
-		{
-			settings.Add("useBezier", true);
-			settings.Add("snapToGrid", false);
-
-			if (File.Exists(runPath + "\\" + settFile))
-			{
-				XDocument xSettDoc = XDocument.Load(runPath + "\\" + settFile);
-				XElement xSettRoot = xSettDoc.Element("Settings");
-				settings["snapToGrid"] = xSettRoot.Element("SnapToGrid").Value == "true";
-				settings["useBezier"] = xSettRoot.Element("UseBezier").Value == "true";
-            }
-
-			UseSettings(false);
+			if (saved)
+				WasEdited();
         }
 
 		public string RenameWorkspace(string type, string name)
@@ -5814,6 +5801,18 @@ namespace DominoVisualizer
 				doc.Save(xw);
 
 			byte[] lua = luaData.ToArray();
+
+			if (((bool)settings["bytecode"] && !debug) || ((bool)settings["bytecodeDebug"] && debug))
+			{
+				File.WriteAllBytes(exportPath, lua);
+
+                LuacLibProcess(exportPath, exportPath + ".tmp");
+                lua = File.ReadAllBytes(exportPath + ".tmp");
+                File.Delete(exportPath + ".tmp");
+
+				File.Delete(exportPath);
+            }
+
 			byte[] meta = docData.ToArray();
 
 			var fileStream = File.Create(exportPath);
@@ -6319,10 +6318,31 @@ namespace DominoVisualizer
 				return xGrN;
 			}
 
-			if (File.Exists(file))
+			void saveSett(XElement xRoot)
+			{
+				XElement xSettings = xRoot.Element("Settings");
+
+                if (xSettings == null)
+				{
+                    xSettings = new XElement("Settings");
+					xRoot.Add(xSettings);
+                }
+
+                xSettings.Elements().Remove();
+                xSettings.Add(new XElement("SnapToGrid", (bool)settings["snapToGrid"] ? "true" : "false"));
+                xSettings.Add(new XElement("UseBezier", (bool)settings["useBezier"] ? "true" : "false"));
+                xSettings.Add(new XElement("Bytecode", (bool)settings["bytecode"] ? "true" : "false"));
+                xSettings.Add(new XElement("BytecodeDebug", (bool)settings["bytecodeDebug"] ? "true" : "false"));
+            }
+
+            if (File.Exists(file))
 			{
 				XDocument doc = XDocument.Load(file);
-				XElement xGraphs = doc.Element("DominoDocument").Element("Graphs");
+                XElement xRoot = doc.Element("DominoDocument");
+
+				saveSett(xRoot);
+
+                XElement xGraphs = xRoot.Element("Graphs");
 				var e = xGraphs.Elements("Graph").Where(a => a.Attribute("UniqueID").Value == dominoGraphs[selGraph].UniqueID).SingleOrDefault();
 				e?.Remove();
 
@@ -6341,7 +6361,10 @@ namespace DominoVisualizer
 				xRoot.Add(new XElement("Game", game));
 				xRoot.Add(new XElement("Name", workspaceName));
 				xRoot.Add(new XElement("Path", datPath));
-				var xGraphs = new XElement("Graphs");
+
+                saveSett(xRoot);
+
+                var xGraphs = new XElement("Graphs");
 				xRoot.Add(xGraphs);
 
 				if (!afterDelete)
@@ -6813,6 +6836,20 @@ namespace DominoVisualizer
 			game = xRoot.Element("Game").Value;
 			workspaceName = xRoot.Element("Name").Value;
 			datPath = xRoot.Element("Path").Value;
+
+            XElement xSettings = xRoot.Element("Settings");
+			if (xSettings != null)
+            {
+                if (File.Exists(runPath + "\\" + settFile))
+                {
+                    settings["snapToGrid"] = xSettings.Element("SnapToGrid").Value == "true";
+                    settings["useBezier"] = xSettings.Element("UseBezier").Value == "true";
+                    settings["bytecode"] = xSettings.Element("Bytecode").Value == "true";
+                    settings["bytecodeDebug"] = xSettings.Element("BytecodeDebug").Value == "true";
+                }
+
+                UseSettings(false);
+            }
 
 			IEnumerable<XElement> xGraphs = xRoot.Element("Graphs").Elements("Graph");
 			XElement xGraph = null;

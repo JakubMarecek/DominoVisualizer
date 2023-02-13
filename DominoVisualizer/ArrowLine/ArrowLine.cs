@@ -98,7 +98,6 @@ namespace Petzold.Media2D
         {
             get
             {
-                // Clear out the PathGeometry.
                 pathgeo.Figures.Clear();
 
                 if (bezsegLine != null)
@@ -120,35 +119,84 @@ namespace Petzold.Media2D
                         lineLen2 = Point.Subtract(p2, p1).Length;
                     }
 
-                    // Define a single PathFigure with the points.
                     pathfigLine.StartPoint = new Point(X1, Y1);
                     bezsegLine.Points.Clear();
                     bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen1 / 3), Y1)); // (lineLen / 5)
 
-                    //Point lastPoint = pathfigLine.StartPoint;
-
                     if (Points != null)
-                        foreach (var p in Points)
+                        for (int i = 0; i < Points.Count; i++)
                         {
-                            /*double alX1 = 0;
+                            Point currPoint = Points[i].Point;
+
+                            Point refPoint;
+                            double lineLenRef = 0;
+
+                            if (i == 0)
+                            {
+                                refPoint = new Point(X1, Y1);
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp = 0;
+
+                                if (Points.Count > 1)
+                                {
+                                    lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
+                                }
+
+                                if (lineTmp > 0 && lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refPoint = Points[i + 1].Point;
+                                }
+                            }
+                            else if (i == Points.Count - 1)
+                            {
+                                refPoint = new Point(X2, Y2);
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp = 0;
+
+                                if (Points.Count > 1)
+                                {
+                                    lineTmp = Point.Subtract(Points[i - 1].Point, currPoint).Length;
+                                }
+
+                                if (lineTmp > 0 && lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refPoint = Points[i - 1].Point;
+                                }
+                            }
+                            else
+                            {
+                                refPoint = Points[i - 1].Point;
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
+
+                                if (lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refPoint = Points[i + 1].Point;
+                                }
+                            }
+
+
+                            double alX1 = 0;
                             double alX2 = 0;
                             double alY1 = 0;
                             double alY2 = 0;
-                            Point currPoint = new(p.Point.X, p.Point.Y);
 
-                            double angle = Math.Atan2(lastPoint.X - p.Point.X, lastPoint.Y - p.Point.Y) * (180 / Math.PI);
+                            double angle = Math.Atan2(refPoint.X - Points[i].Point.X, refPoint.Y - Points[i].Point.Y) * (180 / Math.PI);
 
                             if (angle >= -45 && angle <= 45)
                             {
                                 alX1 = 0;
                                 alX2 = 0;
-                                alY1 = +Math.Min(100, lineLen1 / 3);
-                                alY2 = -Math.Min(100, lineLen1 / 3);
+                                alY1 = +Math.Min(100, lineLenRef / 3);
+                                alY2 = -Math.Min(100, lineLenRef / 3);
                             }
                             if (angle < -45 && angle >= -135)
                             {
-                                alX1 = -Math.Min(100, lineLen1 / 3);
-                                alX2 = +Math.Min(100, lineLen1 / 3);
+                                alX1 = -Math.Min(100, lineLenRef / 3);
+                                alX2 = +Math.Min(100, lineLenRef / 3);
                                 alY1 = 0;
                                 alY2 = 0;
                             }
@@ -156,25 +204,24 @@ namespace Petzold.Media2D
                             {
                                 alX1 = 0;
                                 alX2 = 0;
-                                alY1 = -Math.Min(100, lineLen1 / 3);
-                                alY2 = +Math.Min(100, lineLen1 / 3);
+                                alY1 = -Math.Min(100, lineLenRef / 3);
+                                alY2 = +Math.Min(100, lineLenRef / 3);
                             }
                             if (angle > 45 && angle <= 135)
                             {
-                                alX1 = +Math.Min(100, lineLen1 / 3);
-                                alX2 = -Math.Min(100, lineLen1 / 3);
+                                alX1 = +Math.Min(100, lineLenRef / 3);
+                                alX2 = -Math.Min(100, lineLenRef / 3);
                                 alY1 = 0;
                                 alY2 = 0;
                             }
 
-                            lastPoint = currPoint;
-                            bezsegLine.Points.Add(new Point(p.Point.X + alX1, p.Point.Y + alY1));
+                            bezsegLine.Points.Add(new Point(Points[i].Point.X + alX1, Points[i].Point.Y + alY1));
                             bezsegLine.Points.Add(currPoint);
-                            bezsegLine.Points.Add(new Point(p.Point.X + alX2, p.Point.Y + alY2));*/
+                            bezsegLine.Points.Add(new Point(Points[i].Point.X + alX2, Points[i].Point.Y + alY2));
 
+                            /*bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
                             bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
-                            bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
-                            bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
+                            bezsegLine.Points.Add(new Point(p.Point.X, p.Point.Y));*/
                         }
 
                     bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen2 / 3), Y2)); // (lineLen / 5)

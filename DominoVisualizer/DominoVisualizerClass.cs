@@ -150,10 +150,10 @@ namespace DominoVisualizer
 		bool wasEdited = false;
 
         [DllImport("luac51", EntryPoint = "Process", CallingConvention = CallingConvention.Cdecl)]
-        static extern void LuacLibProcess(string inPath, string outPath, string bytecodePath);
+        static extern int LuacLibProcess(string inPath, string outPath, string bytecodePath, out IntPtr error);
 
         [DllImport("luac51", EntryPoint = "ProcessBytes", CallingConvention = CallingConvention.Cdecl)]
-        static extern void LuacLibProcessBytes(byte[] inBuffer, int inSize, out IntPtr outBuffer, out int outSize, string bytecodePath);
+        static extern int LuacLibProcessBytes(byte[] inBuffer, int inSize, out IntPtr outBuffer, out int outSize, string bytecodePath, out IntPtr error);
 
         [DllImport("luac51", EntryPoint = "FreeMem", CallingConvention = CallingConvention.Cdecl)]
         static extern void LuacLibFreeMem(IntPtr obj);
@@ -5167,12 +5167,15 @@ namespace DominoVisualizer
 			else
 				openNotice("Domino has been successfully exported to LUA.");
 
-			AskDialog("Export", "Export also debug files? To use debug you must export all graphs with debug.", () =>
-			{
-				string r = ExportWrite(true);
-				if (a != "")
-					openInfoDialog("Export", a);
-			});
+			if (a == "")
+            {
+                AskDialog("Export", "Export also debug files? To use debug you must export all graphs with debug.", () =>
+                {
+                    string r = ExportWrite(true);
+                    if (a != "")
+                        openInfoDialog("Export", a);
+                });
+            }
 		}
 
 		private string ExportWrite(bool debug)
@@ -5812,11 +5815,14 @@ namespace DominoVisualizer
 
 			if (((bool)settings["bytecode"] && !debug) || ((bool)settings["bytecodeDebug"] && debug))
 			{
-				string luaFile = Path.GetFileName(exportPath);
-
 				byte[] bytecode;
 
-				LuacLibProcessBytes(lua, lua.Length, out IntPtr buffer, out int bufferSize, luaFile);
+				int ret = LuacLibProcessBytes(lua, lua.Length, out IntPtr buffer, out int bufferSize, exportPath, out IntPtr error);
+				if (ret != 0)
+                {
+                    string str = Marshal.PtrToStringAnsi(error);
+					return "Error during parsing Lua:" + Environment.NewLine + str;
+                }
 
                 bytecode = new byte[bufferSize];
                 Marshal.Copy(buffer, bytecode, 0, bufferSize);

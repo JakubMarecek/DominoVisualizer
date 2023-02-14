@@ -129,39 +129,43 @@ namespace Petzold.Media2D
                             Point currPoint = Points[i].Point;
 
                             Point refPoint;
-                            double lineLenRef = 0;
+                            double lineLenRef;
+                            bool refEnd = false;
 
                             if (i == 0)
                             {
                                 refPoint = new Point(X1, Y1);
                                 lineLenRef = Point.Subtract(currPoint, refPoint).Length;
-                                double lineTmp = 0;
+                                double lineTmp;
 
-                                if (Points.Count > 1)
-                                {
+                                if (Points.Count == 1)
+                                    lineTmp = Point.Subtract(new Point(X2, Y2), currPoint).Length;
+                                else
                                     lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
-                                }
 
-                                if (lineTmp > 0 && lineTmp < lineLenRef)
+                                if (lineTmp < lineLenRef)
                                 {
                                     lineLenRef = lineTmp;
-                                    refPoint = Points[i + 1].Point;
+                                    refEnd = true;
+
+                                    if (Points.Count == 1)
+                                        refPoint = new Point(X2, Y2);
+                                    else
+                                        refPoint = Points[i + 1].Point;
                                 }
                             }
                             else if (i == Points.Count - 1)
                             {
                                 refPoint = new Point(X2, Y2);
                                 lineLenRef = Point.Subtract(currPoint, refPoint).Length;
-                                double lineTmp = 0;
+                                double lineTmp = Point.Subtract(Points[i - 1].Point, currPoint).Length;
+                                refEnd = true;
 
-                                if (Points.Count > 1)
-                                {
-                                    lineTmp = Point.Subtract(Points[i - 1].Point, currPoint).Length;
-                                }
-
-                                if (lineTmp > 0 && lineTmp < lineLenRef)
+                                if (lineTmp < lineLenRef)
                                 {
                                     lineLenRef = lineTmp;
+                                    refEnd = false;
+
                                     refPoint = Points[i - 1].Point;
                                 }
                             }
@@ -174,10 +178,10 @@ namespace Petzold.Media2D
                                 if (lineTmp < lineLenRef)
                                 {
                                     lineLenRef = lineTmp;
+                                    refEnd = true;
                                     refPoint = Points[i + 1].Point;
                                 }
                             }
-
 
                             double alX1 = 0;
                             double alX2 = 0;
@@ -185,6 +189,8 @@ namespace Petzold.Media2D
                             double alY2 = 0;
 
                             double angle = Math.Atan2(refPoint.X - Points[i].Point.X, refPoint.Y - Points[i].Point.Y) * (180 / Math.PI);
+                            if (refEnd)
+                                angle = Math.Atan2(Points[i].Point.X - refPoint.X, Points[i].Point.Y - refPoint.Y) * (180 / Math.PI);
 
                             if (angle >= -45 && angle <= 45)
                             {

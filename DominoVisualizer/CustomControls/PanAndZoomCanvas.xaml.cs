@@ -326,7 +326,7 @@ namespace WpfPanAndZoom.CustomControls
                                     )
                                 {
                                     _borderChilds.Add(child);
-                                    _borderChildsDeltas.Add(new Point(xc, yc) - mousePosition);
+                                    _borderChildsDeltas.Add(new Point(xc, yc) - Transform3(elementPosition));
                                 }
                             }
                     }
@@ -495,19 +495,27 @@ namespace WpfPanAndZoom.CustomControls
                     double x = Mouse.GetPosition(this).X;
                     double y = Mouse.GetPosition(this).Y;
 
-                    x += _draggingDelta.X;
-                    y += _draggingDelta.Y;
+                    double sx = 0;
+                    double sy = 0;
 
                     if (SnapToGrid)
                     {
                         var a = Transform4(new(100, 100));
 
-                        x -= x % a.X;
-                        y -= y % a.Y;
-                    }
+                        sx = x + _draggingDelta.X;
+                        sy = y + _draggingDelta.Y;
 
-                    Canvas.SetLeft(_selectedElement, x);
-                    Canvas.SetTop(_selectedElement, y);
+                        sx -= sx % a.X;
+                        sy -= sy % a.Y;
+
+                        Canvas.SetLeft(_selectedElement, sx);
+                        Canvas.SetTop(_selectedElement, sy);
+                    }
+                    else
+                    {
+                        Canvas.SetLeft(_selectedElement, x + _draggingDelta.X);
+                        Canvas.SetTop(_selectedElement, y + _draggingDelta.Y);
+                    }
 
                     if (_selectedElement is Widget widget)
                     {
@@ -525,8 +533,16 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         for (int i = 0; i < _borderChilds.Count; i++)
                         {
-                            Canvas.SetLeft(_borderChilds[i], x + _borderChildsDeltas[i].X);
-                            Canvas.SetTop(_borderChilds[i], y + _borderChildsDeltas[i].Y);
+                            if (SnapToGrid)
+                            {
+                                Canvas.SetLeft(_borderChilds[i], x + _borderChildsDeltas[i].X);
+                                Canvas.SetTop(_borderChilds[i], y + _borderChildsDeltas[i].Y);
+                            }
+                            else
+                            {
+                                Canvas.SetLeft(_borderChilds[i], x + _borderChildsDeltas[i].X);
+                                Canvas.SetTop(_borderChilds[i], y + _borderChildsDeltas[i].Y);
+                            }
 
                             if (_borderChilds[i] is Widget widgetC)
                             {

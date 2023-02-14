@@ -576,14 +576,15 @@
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogSettings" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="300">
+                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
                     <Rectangle Style="{StaticResource DialogRect}" />
                     <Label Content="Settings" Style="{StaticResource Header}" />
 
                     <CheckBox Content=" Use Bezier curve on lines" Name="settingsBezier" Margin="20,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" When moving, snap everything to grid" Name="settingsSnap" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Use Lua bytecode for production files" Name="settingsBytecode" Margin="20,140,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Use Lua bytecode for debug files" Name="settingsBytecodeDebug" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <CheckBox Content=" Use Bezier on line points" Name="settingsLinePointsBezier" Margin="40,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <CheckBox Content=" When moving, snap everything to grid" Name="settingsSnap" Margin="20,140,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <CheckBox Content=" Use Lua bytecode for production files" Name="settingsBytecode" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <CheckBox Content=" Use Lua bytecode for debug files" Name="settingsBytecodeDebug" Margin="20,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                     <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                     <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />

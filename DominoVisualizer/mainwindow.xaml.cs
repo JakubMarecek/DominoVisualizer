@@ -1263,6 +1263,7 @@ namespace DominoVisualizer
             {
                 var s = parser.GetSettings;
                 s["useBezier"] = settingsBezier.IsChecked == true;
+                s["linePointsBezier"] = settingsLinePointsBezier.IsChecked == true;
                 s["snapToGrid"] = settingsSnap.IsChecked == true;
                 s["bytecode"] = settingsBytecode.IsChecked == true;
                 s["bytecodeDebug"] = settingsBytecodeDebug.IsChecked == true;
@@ -1295,6 +1296,7 @@ namespace DominoVisualizer
             {
                 var s = parser.GetSettings;
                 settingsBezier.IsChecked = (bool)s["useBezier"];
+                settingsLinePointsBezier.IsChecked = (bool)s["linePointsBezier"];
                 settingsSnap.IsChecked = (bool)s["snapToGrid"];
                 settingsBytecode.IsChecked = (bool)s["bytecode"];
                 settingsBytecodeDebug.IsChecked = (bool)s["bytecodeDebug"];

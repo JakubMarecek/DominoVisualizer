@@ -326,7 +326,7 @@ namespace WpfPanAndZoom.CustomControls
                                     )
                                 {
                                     _borderChilds.Add(child);
-                                    _borderChildsDeltas.Add(new Point(xc, yc) - Transform3(elementPosition));
+                                    _borderChildsDeltas.Add(new Point(xc, yc) - elementPosition);
                                 }
                             }
                     }
@@ -338,7 +338,7 @@ namespace WpfPanAndZoom.CustomControls
                         {
                             double xc = Canvas.GetLeft(child);
                             double yc = Canvas.GetTop(child);
-                            _selectionItemsDeltas.Add(new Point(xc, yc) - mousePosition);
+                            _selectionItemsDeltas.Add(new Point(xc, yc) - elementPosition);
                         }
                     }
                 }
@@ -495,15 +495,12 @@ namespace WpfPanAndZoom.CustomControls
                     double x = Mouse.GetPosition(this).X;
                     double y = Mouse.GetPosition(this).Y;
 
-                    double sx = 0;
-                    double sy = 0;
-
                     if (SnapToGrid)
                     {
                         var a = Transform4(new(100, 100));
 
-                        sx = x + _draggingDelta.X;
-                        sy = y + _draggingDelta.Y;
+                        double sx = x + _draggingDelta.X;
+                        double sy = y + _draggingDelta.Y;
 
                         sx -= sx % a.X;
                         sy -= sy % a.Y;
@@ -533,16 +530,10 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         for (int i = 0; i < _borderChilds.Count; i++)
                         {
-                            if (SnapToGrid)
-                            {
-                                Canvas.SetLeft(_borderChilds[i], x + _borderChildsDeltas[i].X);
-                                Canvas.SetTop(_borderChilds[i], y + _borderChildsDeltas[i].Y);
-                            }
-                            else
-                            {
-                                Canvas.SetLeft(_borderChilds[i], x + _borderChildsDeltas[i].X);
-                                Canvas.SetTop(_borderChilds[i], y + _borderChildsDeltas[i].Y);
-                            }
+                            Point parentPosition = new Point(Canvas.GetLeft(_selectedElement), Canvas.GetTop(_selectedElement));
+
+                            Canvas.SetLeft(_borderChilds[i], parentPosition.X + _borderChildsDeltas[i].X);
+                            Canvas.SetTop(_borderChilds[i], parentPosition.Y + _borderChildsDeltas[i].Y);
 
                             if (_borderChilds[i] is Widget widgetC)
                             {
@@ -569,13 +560,37 @@ namespace WpfPanAndZoom.CustomControls
             }
             else if (_dragging && e.LeftButton == MouseButtonState.Pressed && Keyboard.Modifiers == ModifierKeys.Control && _selectionItems.Any())
             {
+                double x = Mouse.GetPosition(this).X;
+                double y = Mouse.GetPosition(this).Y;
+
+                if (SnapToGrid)
+                {
+                    var a = Transform4(new(100, 100));
+
+                    double sx = x + _draggingDelta.X;
+                    double sy = y + _draggingDelta.Y;
+
+                    sx -= sx % a.X;
+                    sy -= sy % a.Y;
+
+                    Canvas.SetLeft(_selectedElement, sx);
+                    Canvas.SetTop(_selectedElement, sy);
+                }
+                else
+                {
+                    Canvas.SetLeft(_selectedElement, x + _draggingDelta.X);
+                    Canvas.SetTop(_selectedElement, y + _draggingDelta.Y);
+                }
+
                 for (int i = 0; i < _selectionItems.Count; i++)
                 {
-                    double x = Mouse.GetPosition(this).X;
-                    double y = Mouse.GetPosition(this).Y;
-
-                    Canvas.SetLeft(_selectionItems[i], x + _selectionItemsDeltas[i].X);
-                    Canvas.SetTop(_selectionItems[i], y + _selectionItemsDeltas[i].Y);
+                    if (_selectionItems[i] != _selectedElement)
+                    {
+                        Point parentPosition = new Point(Canvas.GetLeft(_selectedElement), Canvas.GetTop(_selectedElement));
+    
+                        Canvas.SetLeft(_selectionItems[i], parentPosition.X + _selectionItemsDeltas[i].X);
+                        Canvas.SetTop(_selectionItems[i], parentPosition.Y + _selectionItemsDeltas[i].Y);
+                    }
 
                     var b = Transform5(_selectionItems[i]);
 

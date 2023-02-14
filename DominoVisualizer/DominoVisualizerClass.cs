@@ -108,8 +108,8 @@ namespace DominoVisualizer
 		 * -stick to grid								ok		https://stackoverflow.com/questions/1892474/c-sharp-create-snap-to-grid-functionality
 		 * -setting window - open in workspace			ok
 		 * -adding new box, execbox -> missing in debug	ok
-		 * -stick to grid - borders
-		 * -lines points bezier
+		 * -stick to grid - borders						ok
+		 * -lines points bezier							ok
 		 * -export - markers as saved
 		 */
 
@@ -4643,6 +4643,7 @@ namespace DominoVisualizer
 		private void LoadSettings()
 		{
             settings.Add("useBezier", true);
+            settings.Add("linePointsBezier", true);
             settings.Add("snapToGrid", false);
             settings.Add("bytecode", false);
             settings.Add("bytecodeDebug", false);
@@ -4658,6 +4659,8 @@ namespace DominoVisualizer
 					l.UI.MakeBezier();
 				else
 					l.UI.MakePoly();
+
+				l.UI.PointBezier = (bool)settings["linePointsBezier"];
 
                 l.UI.Measure(new(1, 1));
             }
@@ -6331,6 +6334,7 @@ namespace DominoVisualizer
                 xSettings.Elements().Remove();
                 xSettings.Add(new XElement("SnapToGrid", (bool)settings["snapToGrid"] ? "true" : "false"));
                 xSettings.Add(new XElement("UseBezier", (bool)settings["useBezier"] ? "true" : "false"));
+                xSettings.Add(new XElement("LinePointsBezier", (bool)settings["linePointsBezier"] ? "true" : "false"));
                 xSettings.Add(new XElement("Bytecode", (bool)settings["bytecode"] ? "true" : "false"));
                 xSettings.Add(new XElement("BytecodeDebug", (bool)settings["bytecodeDebug"] ? "true" : "false"));
             }
@@ -6844,6 +6848,7 @@ namespace DominoVisualizer
                 {
                     settings["snapToGrid"] = xSettings.Element("SnapToGrid").Value == "true";
                     settings["useBezier"] = xSettings.Element("UseBezier").Value == "true";
+                    settings["linePointsBezier"] = xSettings.Element("LinePointsBezier").Value == "true";
                     settings["bytecode"] = xSettings.Element("Bytecode").Value == "true";
                     settings["bytecodeDebug"] = xSettings.Element("BytecodeDebug").Value == "true";
                 }

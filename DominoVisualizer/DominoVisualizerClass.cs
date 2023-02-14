@@ -135,7 +135,6 @@ namespace DominoVisualizer
 
 		byte[] fileBytes = null;
 		string runPath = "";
-		const string settFile = "DominoVisualizer.xml";
 
         string game = "";
 		string file = "";
@@ -151,7 +150,13 @@ namespace DominoVisualizer
 		bool wasEdited = false;
 
         [DllImport("luac51", EntryPoint = "Process", CallingConvention = CallingConvention.Cdecl)]
-        static extern void LuacLibProcess(string inPath, string outPath);
+        static extern void LuacLibProcess(string inPath, string outPath, string bytecodePath);
+
+        [DllImport("luac51", EntryPoint = "ProcessBytes", CallingConvention = CallingConvention.Cdecl)]
+        static extern void LuacLibProcessBytes(byte[] inBuffer, int inSize, out IntPtr outBuffer, out int outSize, string bytecodePath);
+
+        [DllImport("luac51", EntryPoint = "FreeMem", CallingConvention = CallingConvention.Cdecl)]
+        static extern void LuacLibFreeMem(IntPtr obj);
 
         List<string> resourcesTypes = new()
         {
@@ -5807,13 +5812,18 @@ namespace DominoVisualizer
 
 			if (((bool)settings["bytecode"] && !debug) || ((bool)settings["bytecodeDebug"] && debug))
 			{
-				File.WriteAllBytes(exportPath, lua);
+				string luaFile = Path.GetFileName(exportPath);
 
-                LuacLibProcess(exportPath, exportPath + ".tmp");
-                lua = File.ReadAllBytes(exportPath + ".tmp");
-                File.Delete(exportPath + ".tmp");
+				byte[] bytecode;
 
-				File.Delete(exportPath);
+				LuacLibProcessBytes(lua, lua.Length, out IntPtr buffer, out int bufferSize, luaFile);
+
+                bytecode = new byte[bufferSize];
+                Marshal.Copy(buffer, bytecode, 0, bufferSize);
+
+                LuacLibFreeMem(buffer);
+
+				lua = bytecode;
             }
 
 			byte[] meta = docData.ToArray();
@@ -6844,14 +6854,11 @@ namespace DominoVisualizer
             XElement xSettings = xRoot.Element("Settings");
 			if (xSettings != null)
             {
-                if (File.Exists(runPath + "\\" + settFile))
-                {
-                    settings["snapToGrid"] = xSettings.Element("SnapToGrid").Value == "true";
-                    settings["useBezier"] = xSettings.Element("UseBezier").Value == "true";
-                    settings["linePointsBezier"] = xSettings.Element("LinePointsBezier").Value == "true";
-                    settings["bytecode"] = xSettings.Element("Bytecode").Value == "true";
-                    settings["bytecodeDebug"] = xSettings.Element("BytecodeDebug").Value == "true";
-                }
+                settings["snapToGrid"] = xSettings.Element("SnapToGrid").Value == "true";
+                settings["useBezier"] = xSettings.Element("UseBezier").Value == "true";
+                settings["linePointsBezier"] = xSettings.Element("LinePointsBezier").Value == "true";
+                settings["bytecode"] = xSettings.Element("Bytecode").Value == "true";
+                settings["bytecodeDebug"] = xSettings.Element("BytecodeDebug").Value == "true";
 
                 UseSettings(false);
             }

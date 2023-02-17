@@ -5158,24 +5158,25 @@ namespace DominoVisualizer
 
 		public void Export()
 		{
+			bool su = false;
+
 			var a = ExportWrite(false);
 			if (a == "r")
-			{
-			}
+				su = true;
 			else if (a != "")
 				openInfoDialog("Export", a);
-			else
-				openNotice("Domino has been successfully exported to LUA.");
 
-			if (a == "")
+            a = ExportWrite(true);
+            if (a == "r")
+                su = true;
+            else if (a != "")
             {
-                AskDialog("Export", "Export also debug files? To use debug you must export all graphs with debug.", () =>
-                {
-                    string r = ExportWrite(true);
-                    if (a != "")
-                        openInfoDialog("Export", a);
-                });
+                openInfoDialog("Export", a);
+                su = false;
             }
+
+            if (su)
+                openNotice("Domino has been successfully exported to LUA.");
 		}
 
 		private string ExportWrite(bool debug)

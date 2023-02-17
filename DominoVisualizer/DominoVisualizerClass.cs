@@ -5162,18 +5162,24 @@ namespace DominoVisualizer
 
 			var a = ExportWrite(false);
 			if (a == "r")
-				su = true;
+			{
+			}
 			else if (a != "")
 				openInfoDialog("Export", a);
+			else if (a == "")
+                su = true;
 
             a = ExportWrite(true);
             if (a == "r")
-                su = true;
+			{
+			}
             else if (a != "")
             {
                 openInfoDialog("Export", a);
                 su = false;
             }
+            else if (a == "")
+                su = true;
 
             if (su)
                 openNotice("Domino has been successfully exported to LUA.");

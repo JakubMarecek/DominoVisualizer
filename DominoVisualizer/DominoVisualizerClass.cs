@@ -5488,8 +5488,10 @@ namespace DominoVisualizer
 
 				foreach (var otf in conn.Value.OutFuncName)
                 {
-                    streamWriter.WriteLine($"  self:WriteDebugToFile(\"\", \"\", \"\", \"{otf}\", \"\")");
-                    streamWriter.WriteLine($"  self:{otf}()");
+                    if (debug)
+                        streamWriter.WriteLine($"  self:WriteDebugToFile(\"\", \"\", \"\", \"{otf}\", \"\")");
+                    
+					streamWriter.WriteLine($"  self:{otf}()");
 
 					if (!outFncs.Contains(otf))
 						outFncs.Add(otf);

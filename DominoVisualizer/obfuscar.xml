@@ -1,0 +1,46 @@
+﻿<?xml version='1.0'?>
+<Obfuscator>
+	<Var name="InPath" value="" />
+	<Var name="OutPath" value="..\bin\net7.0-windows\win-x64\Obfuscated\" />
+	<Var name="KeepPublicApi" value="false" />
+	<Var name="HidePrivateApi" value="true" />
+	<Var name="RenameProperties" value="true" />
+	<Var name="RenameEvents" value="true" />
+	<Var name="RenameFields" value="true" />
+	<Var name="ReuseNames" value="true" />
+	<Var name="UseUnicodeNames" value="true" />
+	<Var name="UseKoreanNames" value="false" />
+	<Var name="HideStrings" value="true" />
+	<Var name="OptimizeMethods" value="true" />
+	<Var name="SuppressIldasm" value="true" />
+	<Var name="AnalyzeXaml" value="true" />
+	<Module file="..\DominoVisualizer\obj\Release\net7.0-windows\win-x64\DominoVisualizer.dll">
+		<SkipProperty type="DominoVisualizer.ExecEntry" name="Name" />
+		<SkipProperty type="DominoVisualizer.ExecEntry" name="Num" />
+
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamName" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamNameRaw" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="UniqueID" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="UniqueIDParent" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamValue" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamUsed" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamIsBase" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ParamHasArray" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="NameMargin" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="AddArrayVs" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="AddVs" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="RemoveVs" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="ArrayBulletVs" />
+		<SkipProperty type="DominoVisualizer.ParamEntry" name="GetDataVs" />
+
+		<SkipProperty type="DominoVisualizer.ColorEntry" name="Color" />
+
+		<SkipProperty type="DominoVisualizer.DominoGraph" name="Name" />
+		<SkipProperty type="DominoVisualizer.DominoGraph" name="UniqueID" />
+		<SkipProperty type="DominoVisualizer.DominoGraph" name="IsDefault" />
+		<SkipProperty type="DominoVisualizer.DominoGraph" name="Metadata" />
+		<SkipProperty type="DominoVisualizer.DominoGraph" name="ContainsBoxes" />
+	</Module>
+	<AssemblySearchPath path="C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.3" />
+	<AssemblySearchPath path="C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\7.0.3" />
+</Obfuscator>

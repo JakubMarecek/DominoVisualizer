@@ -2,7 +2,6 @@
 using Petzold.Media2D;
 using System.Collections.Generic;
 using System.Windows.Controls;
-using WpfPanAndZoom.CustomControls;
 
 namespace DominoVisualizer
 {

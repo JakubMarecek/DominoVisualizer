@@ -21,7 +21,7 @@ namespace DominoVisualizer
     /// </summary>
     public partial class MainWindow : Window
 	{
-		DominoVisualizerClass parser;
+        DVClass parser;
 		//string fileSel = "";
 		bool loaded = false;
 		bool externalLaunch = false;

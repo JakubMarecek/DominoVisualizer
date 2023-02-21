@@ -26,7 +26,7 @@ using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
 {
-	internal class DominoVisualizerClass
+	internal class DVClass
 	{
         /* TODO
 		 * -param lua file open							ok / maybe
@@ -204,32 +204,36 @@ namespace DominoVisualizer
 
 		public Dictionary<string, object> GetSettings { get { return settings; } }
 
-		public DominoVisualizerClass(MainWindow window, PanAndZoomCanvas canvas, string game)
+		public DVClass(MainWindow window, PanAndZoomCanvas canvas, string game)
 		{
 			this.wnd = window;
 			this.canvas = canvas;
 			this.game = game;
 
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            using var processModule = Process.GetCurrentProcess().MainModule;
+            runPath = Path.GetDirectoryName(processModule?.FileName);
+            //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
 			LoadSettings();
             ParseAllBoxes();
 			AddColors();
 		}
 
-		public DominoVisualizerClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas)
+		public DVClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas)
         {
             this.wnd = window;
             file = dominoPath;
 			this.canvas = canvas;
 
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            using var processModule = Process.GetCurrentProcess().MainModule;
+            runPath = Path.GetDirectoryName(processModule?.FileName);
+            //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
             AddColors();
 		}
 
-		public DominoVisualizerClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
+		public DVClass(MainWindow window, string dominoPath, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoPath;
@@ -238,14 +242,16 @@ namespace DominoVisualizer
 
 			luaFile = new MemoryStream(File.ReadAllBytes(file));
 
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            using var processModule = Process.GetCurrentProcess().MainModule;
+            runPath = Path.GetDirectoryName(processModule?.FileName);
+            //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
             ParseAllBoxes();
 			AddColors();
 		}
 
-		public DominoVisualizerClass(MainWindow window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
+		public DVClass(MainWindow window, string dominoPath, string dominoSearchFolder, PanAndZoomCanvas canvas, string game)
         {
             this.wnd = window;
             file = dominoSearchFolder;
@@ -256,7 +262,9 @@ namespace DominoVisualizer
 
 			File.Delete(dominoPath);
 
-			runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            using var processModule = Process.GetCurrentProcess().MainModule;
+            runPath = Path.GetDirectoryName(processModule?.FileName);
+            //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
             ParseAllBoxes();

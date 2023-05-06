@@ -505,6 +505,14 @@ namespace WpfPanAndZoom.CustomControls
                         sx -= sx % a.X;
                         sy -= sy % a.Y;
 
+                        if (_selectedElement is DominoUILinePoint)
+                        {
+                            var b = Transform4(new(7.5, 7.5));
+
+                            sx -= b.X;
+                            sy -= b.Y;
+                        }
+
                         Canvas.SetLeft(_selectedElement, sx);
                         Canvas.SetTop(_selectedElement, sy);
                     }

@@ -2287,6 +2287,8 @@ namespace DominoVisualizer
 			else
 				l.MakePoly();
 
+			l.PointBezier = (bool)settings["linePointsBezier"];
+
             l.Cursor = Cursors.Hand;
 			l.Points = new();
 

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DominoVisualizer": {
+      "commandName": "Project",
+      "commandLineArgs": "Z:\\home_cloud_private\\dominos\\fc6_zeniagarageopener.domino.xml"
+    }
+  }
+}

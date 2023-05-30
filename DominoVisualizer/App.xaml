@@ -182,6 +182,7 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Content" Value="" />
             <Setter Property="ToolTip" Value="Edit" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="100" />
 
             <Setter Property="Template">
                 <Setter.Value>
@@ -961,6 +962,32 @@
 
                             </Grid>
                         </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
+            <Setter Property="OverridesDefaultStyle" Value="true" />
+            <Setter Property="HasDropShadow" Value="True" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontFamily" Value="/DominoVisualizer;component/OpenSans.ttf#Open Sans"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Name="Border" BorderThickness="1" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="#1b1b1b">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#F28C28" />
+                            </Border.BorderBrush>
+                            <ContentPresenter Margin="6" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasDropShadow" Value="true">
+                                <Setter TargetName="Border" Property="CornerRadius" Value="4" />
+                                <Setter TargetName="Border" Property="SnapsToDevicePixels" Value="true" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

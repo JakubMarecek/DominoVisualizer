@@ -1339,7 +1339,7 @@ namespace DominoVisualizer
 				string[] varAssignSp = inputStr.Split(':');
 
 				if (!dominoBoxes.ContainsKey(varAssignSp[0]))
-					return "";
+					return "BOX NOT ASSIGNED HERE";
 
 				int dataOutParam = int.Parse(varAssignSp[1].Replace("GetDataOutValue(", "").Replace(")", ""));
 				var boxNameP = dominoBoxes[varAssignSp[0]].Name;

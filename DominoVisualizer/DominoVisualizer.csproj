@@ -49,10 +49,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DominoLib.bin">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </None>
+	  <None Update="DominoLib.bin">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </None>
+	  <None Update="DominoLibCustom.zip">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </None>
     <None Update="luac51.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

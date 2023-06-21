@@ -798,34 +798,40 @@ namespace DominoVisualizer
 
 		private void ParseAllBoxes()
 		{
-			ZipArchive zip = ZipFile.OpenRead(runPath + "\\DominoLib.bin");
+			void a(string file)
+            {
+                ZipArchive zip = ZipFile.OpenRead(runPath + "\\" + a);
 
-            string zipFileStr = "";
-            if (game == "fc5") zipFileStr = "FC5";
-            if (game == "fcnd") zipFileStr = "FCND";
-            if (game == "fc6") zipFileStr = "FC6";
+                string zipFileStr = "";
+                if (game == "fc5") zipFileStr = "FC5";
+                if (game == "fcnd") zipFileStr = "FCND";
+                if (game == "fc6") zipFileStr = "FC6";
 
-            foreach (var l in zip.Entries)
-			{
-				if (l.FullName.StartsWith(zipFileStr) && l.FullName.EndsWith(".lua"))
-				{
-					MemoryStream fs = new MemoryStream();
+                foreach (var l in zip.Entries)
+                {
+                    if (l.FullName.StartsWith(zipFileStr) && l.FullName.EndsWith(".lua"))
+                    {
+                        MemoryStream fs = new MemoryStream();
 
-					Stream tmpStream = l.Open();
-					tmpStream.CopyTo(fs);
+                        Stream tmpStream = l.Open();
+                        tmpStream.CopyTo(fs);
 
-					byte[] byteBuffer = fs.ToArray();
-					string byteBufferAsString = System.Text.Encoding.UTF8.GetString(byteBuffer);
-					int offset = byteBufferAsString.IndexOf("DominoMetadata");
+                        byte[] byteBuffer = fs.ToArray();
+                        string byteBufferAsString = System.Text.Encoding.UTF8.GetString(byteBuffer);
+                        int offset = byteBufferAsString.IndexOf("DominoMetadata");
 
-					if (offset > 0)
-					{
-						var m = ParseLuaBoxFile(fs);
-						regBoxesAll.Add(l.FullName.Replace(zipFileStr + "/", ""), m);
-					}
-				}
-			}
-		}
+                        if (offset > 0)
+                        {
+                            var m = ParseLuaBoxFile(fs);
+                            regBoxesAll.Add(l.FullName.Replace(zipFileStr + "/", ""), m);
+                        }
+                    }
+                }
+            }
+
+			a("DominoLib.bin");
+			a("DominoLibCustom.zip");
+        }
 
 		private DominoBoxMetadata ParseLuaBoxFile(Stream fs)
 		{

@@ -2,7 +2,7 @@
   "profiles": {
     "DominoVisualizer": {
       "commandName": "Project",
-      "commandLineArgs": "\"G:\\fc5 sources\\a_installpkg_unpacked\\domino\\user\\fc6_main\\activities\\fc6_licensed\\lem0020\\lem0020_b10.lem0020_b10.lua\""
+      "commandLineArgs": "\"D:\\Desktop\\fc6_defendoutpost.spawnenemies.lua\""
     }
   }
 }

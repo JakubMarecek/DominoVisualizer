@@ -800,7 +800,7 @@ namespace DominoVisualizer
 		{
 			void a(string file)
             {
-                ZipArchive zip = ZipFile.OpenRead(runPath + "\\" + a);
+                ZipArchive zip = ZipFile.OpenRead(runPath + "\\" + file);
 
                 string zipFileStr = "";
                 if (game == "fc5") zipFileStr = "FC5";

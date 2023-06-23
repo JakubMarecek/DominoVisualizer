@@ -396,7 +396,7 @@ namespace DominoVisualizer
 				{
 				}
 				else*/
-				if (l.StartsWith("self.") && !externalBoxDef && !l.Contains("l0:GetDataOutValue(") && !isExtFuncs)
+				if (l.StartsWith("self.") && !externalBoxDef && !l.Contains("l0:GetDataOutValue(") && !isExtFuncs && l.Contains('='))
 				{
 					DominoDict rgv()
 					{

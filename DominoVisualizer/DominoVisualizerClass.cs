@@ -1038,7 +1038,7 @@ namespace DominoVisualizer
 					conn.ExecBoxes.Add(execBox);
 
 					tempParams = new();
-					boxID = "";
+					//boxID = "";
 					paramsFunc = "";
 				}
 			}

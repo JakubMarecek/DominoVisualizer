@@ -5746,7 +5746,7 @@ namespace DominoVisualizer
                         {
                             if (svar.Value != null)
                             {
-                                string dSet = svar.Name + " = " + svar.Value;
+                                string dSet = (svar.Name == "" ? "" : svar.Name + " = ") + svar.Value;
 
                                 foreach (var tmpVar in tmpVars)
                                     dSet = dSet.Replace(tmpVar.Key, tmpVar.Value);
@@ -5756,7 +5756,7 @@ namespace DominoVisualizer
 
                             if (svar.ValueArray.Any())
 							{
-								string v = svar.Name + " = {" + nl + "    " + string.Join("," + nl + "    ", writeArray(svar.ValueArray)) + nl + "  }";
+								string v = (svar.Name == "" ? "" : svar.Name + " = ") + "{" + nl + "    " + string.Join("," + nl + "    ", writeArray(svar.ValueArray)) + nl + "  }";
                                 outVal.Add(v);
                             }
                         }

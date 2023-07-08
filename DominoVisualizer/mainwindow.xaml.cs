@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -44,7 +45,75 @@ namespace DominoVisualizer
             SwapGraph
 		}
 
-		public MainWindow()
+        DiscordRPC.DiscordRpcClient discordClient;
+        DiscordRPC.RichPresence discordPresence;
+        System.Threading.Timer discordTimer;
+
+        private void DiscordPresence()
+        {
+            try
+            {
+                discordClient = new("1127168424334856224", -1);
+                discordClient.Initialize();
+                discordPresence = new DiscordRPC.RichPresence()
+                {
+                    Details = "No workspace opened",
+                    Timestamps = DiscordRPC.Timestamps.Now,
+                    Buttons = new DiscordRPC.Button[] { new DiscordRPC.Button() { Label = "Visit FCModding.com", Url = "https://fcmodding.com/" } },
+                    State = "",
+                    Assets = new DiscordRPC.Assets()
+                    {
+                        LargeImageKey = "domino",
+                        LargeImageText = appName
+                    }
+                };
+                discordClient.SetPresence(discordPresence);
+                discordTimer = new System.Threading.Timer(_ => DiscordTimer_Tick(), null, 0, 5000);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void DiscordClose()
+        {
+            try
+            {
+                discordTimer.Dispose();
+                discordClient.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void DiscordTimer_Tick()
+        {
+            try
+            {
+                if (parser == null)
+                {
+                    discordPresence.Details = "No workspace opened";
+                    discordPresence.State = "";
+                }
+                else
+                {
+                    discordPresence.Details = "Workspace: " + parser.GetWorkspaceName;
+                    discordPresence.State = "Graph: " + parser.GetGraphName;
+                }
+                discordClient.SetPresence(discordPresence);
+
+                if (Process.GetProcessesByName("discord").Length == 0)
+                {
+                    DiscordClose();
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public MainWindow()
 		{
 			InitializeComponent();
 			SetTitle(true);
@@ -67,6 +136,8 @@ namespace DominoVisualizer
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
+            DiscordPresence();
+
             /*gridLoading.Visibility = Visibility.Hidden;
 			gridException.Visibility = Visibility.Hidden;
 			gridNotice.Visibility = Visibility.Hidden;
@@ -492,6 +563,8 @@ namespace DominoVisualizer
         bool closeWait = false;
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            DiscordClose();
+
             if (parser != null && !canClose)
             {
                 parser.CheckEdited(() =>

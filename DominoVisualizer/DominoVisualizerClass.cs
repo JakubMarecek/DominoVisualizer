@@ -198,6 +198,22 @@ namespace DominoVisualizer
 
         //Random r = new();
 
+        public string GetWorkspaceName
+        {
+            get
+            {
+                return workspaceName;
+            }
+        }
+
+        public string GetGraphName
+        {
+            get
+            {
+                return dominoGraphs[selGraph].Name;
+            }
+        }
+
         public string CurrentFile { get { return file; } }
 
 		public string CurrentDatPath { get { return datPath; } }
@@ -271,7 +287,7 @@ namespace DominoVisualizer
 			AddColors();
 		}
 
-		public void Create(string workspace, string graph, string dat)
+        public void Create(string workspace, string graph, string dat)
 		{
 			workspaceName = workspace;
 			datPath = dat;

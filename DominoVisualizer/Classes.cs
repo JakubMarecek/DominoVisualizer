@@ -220,6 +220,8 @@ namespace DominoVisualizer
             Name = name;
             AnchorDynType = anchorDynType;
             DataTypeID = dataTypeID;
+
+            UniqueID = Helpers.RandomString();
         }
 
         public string Name { set; get; }
@@ -227,6 +229,8 @@ namespace DominoVisualizer
         public int AnchorDynType { set; get; }
 
         public string DataTypeID { set; get; }
+
+        public string UniqueID { get; set; }
 
         public Border ContainerUI { set; get; }
     }

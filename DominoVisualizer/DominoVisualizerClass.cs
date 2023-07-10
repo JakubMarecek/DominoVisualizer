@@ -226,8 +226,9 @@ namespace DominoVisualizer
 			this.canvas = canvas;
 			this.game = game;
 
-            using var processModule = Process.GetCurrentProcess().MainModule;
-            runPath = Path.GetDirectoryName(processModule?.FileName);
+			runPath = AppContext.BaseDirectory;
+            //using var processModule = Process.GetCurrentProcess().MainModule;
+            //runPath = Path.GetDirectoryName(processModule?.FileName);
             //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
 			LoadSettings();
@@ -241,8 +242,9 @@ namespace DominoVisualizer
             file = dominoPath;
 			this.canvas = canvas;
 
-            using var processModule = Process.GetCurrentProcess().MainModule;
-            runPath = Path.GetDirectoryName(processModule?.FileName);
+			runPath = AppContext.BaseDirectory;
+            //using var processModule = Process.GetCurrentProcess().MainModule;
+            //runPath = Path.GetDirectoryName(processModule?.FileName);
             //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
@@ -258,8 +260,9 @@ namespace DominoVisualizer
 
 			luaFile = new MemoryStream(File.ReadAllBytes(file));
 
-            using var processModule = Process.GetCurrentProcess().MainModule;
-            runPath = Path.GetDirectoryName(processModule?.FileName);
+			runPath = AppContext.BaseDirectory;
+            //using var processModule = Process.GetCurrentProcess().MainModule;
+            //runPath = Path.GetDirectoryName(processModule?.FileName);
             //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
@@ -278,8 +281,9 @@ namespace DominoVisualizer
 
 			File.Delete(dominoPath);
 
-            using var processModule = Process.GetCurrentProcess().MainModule;
-            runPath = Path.GetDirectoryName(processModule?.FileName);
+			runPath = AppContext.BaseDirectory;
+            //using var processModule = Process.GetCurrentProcess().MainModule;
+            //runPath = Path.GetDirectoryName(processModule?.FileName);
             //runPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             LoadSettings();
@@ -2541,7 +2545,7 @@ namespace DominoVisualizer
 			wb.list.Children.Add(DrawBtn("Add new output connector", box.ID, AddBoxConnector));
 		}
 
-		private void DrawMetaDataIn(DominoBoxMetadataDatasIn inData, bool indt)
+		private void DrawMetaDataIn(DominoBoxMetadataDatasIn inData, bool indt, bool updateUI = false)
 		{
 			StackPanel sp2 = new();
 
@@ -2549,7 +2553,7 @@ namespace DominoVisualizer
 
 			g2.Children.Add(new TextBox() { Text = inData.Name, FontWeight = FontWeights.Bold });
 
-			string tag = (indt ? "datain" : "dataout") + "|" + inData.Name;
+			string tag = (indt ? "datain" : "dataout") + "|" + inData.UniqueID;
 
 			Button btn = new Button() { Tag = tag, Style = (Application.Current.FindResource("EditBtn") as Style) };
 			btn.Click += EditMetadataInfo;
@@ -2565,10 +2569,17 @@ namespace DominoVisualizer
 			sp2.Children.Add(new TextBox() { Text = "AnchorDynType: " + inData.AnchorDynType, Margin = new(10, 0, 0, 0) });
 			sp2.Children.Add(new TextBox() { Text = "DataTypeID: " + inData.DataTypeID, Margin = new(10, 0, 0, 0) });
 
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			inData.ContainerUI = b2;
-			if (indt) wiMetaDataIn.list.Children.Add(b2);
-			else wiMetaDataOut.list.Children.Add(b2);
+			if (updateUI)
+			{
+                inData.ContainerUI.Child = sp2;
+            }
+			else
+            {
+                Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+                inData.ContainerUI = b2;
+                if (indt) wiMetaDataIn.list.Children.Add(inData.ContainerUI);
+                else wiMetaDataOut.list.Children.Add(inData.ContainerUI);
+            }
 		}
 
 		private void DrawMetaControlIn(DominoBoxMetadataControlsIn inCtrl)
@@ -4235,13 +4246,13 @@ namespace DominoVisualizer
 
 			if (tag == "datain")
 			{
-				var m = new DominoBoxMetadataDatasIn("New Data In", 0, "string");
+				var m = new DominoBoxMetadataDatasIn("NewDataIn", 0, "string");
 				dominoGraphs[selGraph].Metadata.DatasIn.Add(m);
 				DrawMetaDataIn(m, true);
 			}
 			if (tag == "dataout")
 			{
-				var m = new DominoBoxMetadataDatasOut("New Data Out", 0, "string");
+				var m = new DominoBoxMetadataDatasOut("NewDataOut", 0, "string");
 				dominoGraphs[selGraph].Metadata.DatasOut.Add(m);
 				DrawMetaDataIn(m, false);
 			}
@@ -4285,12 +4296,12 @@ namespace DominoVisualizer
 
 			if (tag[0] == "datain")
 			{
-				var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == tag[1]).Single();
+				var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.UniqueID == tag[1]).Single();
 				openEditDataDialog("Edit data in", "Edit the input data of this Domino:", m.Name, m.AnchorDynType.ToString(), m.DataTypeID, null, null, null);
 			}
 			if (tag[0] == "dataout")
 			{
-				var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == tag[1]).Single();
+				var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.UniqueID == tag[1]).Single();
 				openEditDataDialog("Edit data out", "Edit the output data of this Domino:", m.Name, m.AnchorDynType.ToString(), m.DataTypeID, null, null, null);
 			}
 			if (tag[0] == "controlin")
@@ -4329,17 +4340,18 @@ namespace DominoVisualizer
 		{
 			if (editMetadataDialogData[0] == "datain")
 			{
-				var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == editMetadataDialogData[1]).Single();
+				var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.UniqueID == editMetadataDialogData[1]).Single();
 				m.Name = name;
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.DataTypeID = dataTypeID;
 
-				wiMetaDataIn.list.Children.Remove(m.ContainerUI);
-				DrawMetaDataIn(m, true);
-			}
-			if (editMetadataDialogData[0] == "dataout")
+                //wiMetaDataIn.list.Children.Remove(m.ContainerUI);
+                //DrawMetaDataIn(m, true);
+                DrawMetaDataIn(m, true, true);
+            }
+            if (editMetadataDialogData[0] == "dataout")
 			{
-				var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == editMetadataDialogData[1]).Single();
+				var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.UniqueID == editMetadataDialogData[1]).Single();
 				m.Name = name;
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.DataTypeID = dataTypeID;

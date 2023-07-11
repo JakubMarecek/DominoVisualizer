@@ -2456,7 +2456,7 @@ namespace DominoVisualizer
 				});
 			};
 
-			w.editBtn.Visibility = Visibility.Visible;
+			w.editBtn.Visibility = conn.INT_isIn || conn.INT_isOut ? Visibility.Hidden : Visibility.Visible;
 			w.editBtn.Tag = conn.ID;
 			w.editBtn.Click += EditConnectorDialog;
 
@@ -2582,7 +2582,7 @@ namespace DominoVisualizer
             }
 		}
 
-		private void DrawMetaControlIn(DominoBoxMetadataControlsIn inCtrl)
+		private void DrawMetaControlIn(DominoBoxMetadataControlsIn inCtrl, bool updateUI = false)
 		{
 			StackPanel sp2 = new();
 
@@ -2598,13 +2598,20 @@ namespace DominoVisualizer
 
 			sp2.Children.Add(new TextBox() { Text = "AnchorDynType: " + inCtrl.AnchorDynType, Margin = new(10, 0, 0, 0) });
 			sp2.Children.Add(new TextBox() { Text = "HostExecFunc: " + inCtrl.HostExecFunc, Margin = new(10, 0, 0, 0) });
-
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			inCtrl.ContainerUI = b2;
-			wiMetaControlIn.list.Children.Add(b2);
+			
+			if (updateUI)
+			{
+                inCtrl.ContainerUI.Child = sp2;
+            }
+			else
+            {
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				inCtrl.ContainerUI = b2;
+				wiMetaControlIn.list.Children.Add(inCtrl.ContainerUI);
+            }
 		}
 
-		private void DrawMetaControlOut(DominoBoxMetadataControlsOut outCtrl)
+		private void DrawMetaControlOut(DominoBoxMetadataControlsOut outCtrl, bool updateUI = false)
 		{
 			StackPanel sp2 = new();
 
@@ -2621,9 +2628,16 @@ namespace DominoVisualizer
 			sp2.Children.Add(new TextBox() { Text = "AnchorDynType: " + outCtrl.AnchorDynType, Margin = new(10, 0, 0, 0) });
 			sp2.Children.Add(new TextBox() { Text = "IsDelayed: " + (outCtrl.IsDelayed ? "true" : "false"), Margin = new(10, 0, 0, 0) });
 
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			outCtrl.ContainerUI = b2;
-			wiMetaControlOut.list.Children.Add(b2);
+			if (updateUI)
+			{
+                outCtrl.ContainerUI.Child = sp2;
+            }
+			else
+            {
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				outCtrl.ContainerUI = b2;
+				wiMetaControlOut.list.Children.Add(outCtrl.ContainerUI);
+            }
 		}
 
 		private void RemoveLine(string a)
@@ -2720,7 +2734,7 @@ namespace DominoVisualizer
 			conn.Widget.list.Children.Insert(pos, b2);
 		}
 
-		private void DrawGlobalVar(DominoDict var)
+		private void DrawGlobalVar(DominoDict var, bool updateUI = false)
 		{
 			string pv = ParamsAsString(var);
 
@@ -2746,9 +2760,16 @@ namespace DominoVisualizer
 
 			sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0) });
 
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
-			var.ContainerUI = b2;
-			wiGlobalVars.list.Children.Add(b2);
+			if (updateUI)
+			{
+                var.ContainerUI.Child = sp2;
+            }
+			else
+            {
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				var.ContainerUI = b2;
+				wiGlobalVars.list.Children.Add(var.ContainerUI);
+            }
 		}
 
 		private void RemoveBox(DominoBox box)
@@ -4356,8 +4377,8 @@ namespace DominoVisualizer
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.DataTypeID = dataTypeID;
 
-				wiMetaDataOut.list.Children.Remove(m.ContainerUI);
-				DrawMetaDataIn(m, false);
+				//wiMetaDataOut.list.Children.Remove(m.ContainerUI);
+				DrawMetaDataIn(m, false, true);
 			}
 			if (editMetadataDialogData[0] == "controlin")
 			{
@@ -4365,8 +4386,8 @@ namespace DominoVisualizer
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.HostExecFunc = hostExecFunc;
 
-				wiMetaControlIn.list.Children.Remove(m.ContainerUI);
-				DrawMetaControlIn(m);
+				//wiMetaControlIn.list.Children.Remove(m.ContainerUI);
+				DrawMetaControlIn(m, true);
 			}
 			if (editMetadataDialogData[0] == "controlout")
 			{
@@ -4374,8 +4395,8 @@ namespace DominoVisualizer
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.IsDelayed = isDelayed == true;
 
-				wiMetaControlOut.list.Children.Remove(m.ContainerUI);
-				DrawMetaControlOut(m);
+				//wiMetaControlOut.list.Children.Remove(m.ContainerUI);
+				DrawMetaControlOut(m, true);
 			}
 			if (editMetadataDialogData[0] == "globalvar")
 			{
@@ -4383,7 +4404,7 @@ namespace DominoVisualizer
 
 				var m = globalVariables.Where(a => a.UniqueID == editMetadataDialogData[1]).Single();
 
-				wiGlobalVars.list.Children.Remove(m.ContainerUI);
+				//wiGlobalVars.list.Children.Remove(m.ContainerUI);
 
 				EditExecBoxUIGetParams(paramsList);
 				//m = paramsEdit[0]; // loose instance
@@ -4392,7 +4413,7 @@ namespace DominoVisualizer
 				m.ValueArray = paramsEdit[0].ValueArray;
 				m.UniqueID = paramsEdit[0].UniqueID;
 
-				DrawGlobalVar(m);
+				DrawGlobalVar(m, true);
 			}
 			if (editMetadataDialogData[0] == "connvar")
 			{

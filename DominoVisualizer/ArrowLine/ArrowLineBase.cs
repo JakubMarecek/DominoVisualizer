@@ -1,11 +1,11 @@
 //----------------------------------------------
 // ArrowLineBase.cs (c) 2007 by Charles Petzold
 //----------------------------------------------
+using Avalonia;
+using Avalonia.Controls.Shapes;
+using Avalonia.Media;
+using DominoVisualizer;
 using System;
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace Petzold.Media2D
 {
@@ -28,11 +28,8 @@ namespace Petzold.Media2D
         /// <summary>
         ///     Identifies the ArrowAngle dependency property.
         /// </summary>
-        public static readonly DependencyProperty ArrowAngleProperty =
-            DependencyProperty.Register("ArrowAngle",
-                typeof(double), typeof(ArrowLineBase),
-                new FrameworkPropertyMetadata(45.0,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public static readonly StyledProperty<double> ArrowAngleProperty =
+            AvaloniaProperty.Register<ArrowLineBase, double>(nameof(ArrowAngle), 45);
 
         /// <summary>
         ///     Gets or sets the angle between the two sides of the arrowhead.
@@ -46,11 +43,8 @@ namespace Petzold.Media2D
         /// <summary>
         ///     Identifies the ArrowLength dependency property.
         /// </summary>
-        public static readonly DependencyProperty ArrowLengthProperty =
-            DependencyProperty.Register("ArrowLength",
-                typeof(double), typeof(ArrowLineBase),
-                new FrameworkPropertyMetadata(12.0,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public static readonly StyledProperty<double> ArrowLengthProperty =
+            AvaloniaProperty.Register<ArrowLineBase, double>(nameof(ArrowLength), 12);
 
         /// <summary>
         ///     Gets or sets the length of the two sides of the arrowhead.
@@ -64,11 +58,8 @@ namespace Petzold.Media2D
         /// <summary>
         ///     Identifies the IsArrowClosed dependency property.
         /// </summary>
-        public static readonly DependencyProperty IsArrowClosedProperty =
-            DependencyProperty.Register("IsArrowClosed",
-                typeof(bool), typeof(ArrowLineBase),
-                new FrameworkPropertyMetadata(false,
-                        FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public static readonly StyledProperty<bool> IsArrowClosedProperty =
+            AvaloniaProperty.Register<ArrowLineBase, bool>(nameof(IsArrowClosed), false);
 
         /// <summary>
         ///     Gets or sets the property that determines if the arrow head
@@ -134,7 +125,7 @@ namespace Petzold.Media2D
         /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
         /// </summary>
-        protected override Geometry DefiningGeometry
+        protected new Geometry DefiningGeometry
         {
             get
             {
@@ -198,12 +189,14 @@ namespace Petzold.Media2D
 
             PolyLineSegment polyseg = pathfig.Segments[0] as PolyLineSegment;
             polyseg.Points.Clear();
-            matx.Rotate(ArrowAngle / 2);
-            pathfig.StartPoint = pt2 + vect * matx;
+            //matx.Rotate(ArrowAngle / 2);
+            //pathfig.StartPoint = pt2 + vect * matx;
+            pathfig.StartPoint = pt2 + (MatrixHelper.TransformVector(MatrixHelper.Rotation(ArrowAngle / 2), vect));
             polyseg.Points.Add(pt2);
 
-            matx.Rotate(-ArrowAngle);
-            polyseg.Points.Add(pt2 + vect * matx);
+            //matx.Rotate(-ArrowAngle);
+            //polyseg.Points.Add(pt2 + vect * matx);
+            polyseg.Points.Add(pt2 + (MatrixHelper.TransformVector(MatrixHelper.Rotation(-ArrowAngle), vect)));
             pathfig.IsClosed = IsArrowClosed;
 
             return pathfig;

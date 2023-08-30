@@ -1,5 +1,5 @@
-﻿using System.Windows.Controls;
-using System.Windows.Media;
+﻿using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DominoVisualizer.CustomControls
 {

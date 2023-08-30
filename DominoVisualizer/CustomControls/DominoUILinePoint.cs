@@ -1,4 +1,5 @@
-using System.Windows.Controls;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DominoVisualizer.CustomControls
 {
@@ -9,7 +10,7 @@ namespace DominoVisualizer.CustomControls
             ID = Helpers.RandomString();
         }
 
-        public System.Windows.Point Point { set; get; }
+        public Point Point { set; get; }
 
         public string ID { set; get; }
     }

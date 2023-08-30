@@ -1,26 +1,15 @@
 ﻿<Window x:Class="DominoVisualizer.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:CustomControlsDV="clr-namespace:DominoVisualizer.CustomControls"
     xmlns:CustomControls="clr-namespace:WpfPanAndZoom.CustomControls"
+    x:CompileBindings="True"
+    ExtendClientAreaToDecorationsHint="True"
+    ExtendClientAreaChromeHints="NoChrome"
+    ExtendClientAreaTitleBarHeightHint="-1"
     xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown" WindowStartupLocation="CenterScreen" Icon="domino.ico" Closing="Window_Closing">
-
-    <Window.Style>
-        <Style TargetType="{x:Type local:MainWindow}">
-            <Setter Property="WindowChrome.WindowChrome">
-                <Setter.Value>
-                    <WindowChrome
-                          ResizeBorderThickness="5"
-                          CaptionHeight="0"
-                          CornerRadius="0"
-                          GlassFrameThickness="0,0,0,1"
-                          />
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Style>
 
     <Window.Resources>
         <Storyboard x:Key="gridNoticeNoteFadeIn">
@@ -41,23 +30,23 @@
                     <Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
                     <Label Content="by ArmanIII" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,70" />
                     <Label Content="Import Domino from LUA:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,0,0,15" />
-                    <Button Style="{StaticResource CBtn}" Content="Import" Click="ButtonSelDialog_Click" Tag="0" />
+                    <Button Classes="CBtn" Content="Import" Click="ButtonSelDialog_Click" Tag="0" />
                     <Label Content="Create a new workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
-                    <Button Style="{StaticResource CBtn}" Content="Create" Click="ButtonSelDialog_Click" Tag="2" />
+                    <Button Classes="CBtn" Content="Create" Click="ButtonSelDialog_Click" Tag="2" />
                     <Label Content="Or open workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
-                    <Button Style="{StaticResource CBtn}" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
+                    <Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
                 </StackPanel>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogSelGame" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Game base" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Game base" Classes="Header" />
                     <TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,130,0,10">
-                        <Button Style="{StaticResource CBtn}" Content="Far Cry 5" Click="ButtonSelGame_Click" Tag="fc5" />
-                        <Button Style="{StaticResource CBtn}" Content="Far Cry New Dawn" Click="ButtonSelGame_Click" Tag="fcnd" />
-                        <Button Style="{StaticResource CBtn}" Content="Far Cry 6" Click="ButtonSelGame_Click" Tag="fc6" />
-                        <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonSelGame_Click" Tag="cancel" Margin="0,20,0,10" />
+                        <Button Classes="CBtn" Content="Far Cry 5" Click="ButtonSelGame_Click" Tag="fc5" />
+                        <Button Classes="CBtn" Content="Far Cry New Dawn" Click="ButtonSelGame_Click" Tag="fcnd" />
+                        <Button Classes="CBtn" Content="Far Cry 6" Click="ButtonSelGame_Click" Tag="fc6" />
+                        <Button Classes="CBtn" Content="Cancel" Click="ButtonSelGame_Click" Tag="cancel" Margin="0,20,0,10" />
                     </StackPanel>
                 </Grid>
             </Grid>
@@ -68,7 +57,7 @@
                             <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
                             <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
 
-                            <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 
                             <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
 
@@ -82,31 +71,31 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
 
-                            <Button Style="{StaticResource EditBtnWhite}" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-                            <Button Style="{StaticResource DelBtnWhite}" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+                            <Button Classes="DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
                         </Grid>
                     </CustomControlsDV:BlurHost>
                 </Grid>
                 <Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
                     <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
                         <Grid Background="#77000000">
-                            <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Style="{StaticResource CBtn}" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                            <Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
                         </Grid>
                     </CustomControlsDV:BlurHost>
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Edit exec box" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Edit exec box" Classes="Header" />
                     <TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
@@ -133,10 +122,10 @@
                         <TextBox Name="editExecBoxDynInt" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right" />
                     </StackPanel>
 
-                    <ListView Style="{StaticResource ParamsList}" ItemContainerStyle="{StaticResource ParamsListContainer}"
+                    <ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
                       KeyboardNavigation.TabNavigation="Local" Margin="10,220,8,60" Name="paramsList" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListView.View>
-                            <GridView ColumnHeaderContainerStyle="{StaticResource ParamsListHeader}" AllowsColumnReorder="False">
+                            <GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -168,28 +157,28 @@
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Style="{StaticResource EditExecArrayBtn}" />
+                                            <Button Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Style="{StaticResource EditExecAddBtn}" />
+                                            <Button Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Style="{StaticResource EditExecRemoveBtn}" />
+                                            <Button Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonLVGetData_Click" Visibility="{Binding GetDataVs}" Style="{StaticResource EditExecGetDataBtn}" />
+                                            <Button Click="ButtonLVGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -197,14 +186,14 @@
                         </ListView.View>
                     </ListView>
 
-                    <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonDialogEditExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Save" Click="ButtonDialogEditExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddExecBox" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Add exec box" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Add exec box" Classes="Header" />
                     <TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
@@ -220,14 +209,14 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddBoxConnector" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Add connector" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Add connector" Classes="Header" />
                     <TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
@@ -257,14 +246,14 @@
                         <TextBox Name="addBoxConnectorArrayKey" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right" />
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddBoxConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBoxConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddConnector" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Add new connector" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Add new connector" Classes="Header" />
                     <TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
 
                     <TextBox Text="" Name="addConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -273,14 +262,14 @@
                     <CheckBox Content=" Is output control" Name="addConnectorOut" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     <TextBox Name="addConnectorOutName" Text="" Width="330" Margin="200,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddBox" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Add new box" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Add new box" Classes="Header" />
                     <TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
 
                     <CheckBox Content=" Is global" Name="addBoxGlobal" Margin="20,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -298,14 +287,14 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditData" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Name="editDataLblName" Content="--name--" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Name="editDataLblName" Content="--name--" Classes="Header" />
                     <TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
 
                     <StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="0,90,0,70">
@@ -338,10 +327,10 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <ListView Style="{StaticResource ParamsList}" ItemContainerStyle="{StaticResource ParamsListContainer}"
+                    <ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
                       KeyboardNavigation.TabNavigation="Local" Margin="10,140,10,60" Name="editDataList" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListView.View>
-                            <GridView ColumnHeaderContainerStyle="{StaticResource ParamsListHeader}" AllowsColumnReorder="False">
+                            <GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -366,28 +355,28 @@
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Style="{StaticResource EditExecArrayBtn}" />
+                                            <Button Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Style="{StaticResource EditExecAddBtn}" />
+                                            <Button Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Style="{StaticResource EditExecRemoveBtn}" />
+                                            <Button Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Click="ButtonEDLGetData_Click" Visibility="{Binding GetDataVs}" Style="{StaticResource EditExecGetDataBtn}" />
+                                            <Button Click="ButtonEDLGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -395,14 +384,14 @@
                         </ListView.View>
                     </ListView>
 
-                    <Button Style="{StaticResource CBtn}" Content="Edit" Click="ButtonDialogEditData_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditData_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Edit comment" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Edit comment" Classes="Header" />
 
                     <TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" AcceptsReturn="True" VerticalContentAlignment="Top" />
 
@@ -419,14 +408,14 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Set" Click="ButtonDialogAddComment_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogAddComment_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Edit border" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Edit border" Classes="Header" />
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
                         <Label Content="Style" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
@@ -467,14 +456,14 @@
                     <CheckBox Content=" Transparent background" Name="addBorderBgTr" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     <CheckBox Content=" When moving border, children will move too" Name="addBorderMove" Margin="20,230,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditResource" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Edit resource" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Edit resource" Classes="Header" />
                     
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
                         <Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
@@ -494,26 +483,26 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Set" Click="ButtonDialogEditResource_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogEditResource_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogEditName" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Name="dialogEditNameTitle" Content="title" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
                     <TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
 
                     <TextBox Text="" Name="dialogEditName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Edit" Click="ButtonDialogEditName_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditName_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogGetDataFromBox" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Get data from box" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Get data from box" Classes="Header" />
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
                         <Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
@@ -541,14 +530,14 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogGetDataFromBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogGetDataFromBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Workspace" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Workspace" Classes="Header" />
 
                     <TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -559,26 +548,26 @@
                     <TextBlock Text="Set path which will be used inside DAT FAT:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="domino\user\" Name="wrkspDat" Width="510" Margin="20,260,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAddGraph" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Add graph" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Add graph" Classes="Header" />
 
                     <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
                     <TextBox Text="" Name="addGraphName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogSettings" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Settings" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Settings" Classes="Header" />
 
                     <CheckBox Content=" Use Bezier curve on lines" Name="settingsBezier" Margin="20,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     <CheckBox Content=" Use Bezier on line points" Name="settingsLinePointsBezier" Margin="40,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -586,8 +575,8 @@
                     <CheckBox Content=" Use Lua bytecode for production files" Name="settingsBytecode" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     <CheckBox Content=" Use Lua bytecode for debug files" Name="settingsBytecodeDebug" Margin="20,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Style="{StaticResource CBtn}" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
 
@@ -610,26 +599,26 @@
                 <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
                     <Grid Background="#77000000">
                         <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
-                        <Button Style="{StaticResource CBtn}" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                        <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                        <Button Classes="CBtn" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+                        <Button Classes="CBtn" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
                     </Grid>
                 </CustomControlsDV:BlurHost>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Content="Info" Name="dialogInfoName" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Content="Info" Name="dialogInfoName" Classes="Header" />
                     <TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
-                    <Button Style="{StaticResource CBtn}" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <Grid Background="#99000000" Name="gridDialogAsk" Visibility="Hidden">
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Style="{StaticResource DialogRect}" />
-                    <Label Name="dialogAskName" Content="--name--" Style="{StaticResource Header}" />
+                    <Rectangle Classes="DialogRect" />
+                    <Label Name="dialogAskName" Content="--name--" Classes="Header" />
                     <TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
-                    <Button Style="{StaticResource CBtn}" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Style="{StaticResource CBtn}" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                    <Button Classes="CBtn" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
                 </Grid>
             </Grid>
             <!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
@@ -640,10 +629,10 @@
                 <Grid Background="#77000000" MouseRightButtonUp="ShowSystemicMenu" MouseDown="MoveWnd" PreviewMouseDown="ChromeClick">
                     <Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
                     <Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-                    <Button Style="{StaticResource SettBtnWhite}" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" Visibility="Hidden" />
-                    <Button Style="{StaticResource MinBtnWhite}" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
-                    <Button Style="{StaticResource MaxBtnWhite}" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
-                    <Button Style="{StaticResource CloseBtnWhite}" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
+                    <Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" Visibility="Hidden" />
+                    <Button Classes="MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
+                    <Button Classes="MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
+                    <Button Classes="CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
                 </Grid>
             </CustomControlsDV:BlurHost>
         </Grid>

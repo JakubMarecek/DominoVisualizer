@@ -1,13 +1,11 @@
 //------------------------------------------
 // ArrowLine.cs (c) 2007 by Charles Petzold
 //------------------------------------------
-using DominoVisualizer;
+using Avalonia;
+using Avalonia.Media;
 using DominoVisualizer.CustomControls;
 using System;
 using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Media;
 
 namespace Petzold.Media2D
 {
@@ -96,7 +94,7 @@ namespace Petzold.Media2D
         /// <summary>
         ///     Gets a value that represents the Geometry of the ArrowLine.
         /// </summary>
-        protected override Geometry DefiningGeometry
+        protected new Geometry DefiningGeometry
         {
             get
             {

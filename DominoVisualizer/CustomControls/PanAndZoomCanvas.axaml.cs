@@ -1,12 +1,12 @@
-﻿using DominoVisualizer;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
+using Avalonia.Input;
+using Avalonia.Media;
+using DominoVisualizer;
 using DominoVisualizer.CustomControls;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace WpfPanAndZoom.CustomControls
 {
@@ -20,20 +20,20 @@ namespace WpfPanAndZoom.CustomControls
         private Point _initialMousePosition;
 
         private bool _dragging;
-        private UIElement _selectedElement;
+        private Control _selectedElement;
         private Vector _draggingDelta;
         private Rectangle _selectRect;
 
         private Color _lineColor = Color.FromArgb(0xFF, 0x66, 0x66, 0x66);
-        private Color _backgroundColor = (Color)ColorConverter.ConvertFromString("#1e1e1e"); // Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
+        private Color _backgroundColor = Color.Parse("#1e1e1e"); // Color.FromArgb(0xFF, 0x33, 0x33, 0x33);
         private List<Line> _gridLines = new List<Line>();
         private List<Line> _gridLinesSmall = new List<Line>();
 
         private bool _selecting;
-        private List<UIElement> _selectionItems = new();
+        private List<Control> _selectionItems = new();
         private List<Vector> _selectionItemsDeltas = new();
 
-        public List<UIElement> SelectedItems { get { return _selectionItems; } }
+        public List<Control> SelectedItems { get { return _selectionItems; } }
 
         public delegate void MovingEventHandler(string foo, double x, double y);
 
@@ -47,7 +47,7 @@ namespace WpfPanAndZoom.CustomControls
 
         public event MovedEventHandler Moved;
 
-        private List<UIElement> _borderChilds = new();
+        private List<Control> _borderChilds = new();
         private List<Vector> _borderChildsDeltas = new();
 
         int zoom = 0;
@@ -58,10 +58,10 @@ namespace WpfPanAndZoom.CustomControls
         {
             InitializeComponent();
 
-            MouseDown += PanAndZoomCanvas_MouseDown;
-            MouseUp += PanAndZoomCanvas_MouseUp;
-            MouseMove += PanAndZoomCanvas_MouseMove;
-            MouseWheel += PanAndZoomCanvas_MouseWheel;
+            PointerPressed += PanAndZoomCanvas_MouseDown;
+            PointerReleased += PanAndZoomCanvas_MouseUp;
+            PointerMoved += PanAndZoomCanvas_MouseMove;
+            PointerWheelChanged += PanAndZoomCanvas_MouseWheel;
 
             Clean();
         }
@@ -76,14 +76,15 @@ namespace WpfPanAndZoom.CustomControls
             zoom = 0;
 
             _selectRect = new();
-            _selectRect.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#552979ff"));
-            _selectRect.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2979ff"));
+            _selectRect.Fill = new SolidColorBrush(Color.Parse("#552979ff"));
+            _selectRect.Stroke = new SolidColorBrush(Color.Parse("#2979ff"));
             _selectRect.StrokeThickness = 2;
             _selectRect.Width = 1;
             _selectRect.Height = 1;
-            _selectRect.Visibility = Visibility.Hidden;
+            _selectRect.IsVisible = false;
             Children.Add(_selectRect);
-            Canvas.SetZIndex(_selectRect, 100);
+            _selectRect.ZIndex = 100;
+            //Canvas.SetZIndex(_selectRect, 100);
             Canvas.SetLeft(_selectRect, -10);
             Canvas.SetTop(_selectRect, -10);
             _selectionItems = new();
@@ -155,8 +156,8 @@ namespace WpfPanAndZoom.CustomControls
         {
             MinX = 0;
             MinY = 0;
-            MaxX = (int)System.Windows.SystemParameters.PrimaryScreenWidth;
-            MaxY = (int)System.Windows.SystemParameters.PrimaryScreenHeight;
+            MaxX = 1000; //(int)window.Screens.Primary.WorkingArea.Width;
+            MaxY = 1000; //(int)System.Windows.SystemParameters.PrimaryScreenHeight;
         }
 
         public void MakeGrid()
@@ -172,10 +173,8 @@ namespace WpfPanAndZoom.CustomControls
                 Line verticalLine = new Line
                 {
                     Stroke = new SolidColorBrush(_lineColor),
-                    X1 = x,
-                    Y1 = MinY - 100,
-                    X2 = x,
-                    Y2 = MaxY + 1000
+                    StartPoint = new(x, MinY - 100),
+                    EndPoint = new(x, MaxY + 1000)
                 };
 
                 if (x % 1000 == 0)
@@ -197,10 +196,8 @@ namespace WpfPanAndZoom.CustomControls
                 Line horizontalLine = new Line
                 {
                     Stroke = new SolidColorBrush(_lineColor),
-                    X1 = MinX - 100,
-                    Y1 = y,
-                    X2 = MaxX + 1000,
-                    Y2 = y
+                    StartPoint = new(MinX - 100, y),
+                    EndPoint = new(MaxX + 1000, y)
                 };
 
                 if (y % 1000 == 0)
@@ -220,7 +217,7 @@ namespace WpfPanAndZoom.CustomControls
 
         public void RefreshChilds()
         {
-            foreach (UIElement child in this.Children)
+            foreach (Control child in this.Children)
             {
                 child.RenderTransform = _transform;
             }
@@ -240,54 +237,56 @@ namespace WpfPanAndZoom.CustomControls
 
         public Point Transform(Point source)
         {
-            return _transform.Inverse.Transform(source);
+            return _transform.Matrix.Invert().Transform(source);
         }
 
         public Point Transform2(Point source)
         {
-            var bb = Point.Subtract(_transform.Inverse.Transform(source), _transform.Inverse.Transform(new Point(0, 0)));
+            var bb = Vector.Subtract(_transform.Matrix.Invert().Transform(source), _transform.Matrix.Invert().Transform(new Point(0, 0)));
             return new(bb.X, bb.Y);
         }
 
         public Point Transform3(Point source)
         {
-            var aa = _transform.Inverse.Transform(new Point(0, 0));
-            var bb = _transform.Inverse.Transform(source);
+            var aa = _transform.Matrix.Invert().Transform(new Point(0, 0));
+            var bb = _transform.Matrix.Invert().Transform(source);
 
-            var cc = Point.Add(aa, new(bb.X, bb.Y));
+            var cc = Vector.Add(aa, new(bb.X, bb.Y));
 
-            var dd = _transform.Transform(cc);
+            var dd = _transform.Matrix.Transform(new(cc.X, cc.Y));
 
             return new(dd.X, dd.Y);
         }
 
         public Point Transform4(Point source)
         {
-            var bb = Point.Subtract(_transform.Transform(source), _transform.Transform(new Point(0, 0)));
+            var bb = Vector.Subtract(_transform.Matrix.Transform(source), _transform.Matrix.Transform(new Point(0, 0)));
             return new(bb.X, bb.Y);
         }
 
-        public Vector Transform5(IInputElement source)
+        public Vector Transform5(IInputElement source, Point mousePos, Point mousePosSource)
         {
-            var a = _transform.Inverse.Transform(Mouse.GetPosition(this));
-            return Point.Subtract(a, Mouse.GetPosition(source));
+            var a = _transform.Matrix.Invert().Transform(mousePos);
+            return Vector.Subtract(a, mousePosSource);
         }
 
         private float Zoomfactor = 1.1f;
 
-        private void PanAndZoomCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+        private void PanAndZoomCanvas_MouseDown(object sender, PointerPressedEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Right)
+            var props = e.GetCurrentPoint(this).Properties;
+
+            if (props.IsRightButtonPressed)
             {
-                _initialMousePosition = _transform.Inverse.Transform(e.GetPosition(this));
-                Cursor = Cursors.SizeAll;
+                _initialMousePosition = _transform.Matrix.Invert().Transform(e.GetPosition(this));
+                Cursor = new(StandardCursorType.SizeAll);
             }
 
-            if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
+            if (props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Control)
             {
-                Cursor = Cursors.SizeAll;
+                Cursor = new(StandardCursorType.SizeAll);
 
-                if (this.Children.Contains((UIElement)e.Source))
+                if (this.Children.Contains((Control)e.Source))
                 {
                     if (e.Source is Widget widget)
                         if (widget.DisableMove)
@@ -295,8 +294,8 @@ namespace WpfPanAndZoom.CustomControls
 
                     //ResetZoom();
 
-                    _selectedElement = (UIElement)e.Source;
-                    Point mousePosition = Mouse.GetPosition(this);
+                    _selectedElement = (Control)e.Source;
+                    Point mousePosition = e.GetPosition(this);
                     double x = Canvas.GetLeft(_selectedElement);
                     double y = Canvas.GetTop(_selectedElement);
                     Point elementPosition = new Point(x, y);
@@ -305,7 +304,7 @@ namespace WpfPanAndZoom.CustomControls
                     if (e.Source is DominoUIBorder borderD)
                     {
                         if (borderD.EnableMovingChilds)
-                            foreach (UIElement child in this.Children)
+                            foreach (Control child in this.Children)
                             {
                                 if (child is Widget widgetC)
                                     if (widgetC.DisableMove)
@@ -334,7 +333,7 @@ namespace WpfPanAndZoom.CustomControls
                     _selectionItemsDeltas = new();
                     if (_selectionItems.Any())
                     {
-                        foreach (UIElement child in _selectionItems)
+                        foreach (Control child in _selectionItems)
                         {
                             double xc = Canvas.GetLeft(child);
                             double yc = Canvas.GetTop(child);
@@ -345,9 +344,9 @@ namespace WpfPanAndZoom.CustomControls
 
                 _dragging = true;
             }
-            else if (e.ChangedButton == MouseButton.Left)
+            else if (props.IsLeftButtonPressed)
             {
-                var a = Transform3(Mouse.GetPosition(this));
+                var a = Transform3(e.GetPosition(this));
                 Canvas.SetLeft(_selectRect, a.X);
                 Canvas.SetTop(_selectRect, a.Y);
                 _selectRect.Width = 1;
@@ -357,20 +356,20 @@ namespace WpfPanAndZoom.CustomControls
                 _selecting = true;
             }
 
-            if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Shift)
-                if (this.Children.Contains((UIElement)e.Source))
+            if (props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Shift)
+                if (this.Children.Contains((Control)e.Source))
                     if (e.Source is DominoUIBorder borderD)
                         if (borderD.EnableMove)
                         {
-                            Cursor = Cursors.SizeNWSE;
+                            Cursor = new(StandardCursorType.SizeNorthSouth);
 
-                            _selectedElement = (UIElement)e.Source;
+                            _selectedElement = (Control)e.Source;
 
                             _dragging = true;
                         }
         }
 
-        private void PanAndZoomCanvas_MouseUp(object sender, MouseButtonEventArgs e)
+        private void PanAndZoomCanvas_MouseUp(object sender, PointerReleasedEventArgs e)
         {
             if (_dragging)
                 Moved();
@@ -379,7 +378,7 @@ namespace WpfPanAndZoom.CustomControls
             _selectedElement = null;
             _borderChilds.Clear();
             _borderChildsDeltas.Clear();
-            Cursor = Cursors.Arrow;
+            Cursor = new(StandardCursorType.Arrow);
 
             if (_selecting)
                 ResetSelection();
@@ -393,7 +392,7 @@ namespace WpfPanAndZoom.CustomControls
             double selX = Canvas.GetLeft(_selectRect);
             double selY = Canvas.GetTop(_selectRect);
 
-            foreach (UIElement c in Children)
+            foreach (Control c in Children)
             {
                 Widget w = null;
 
@@ -413,7 +412,7 @@ namespace WpfPanAndZoom.CustomControls
                     w.Border.Stroke = new SolidColorBrush(Colors.Black);
                     w.Border.StrokeDashArray = new() { 1, 0 };
                     w.Border.StrokeThickness = 2;
-                    w.selected.Visibility = Visibility.Hidden;
+                    w.selected.IsVisible = false;
                 }
 
                 if (c.GetType() == typeof(DominoUIBorder))
@@ -427,7 +426,7 @@ namespace WpfPanAndZoom.CustomControls
 
                 if (_selectRect.Width > 10 && _selectRect.Height > 10)
                 {
-                    var widSize = Transform4(new((c as FrameworkElement).ActualWidth, (c as FrameworkElement).ActualHeight));
+                    var widSize = Transform4(new((c as Control).Bounds.Width, (c as Control).Bounds.Height));
 
                     if (
                         (
@@ -444,20 +443,20 @@ namespace WpfPanAndZoom.CustomControls
                     {
                         if (w != null)
                         {
-                            w.Border.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff"));
+                            w.Border.Stroke = new SolidColorBrush(Color.Parse("#ffffff"));
                             w.Border.StrokeDashArray = new() { 4, 2 };
                             w.Border.StrokeThickness = 4;
-                            w.selected.Visibility = Visibility.Visible;
+                            w.selected.IsVisible = true;
                         }
 
                         if (c.GetType() == typeof(DominoUIBorder))
-                            (c as DominoUIBorder).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#882979ff"));
+                            (c as DominoUIBorder).Background = new SolidColorBrush(Color.Parse("#882979ff"));
 
                         if (c.GetType() == typeof(DominoUIComment))
-                            (c as DominoUIComment).Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#882979ff"));
+                            (c as DominoUIComment).Background = new SolidColorBrush(Color.Parse("#882979ff"));
 
                         if (c.GetType() == typeof(DominoUILinePoint))
-                            (c as DominoUILinePoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffffff")), StrokeThickness = 2 });
+                            (c as DominoUILinePoint).Children.Add(new Rectangle() { Stroke = new SolidColorBrush(Color.Parse("#ffffff")), StrokeThickness = 2 });
 
                         _selectionItems.Add(c);
                     }
@@ -468,32 +467,34 @@ namespace WpfPanAndZoom.CustomControls
             _selectRect.Height = 1;
             Canvas.SetLeft(_selectRect, -10);
             Canvas.SetTop(_selectRect, -10);
-            _selectRect.Visibility = Visibility.Hidden;
+            _selectRect.IsVisible = false;
 
             _selecting = false;
         }
 
-        private void PanAndZoomCanvas_MouseMove(object sender, MouseEventArgs e)
+        private void PanAndZoomCanvas_MouseMove(object sender, PointerEventArgs e)
         {
-            if (e.RightButton == MouseButtonState.Pressed)
+            var props = e.GetCurrentPoint(this).Properties;
+
+            if (props.IsRightButtonPressed)
             {
-                Point mousePosition = _transform.Inverse.Transform(e.GetPosition(this));
-                Vector delta = Point.Subtract(mousePosition, _initialMousePosition);
+                Point mousePosition = _transform.Matrix.Invert().Transform(e.GetPosition(this));
+                Vector delta = Vector.Subtract(mousePosition, _initialMousePosition);
                 var translate = new TranslateTransform(delta.X, delta.Y);
                 _transform.Matrix = translate.Value * _transform.Matrix;
 
-                foreach (UIElement child in this.Children)
+                foreach (Control child in this.Children)
                 {
                     child.RenderTransform = _transform;
                 }
             }
 
-            if (_dragging && e.LeftButton == MouseButtonState.Pressed && Keyboard.Modifiers == ModifierKeys.Control && !_selectionItems.Any())
+            if (_dragging && props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Control && !_selectionItems.Any())
             {
                 if (_selectedElement != null)
                 {
-                    double x = Mouse.GetPosition(this).X;
-                    double y = Mouse.GetPosition(this).Y;
+                    double x = e.GetPosition(this).X;
+                    double y = e.GetPosition(this).Y;
 
                     if (SnapToGrid)
                     {
@@ -524,13 +525,13 @@ namespace WpfPanAndZoom.CustomControls
 
                     if (_selectedElement is Widget widget)
                     {
-                        var b = Transform5(_selectedElement);
+                        var b = Transform5(_selectedElement, e.GetPosition(this), e.GetPosition(_selectedElement));
                         Moving(widget.ID, b.X, b.Y);
                     }
 
                     if (_selectedElement is DominoUILinePoint lp)
                     {
-                        var b = Transform5(_selectedElement);
+                        var b = Transform5(_selectedElement, e.GetPosition(this), e.GetPosition(_selectedElement));
                         Moving(lp.ID, b.X, b.Y);
                     }
 
@@ -553,23 +554,23 @@ namespace WpfPanAndZoom.CustomControls
 
                                 var c = Point.Add(a, new(bb.X, bb.Y));*/
 
-                                var c = Transform5(_borderChilds[i]);
+                                var c = Transform5(_borderChilds[i], e.GetPosition(this), e.GetPosition(_borderChilds[i]));
                                 Moving(widgetC.ID, c.X, c.Y);
                             }
 
                             if (_borderChilds[i] is DominoUILinePoint lpC)
                             {
-                                var b = Transform5(_borderChilds[i]);
+                                var b = Transform5(_borderChilds[i], e.GetPosition(this), e.GetPosition(_borderChilds[i]));
                                 Moving(lpC.ID, b.X, b.Y);
                             }
                         }
                     }
                 }
             }
-            else if (_dragging && e.LeftButton == MouseButtonState.Pressed && Keyboard.Modifiers == ModifierKeys.Control && _selectionItems.Any())
+            else if (_dragging && props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Control && _selectionItems.Any())
             {
-                double x = Mouse.GetPosition(this).X;
-                double y = Mouse.GetPosition(this).Y;
+                double x = e.GetPosition(this).X;
+                double y = e.GetPosition(this).Y;
 
                 if (SnapToGrid)
                 {
@@ -600,7 +601,7 @@ namespace WpfPanAndZoom.CustomControls
                         Canvas.SetTop(_selectionItems[i], parentPosition.Y + _selectionItemsDeltas[i].Y);
                     }
 
-                    var b = Transform5(_selectionItems[i]);
+                    var b = Transform5(_selectionItems[i], e.GetPosition(this), e.GetPosition(_selectionItems[i]));
 
                     if (_selectionItems[i] is Widget w)
                         Moving(w.ID, b.X, b.Y);
@@ -609,17 +610,17 @@ namespace WpfPanAndZoom.CustomControls
                         Moving(lp.ID, b.X, b.Y);
                 }
             }
-            else if (!_dragging && e.LeftButton == MouseButtonState.Pressed && _selecting)
+            else if (!_dragging && props.IsLeftButtonPressed && _selecting)
             {
-                double x = Mouse.GetPosition(this).X;
-                double y = Mouse.GetPosition(this).Y;
+                double x = e.GetPosition(this).X;
+                double y = e.GetPosition(this).Y;
 
                 x -= Canvas.GetLeft(_selectRect);
                 y -= Canvas.GetTop(_selectRect);
 
-                var a = _transform.Inverse.Transform(new(x, y));
+                var a = _transform.Matrix.Invert().Transform(new(x, y));
 
-                var aa = Transform3(Mouse.GetPosition(this));
+                var aa = Transform3(e.GetPosition(this));
                 var bb = Transform2(new(_draggingDelta.X - aa.X, _draggingDelta.Y - aa.Y));
 
                 if (a.X > 0 && bb.X < 0)
@@ -644,28 +645,28 @@ namespace WpfPanAndZoom.CustomControls
                     _selectRect.Height = bb.Y;
                 }
 
-                _selectRect.Visibility = Visibility.Visible;
+                _selectRect.IsVisible = true;
             }
 
-            if (_dragging && e.LeftButton == MouseButtonState.Pressed && Keyboard.Modifiers == ModifierKeys.Shift)
+            if (_dragging && props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Shift)
                 if (_selectedElement is DominoUIBorder borderD)
                     if (borderD.EnableMove)
                     {
                         if (_selectedElement != null)
                         {
-                            double x = Mouse.GetPosition(this).X;
-                            double y = Mouse.GetPosition(this).Y;
+                            double x = e.GetPosition(this).X;
+                            double y = e.GetPosition(this).Y;
 
                             x -= Canvas.GetLeft(_selectedElement);
                             y -= Canvas.GetTop(_selectedElement);
 
-                            var a = _transform.Inverse.Transform(new(x, y));
+                            var a = _transform.Matrix.Invert().Transform(new(x, y));
 
                             if (a.X > 50)
-                                (_selectedElement as FrameworkElement).Width = a.X;
+                                (_selectedElement as Control).Width = a.X;
 
                             if (a.Y > 50)
-                                (_selectedElement as FrameworkElement).Height = a.Y;
+                                (_selectedElement as Control).Height = a.Y;
                         }
                     }
         }
@@ -700,9 +701,9 @@ namespace WpfPanAndZoom.CustomControls
             }
         }*/
 
-        private void PanAndZoomCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        private void PanAndZoomCanvas_MouseWheel(object sender, PointerWheelEventArgs e)
         {
-            if (e.Delta > 0)
+            if (e.Delta.Y > 0)
                 zoom++;
             else
                 zoom--;
@@ -710,10 +711,10 @@ namespace WpfPanAndZoom.CustomControls
             Zoomed(zoom);
 
             foreach (var b in _gridLinesSmall)
-                b.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;
+                b.IsVisible = zoom < -20 ? false : true;
 
             float scaleFactor = Zoomfactor;
-            if (e.Delta < 0)
+            if (e.Delta.Y < 0)
             {
                 scaleFactor = 1f / scaleFactor;
             }
@@ -721,10 +722,10 @@ namespace WpfPanAndZoom.CustomControls
             Point mousePostion = e.GetPosition(this);
 
             Matrix scaleMatrix = _transform.Matrix;
-            scaleMatrix.ScaleAt(scaleFactor, scaleFactor, mousePostion.X, mousePostion.Y);
-            _transform.Matrix = scaleMatrix;
+            //scaleMatrix.ScaleAt(scaleFactor, scaleFactor, mousePostion.X, mousePostion.Y);
+            _transform.Matrix = MatrixHelper.ScaleAtPrepend(scaleMatrix, scaleFactor, scaleFactor, mousePostion.X, mousePostion.Y);
 
-            foreach (UIElement child in this.Children)
+            foreach (Control child in this.Children)
             {
                 double x = Canvas.GetLeft(child);
                 double y = Canvas.GetTop(child);

@@ -1,4 +1,8 @@
-﻿using DominoVisualizer.CustomControls;
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
+using DominoVisualizer.CustomControls;
 using Gibbed.Dunia2.FileFormats;
 using Gibbed.IO;
 using Microsoft.Win32;

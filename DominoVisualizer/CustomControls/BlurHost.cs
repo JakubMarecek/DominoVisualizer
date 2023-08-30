@@ -1,7 +1,6 @@
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Effects;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DominoVisualizer.CustomControls
 {
@@ -13,12 +12,8 @@ namespace DominoVisualizer.CustomControls
 			set => SetValue(BlurBackgroundProperty, value);
 		}
 
-		public static readonly DependencyProperty BlurBackgroundProperty =
-			DependencyProperty.Register(
-			  "BlurBackground",
-			  typeof(Visual),
-			  typeof(BlurHost),
-			  new PropertyMetadata(default(Visual), OnBlurBackgroundChanged));
+		public static readonly StyledProperty<Visual> BlurBackgroundProperty =
+			AvaloniaProperty.Register<BlurHost, Visual>(nameof(BlurBackground));
 
 		public double BlurOpacity
 		{

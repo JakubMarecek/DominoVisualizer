@@ -1,11 +1,12 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using DominoVisualizer.CustomControls;
 using Gibbed.Dunia2.FileFormats;
 using Gibbed.IO;
-using Microsoft.Win32;
 using Petzold.Media2D;
 using System;
 using System.Collections.Generic;
@@ -18,10 +19,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
@@ -30,7 +27,7 @@ using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
 {
-	internal class DVClass
+    internal class DVClass
 	{
         /* TODO
 		 * -param lua file open							ok / maybe
@@ -1504,82 +1501,82 @@ namespace DominoVisualizer
 
 			// https://www.materialpalette.com/colors
 
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff1744")); // red
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#2979ff")); // blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#00e676")); // green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffea00")); // yellow
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#f50057")); // pink
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#d500f9")); // purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#651fff")); // deep purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#3d5afe")); // indigo
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#00b0ff")); // light blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#00e5ff")); // cyan
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#1de9b6")); // teal
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#76ff03")); // light green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#c6ff00")); // lime
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc400")); // amber
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9100")); // orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff3d00")); // deep orange
+			linesColors.Add(Color.Parse("#ff1744")); // red
+			linesColors.Add(Color.Parse("#2979ff")); // blue
+			linesColors.Add(Color.Parse("#00e676")); // green
+			linesColors.Add(Color.Parse("#ffea00")); // yellow
+			linesColors.Add(Color.Parse("#f50057")); // pink
+			linesColors.Add(Color.Parse("#d500f9")); // purple
+			linesColors.Add(Color.Parse("#651fff")); // deep purple
+			linesColors.Add(Color.Parse("#3d5afe")); // indigo
+			linesColors.Add(Color.Parse("#00b0ff")); // light blue
+			linesColors.Add(Color.Parse("#00e5ff")); // cyan
+			linesColors.Add(Color.Parse("#1de9b6")); // teal
+			linesColors.Add(Color.Parse("#76ff03")); // light green
+			linesColors.Add(Color.Parse("#c6ff00")); // lime
+			linesColors.Add(Color.Parse("#ffc400")); // amber
+			linesColors.Add(Color.Parse("#ff9100")); // orange
+			linesColors.Add(Color.Parse("#ff3d00")); // deep orange
 
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#f44336")); // red
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#2196f3")); // blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#4caf50")); // green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffeb3b")); // yellow
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#e91e63")); // pink
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#9c27b0")); // purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#673ab7")); // deep purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#3f51b5")); // indigo
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#03a9f4")); // light blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#00bcd4")); // cyan
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#009688")); // teal
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#8bc34a")); // light green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#cddc39")); // lime
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffc107")); // amber
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff9800")); // orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff5722")); // deep orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#795548")); // brown
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#9e9e9e")); // grey
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#607d8b")); // blue grey
+			linesColors.Add(Color.Parse("#f44336")); // red
+			linesColors.Add(Color.Parse("#2196f3")); // blue
+			linesColors.Add(Color.Parse("#4caf50")); // green
+			linesColors.Add(Color.Parse("#ffeb3b")); // yellow
+			linesColors.Add(Color.Parse("#e91e63")); // pink
+			linesColors.Add(Color.Parse("#9c27b0")); // purple
+			linesColors.Add(Color.Parse("#673ab7")); // deep purple
+			linesColors.Add(Color.Parse("#3f51b5")); // indigo
+			linesColors.Add(Color.Parse("#03a9f4")); // light blue
+			linesColors.Add(Color.Parse("#00bcd4")); // cyan
+			linesColors.Add(Color.Parse("#009688")); // teal
+			linesColors.Add(Color.Parse("#8bc34a")); // light green
+			linesColors.Add(Color.Parse("#cddc39")); // lime
+			linesColors.Add(Color.Parse("#ffc107")); // amber
+			linesColors.Add(Color.Parse("#ff9800")); // orange
+			linesColors.Add(Color.Parse("#ff5722")); // deep orange
+			linesColors.Add(Color.Parse("#795548")); // brown
+			linesColors.Add(Color.Parse("#9e9e9e")); // grey
+			linesColors.Add(Color.Parse("#607d8b")); // blue grey
 
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ef9a9a")); // red
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#90caf9")); // blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#a5d6a7")); // green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#fff59d")); // yellow
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#f48fb1")); // pink
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ce93d8")); // purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#b39ddb")); // deep purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#9fa8da")); // indigo
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#81d4fa")); // light blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#80deea")); // cyan
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#80cbc4")); // teal
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#c5e1a5")); // light green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#e6ee9c")); // lime
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffe082")); // amber
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffcc80")); // orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ffab91")); // deep orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#bcaaa4")); // brown
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#eeeeee")); // grey
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#b0bec5")); // blue grey
+			linesColors.Add(Color.Parse("#ef9a9a")); // red
+			linesColors.Add(Color.Parse("#90caf9")); // blue
+			linesColors.Add(Color.Parse("#a5d6a7")); // green
+			linesColors.Add(Color.Parse("#fff59d")); // yellow
+			linesColors.Add(Color.Parse("#f48fb1")); // pink
+			linesColors.Add(Color.Parse("#ce93d8")); // purple
+			linesColors.Add(Color.Parse("#b39ddb")); // deep purple
+			linesColors.Add(Color.Parse("#9fa8da")); // indigo
+			linesColors.Add(Color.Parse("#81d4fa")); // light blue
+			linesColors.Add(Color.Parse("#80deea")); // cyan
+			linesColors.Add(Color.Parse("#80cbc4")); // teal
+			linesColors.Add(Color.Parse("#c5e1a5")); // light green
+			linesColors.Add(Color.Parse("#e6ee9c")); // lime
+			linesColors.Add(Color.Parse("#ffe082")); // amber
+			linesColors.Add(Color.Parse("#ffcc80")); // orange
+			linesColors.Add(Color.Parse("#ffab91")); // deep orange
+			linesColors.Add(Color.Parse("#bcaaa4")); // brown
+			linesColors.Add(Color.Parse("#eeeeee")); // grey
+			linesColors.Add(Color.Parse("#b0bec5")); // blue grey
 
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#b71c1c")); // red
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#0d47a1")); // blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#1b5e20")); // green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#f57f17")); // yellow
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#880e4f")); // pink
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#4a148c")); // purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#311b92")); // deep purple
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#1a237e")); // indigo
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#01579b")); // light blue
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#006064")); // cyan
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#004d40")); // teal
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#33691e")); // light green
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#827717")); // lime
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#ff6f00")); // amber
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#e65100")); // orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#bf360c")); // deep orange
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#3e2723")); // brown
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#212121")); // grey
-			linesColors.Add((Color)ColorConverter.ConvertFromString("#263238")); // blue grey
+			linesColors.Add(Color.Parse("#b71c1c")); // red
+			linesColors.Add(Color.Parse("#0d47a1")); // blue
+			linesColors.Add(Color.Parse("#1b5e20")); // green
+			linesColors.Add(Color.Parse("#f57f17")); // yellow
+			linesColors.Add(Color.Parse("#880e4f")); // pink
+			linesColors.Add(Color.Parse("#4a148c")); // purple
+			linesColors.Add(Color.Parse("#311b92")); // deep purple
+			linesColors.Add(Color.Parse("#1a237e")); // indigo
+			linesColors.Add(Color.Parse("#01579b")); // light blue
+			linesColors.Add(Color.Parse("#006064")); // cyan
+			linesColors.Add(Color.Parse("#004d40")); // teal
+			linesColors.Add(Color.Parse("#33691e")); // light green
+			linesColors.Add(Color.Parse("#827717")); // lime
+			linesColors.Add(Color.Parse("#ff6f00")); // amber
+			linesColors.Add(Color.Parse("#e65100")); // orange
+			linesColors.Add(Color.Parse("#bf360c")); // deep orange
+			linesColors.Add(Color.Parse("#3e2723")); // brown
+			linesColors.Add(Color.Parse("#212121")); // grey
+			linesColors.Add(Color.Parse("#263238")); // blue grey
 
             var a = typeof(Colors).GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public)
                                 .Select(c => (Color)c.GetValue(null, null))
@@ -1609,10 +1606,7 @@ namespace DominoVisualizer
 					{
 						if (point.ID == id)
 						{
-							var p = point.Point;
-							p.X = x + 7.5;
-							p.Y = y + 7.5;
-							point.Point = p;
+							point.Point += new Point(7.5, 7.5);
 
                             line.UI.Measure(new(1, 1));
                         }
@@ -1626,27 +1620,27 @@ namespace DominoVisualizer
 		{
 			foreach (var b in dominoBoxes.Values)
 			{
-				b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.list.IsVisible = zoom < -15 ? false : true;
 				//b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 				//b.Widget.swapBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.HeaderGrid.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.Border.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.HeaderGrid.IsVisible = zoom < -15 ? false : true;
+				b.Widget.Border.IsVisible = zoom < -15 ? false : true;
 			}
 
 			foreach (var b in dominoConnectors.Values)
 			{
-				b.Widget.list.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.list.IsVisible = zoom < -15 ? false : true;
 				//b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 				//b.Widget.editBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.HeaderGrid.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
-				b.Widget.Border.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
+				b.Widget.HeaderGrid.IsVisible = zoom < -15 ? false : true;
+				b.Widget.Border.IsVisible = zoom < -15 ? false : true;
 			}
 
 			foreach (var b in dominoComments.Values)
-				b.ContainerUI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
+				b.ContainerUI.IsVisible = zoom < -30 ? false : true;
 
 			foreach (var b in lines)
-				b.UI.Visibility = zoom < -30 ? Visibility.Hidden : Visibility.Visible;
+				b.UI.IsVisible = zoom < -30 ? false : true;
 
 			/*foreach (var b in dominoBorders)
 				b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;*/
@@ -1708,23 +1702,25 @@ namespace DominoVisualizer
 			}
 		}
 
-		private void W_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-		{
-			if (e.ClickCount == 2 && e.LeftButton == MouseButtonState.Pressed)
+		private void W_MouseDoubleClick(object sender, PointerPressedEventArgs e)
+        {
+            var props = e.GetCurrentPoint(canvas).Properties;
+
+            if (e.ClickCount == 2 && props.IsLeftButtonPressed)
 			{
-				var except = (UIElement)e.Source;
+				var except = (Control)e.Source;
 
 				foreach (var child in canvas.Children)
-					((UIElement)child).Opacity = 1;
+					((Control)child).Opacity = 1;
 
 				if (except is Widget || except is ArrowLine)
 					foreach (var child in canvas.Children)
 						if (child != except && (child is Widget || child is ArrowLine))
-							((UIElement)child).Opacity = 0.25;
+							((Control)child).Opacity = 0.25;
 
 				if (e.Source is Widget)
 					foreach (var child in canvas.Children)
-						if (child == (UIElement)e.Source && child is Widget chW)
+						if (child == (Control)e.Source && child is Widget chW)
 							MarkBox(chW.ID);
 
 				if (e.Source is ArrowLine)
@@ -1742,7 +1738,7 @@ namespace DominoVisualizer
 				}
 			}
 
-            if (e.ClickCount == 1 && e.MiddleButton == MouseButtonState.Pressed)
+            if (e.ClickCount == 1 && props.IsMiddleButtonPressed)
             {
                 if (e.Source is ArrowLine)
                 {
@@ -1750,7 +1746,7 @@ namespace DominoVisualizer
                     {
                         if (line.UI == e.Source)
                         {
-							var mp = Mouse.GetPosition(canvas);
+							var mp = e.GetPosition(canvas);
                             var a = canvas.Transform3(mp);
                             var b = canvas.Transform(mp);
 
@@ -1788,8 +1784,8 @@ namespace DominoVisualizer
 					}*/
 
 			foreach (var child in canvas.Children)
-				if (!(child is System.Windows.Shapes.Line))
-					((UIElement)child).Opacity = 0.25;
+				if (!(child is Avalonia.Controls.Shapes.Line))
+					((Control)child).Opacity = 0.25;
 
 			foreach (var b in dominoBoxes.Values)
 				if (b.ID.Contains(input))
@@ -1881,7 +1877,7 @@ namespace DominoVisualizer
 		{
 			canvas.Moving += new MovingEventHandler(HandleMoving);
 			canvas.Zoomed += new ZoomEventHandler(HandleZoomed);
-			canvas.MouseDown += W_MouseDoubleClick;
+			canvas.PointerPressed += W_MouseDoubleClick;
 			canvas.Moved += new MovedEventHandler(HandleMoved);
 
 			List<Point> selectedPoints = new();
@@ -1896,14 +1892,15 @@ namespace DominoVisualizer
 			wiMetaControlIn.Header.Foreground = Brushes.White;
 			wiMetaControlIn.Width = width;
 			wiMetaControlIn.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaControlIn.delBtn.Visibility = Visibility.Hidden;
+			wiMetaControlIn.delBtn.IsVisible = false;
 			wiMetaControlIn.DisableMove = true;
 			canvas.Children.Add(wiMetaControlIn);
 			Canvas.SetLeft(wiMetaControlIn, 0);
 			Canvas.SetTop(wiMetaControlIn, 0);
-			Panel.SetZIndex(wiMetaControlIn, 30);
+			//Panel.SetZIndex(wiMetaControlIn, 30);
+			wiMetaControlIn.ZIndex = 30;
 
-			staticBoxesHeightT = 30;
+            staticBoxesHeightT = 30;
 			foreach (var inControl in dominoGraphs[selGraph].Metadata.ControlsIn)
 			{
 				DrawMetaControlIn(inControl);
@@ -1918,14 +1915,15 @@ namespace DominoVisualizer
 			wiMetaControlOut.Header.Foreground = Brushes.White;
 			wiMetaControlOut.Width = width;
 			wiMetaControlOut.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaControlOut.delBtn.Visibility = Visibility.Hidden;
+			wiMetaControlOut.delBtn.IsVisible = false;
 			wiMetaControlOut.DisableMove = true;
 			canvas.Children.Add(wiMetaControlOut);
 			Canvas.SetLeft(wiMetaControlOut, spaceX);
 			Canvas.SetTop(wiMetaControlOut, 0);
-			Panel.SetZIndex(wiMetaControlOut, 30);
+			//Panel.SetZIndex(wiMetaControlOut, 30);
+			wiMetaControlOut.ZIndex = 30;
 
-			staticBoxesHeightT = 30;
+            staticBoxesHeightT = 30;
 			foreach (var inControl in dominoGraphs[selGraph].Metadata.ControlsOut)
 			{
 				DrawMetaControlOut(inControl);
@@ -1940,14 +1938,15 @@ namespace DominoVisualizer
 			wiMetaDataIn.Header.Foreground = Brushes.White;
 			wiMetaDataIn.Width = width;
 			wiMetaDataIn.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaDataIn.delBtn.Visibility = Visibility.Hidden;
+			wiMetaDataIn.delBtn.IsVisible = false;
 			wiMetaDataIn.DisableMove = true;
 			canvas.Children.Add(wiMetaDataIn);
 			Canvas.SetLeft(wiMetaDataIn, spaceX * 2);
 			Canvas.SetTop(wiMetaDataIn, 0);
-			Panel.SetZIndex(wiMetaDataIn, 30);
+            //Panel.SetZIndex(wiMetaDataIn, 30);
+            wiMetaDataIn.ZIndex = 30;
 
-			wiMetaDataIn.list.Children.Add(DrawBtn("Add new", "datain", AddMetadataInfo));
+            wiMetaDataIn.list.Children.Add(DrawBtn("Add new", "datain", AddMetadataInfo));
 
 			staticBoxesHeightT = 50;
 			foreach (var inData in dominoGraphs[selGraph].Metadata.DatasIn)
@@ -1964,14 +1963,15 @@ namespace DominoVisualizer
 			wiGlobalVars.Header.Foreground = Brushes.White;
 			wiGlobalVars.Width = width;
 			wiGlobalVars.HeaderRectangle.Fill = Brushes.Green;
-			wiGlobalVars.delBtn.Visibility = Visibility.Hidden;
+			wiGlobalVars.delBtn.IsVisible = false;
 			wiGlobalVars.DisableMove = true;
 			canvas.Children.Add(wiGlobalVars);
 			Canvas.SetLeft(wiGlobalVars, spaceX * 3);
 			Canvas.SetTop(wiGlobalVars, 0);
-			Panel.SetZIndex(wiGlobalVars, 30);
+            //Panel.SetZIndex(wiGlobalVars, 30);
+            wiGlobalVars.ZIndex = 30;
 
-			wiGlobalVars.list.Children.Add(DrawBtn("Add new", "globalvar", AddMetadataInfo));
+            wiGlobalVars.list.Children.Add(DrawBtn("Add new", "globalvar", AddMetadataInfo));
 
 			staticBoxesHeightT = 50;
 			foreach (var var in globalVariables)
@@ -1988,14 +1988,15 @@ namespace DominoVisualizer
 			wiMetaDataOut.Header.Foreground = Brushes.White;
 			wiMetaDataOut.Width = width;
 			wiMetaDataOut.HeaderRectangle.Fill = Brushes.Green;
-			wiMetaDataOut.delBtn.Visibility = Visibility.Hidden;
+			wiMetaDataOut.delBtn.IsVisible = false;
 			wiMetaDataOut.DisableMove = true;
 			canvas.Children.Add(wiMetaDataOut);
 			Canvas.SetLeft(wiMetaDataOut, spaceX * 4);
 			Canvas.SetTop(wiMetaDataOut, 0);
-			Panel.SetZIndex(wiMetaDataOut, 30);
+            //Panel.SetZIndex(wiMetaDataOut, 30);
+            wiMetaDataOut.ZIndex = 30;
 
-			wiMetaDataOut.list.Children.Add(DrawBtn("Add new", "dataout", AddMetadataInfo));
+            wiMetaDataOut.list.Children.Add(DrawBtn("Add new", "dataout", AddMetadataInfo));
 
 			staticBoxesHeightT = 50;
 			foreach (var data in dominoGraphs[selGraph].Metadata.DatasOut)
@@ -2012,14 +2013,15 @@ namespace DominoVisualizer
 			wiResources.Header.Foreground = Brushes.White;
 			wiResources.Width = width;
 			wiResources.HeaderRectangle.Fill = Brushes.Green;
-			wiResources.delBtn.Visibility = Visibility.Hidden;
+			wiResources.delBtn.IsVisible = false;
 			wiResources.DisableMove = true;
 			canvas.Children.Add(wiResources);
 			Canvas.SetLeft(wiResources, spaceX * 5);
 			Canvas.SetTop(wiResources, 0);
-			Panel.SetZIndex(wiResources, 30);
+            //Panel.SetZIndex(wiResources, 30);
+            wiResources.ZIndex = 30;
 
-			wiResources.list.Children.Add(DrawBtn("Add new", "", AddResource));
+            wiResources.list.Children.Add(DrawBtn("Add new", "", AddResource));
 
 			staticBoxesHeightT = 50;
 			foreach (var data in dominoResources)

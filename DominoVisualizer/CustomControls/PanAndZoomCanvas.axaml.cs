@@ -19,6 +19,8 @@ namespace WpfPanAndZoom.CustomControls
         private  MatrixTransform _transform = new MatrixTransform();
         private Point _initialMousePosition;
 
+        public Point CurrentMousePos { set; get; } = new(0, 0);
+
         private bool _dragging;
         private Control _selectedElement;
         private Vector _draggingDelta;
@@ -475,6 +477,8 @@ namespace WpfPanAndZoom.CustomControls
         private void PanAndZoomCanvas_MouseMove(object sender, PointerEventArgs e)
         {
             var props = e.GetCurrentPoint(this).Properties;
+
+            CurrentMousePos = e.GetPosition(this);
 
             if (props.IsRightButtonPressed)
             {

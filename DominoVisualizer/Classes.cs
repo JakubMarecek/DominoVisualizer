@@ -1,7 +1,7 @@
-﻿using DominoVisualizer.CustomControls;
+﻿using Avalonia.Controls;
+using DominoVisualizer.CustomControls;
 using Petzold.Media2D;
 using System.Collections.Generic;
-using System.Windows.Controls;
 
 namespace DominoVisualizer
 {

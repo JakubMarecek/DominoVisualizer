@@ -1,13 +1,15 @@
-﻿using Microsoft.Win32;
+﻿using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Timers;
-using Avalonia.Controls;
 
 namespace DominoVisualizer
 {
@@ -132,12 +134,12 @@ namespace DominoVisualizer
 		{
             DiscordPresence();
 
-            /*gridLoading.Visibility = Visibility.Hidden;
-			gridException.Visibility = Visibility.Hidden;
-			gridNotice.Visibility = Visibility.Hidden;
-			gridSearch.Visibility = Visibility.Hidden;
-			gridDialog.Visibility = Visibility.Hidden;
-			gridDialogRun.Visibility = Visibility.Hidden;*/
+            /*gridLoading.IsVisible = false;
+			gridException.IsVisible = false;
+			gridNotice.IsVisible = false;
+			gridSearch.IsVisible = false;
+			gridDialog.IsVisible = false;
+			gridDialogRun.IsVisible = false;*/
             verT.Content = appVer;
 
             string[] args = Environment.GetCommandLineArgs();
@@ -223,7 +225,7 @@ namespace DominoVisualizer
                 bTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                 {
                     bTimer.Stop();
-                    Dispatcher.Invoke(() =>
+                    Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         bool eS = false;
 
@@ -263,7 +265,7 @@ namespace DominoVisualizer
                             parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
                             parser.openNotice = ShowNotice;
 
-                            chromeBtnSettings.Visibility = Visibility.Visible;
+                            chromeBtnSettings.IsVisible = true;
 
                             loaded = true;
 				        	Animation(true, gridMainClose);
@@ -284,7 +286,7 @@ namespace DominoVisualizer
                             aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                             {
                                 aTimer.Stop();
-                                Dispatcher.Invoke(() =>
+                                Dispatcher.UIThread.InvokeAsync(() =>
                                 {
                                     Blur(false);
                                     Animation(false, gridLoading);
@@ -297,7 +299,18 @@ namespace DominoVisualizer
 
             if (type == OpenType.Import)
             {
-                OpenFileDialog ofdI = new OpenFileDialog();
+                FilePickerOpenOptions opts = new();
+                opts.AllowMultiple = false;
+                opts.FileTypeFilter = new FilePickerFileType[] { new("Domino script") { Patterns = new[] { "*.lua" } } };
+                opts.Title = "Select compiled Domino script";
+
+                var d = StorageProvider.OpenFilePickerAsync(opts).Result;
+                if (d != null && d.Count > 0)
+                {
+                    OpenFile(OpenType.ImportParam, game, d[0].Path.LocalPath);
+                }
+
+                /*OpenFileDialog ofdI = new OpenFileDialog();
                 //ofd.InitialDirectory = Path.GetDirectoryName(filenamesel);
                 //ofd.FileName = filenamesel;
                 ofdI.Title = "Select compiled Domino script";
@@ -306,7 +319,7 @@ namespace DominoVisualizer
                 if (ofdI.ShowDialog() == true)
                 {
                     OpenFile(OpenType.ImportParam, game, ofdI.FileName);
-                }
+                }*/
                 /*else
                 {
                     Animation(true, gridMainMenu);
@@ -318,14 +331,25 @@ namespace DominoVisualizer
 
             if (type == OpenType.Open)
             {
-                OpenFileDialog ofdO = new OpenFileDialog();
+                FilePickerOpenOptions opts = new();
+                opts.AllowMultiple = false;
+                opts.FileTypeFilter = new FilePickerFileType[] { new("Domino script") { Patterns = new[] { "*.domino.xml", "*.domino" } } };
+                opts.Title = "Select Domino Workspace";
+
+                var d = StorageProvider.OpenFilePickerAsync(opts).Result;
+                if (d != null && d.Count > 0)
+                {
+                    OpenFile(OpenType.OpenParam, game, d[0].Path.LocalPath);
+                }
+
+                /*OpenFileDialog ofdO = new OpenFileDialog();
                 ofdO.Title = "Select Domino Workspace";
                 ofdO.Filter = "Domino Workspace|*.domino.xml;*.domino";
 
                 if (ofdO.ShowDialog() == true)
                 {
                     OpenFile(OpenType.OpenParam, game, ofdO.FileName);
-                }
+                }*/
                 /*else
                 {
                     Animation(true, gridMainMenu);
@@ -355,7 +379,7 @@ namespace DominoVisualizer
 
 					parser = new(this, arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
 
-					Dispatcher.Invoke(() =>
+                    Dispatcher.UIThread.InvokeAsync(() =>
 					{
 						Loading();
 					});
@@ -575,6 +599,23 @@ namespace DominoVisualizer
             }
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            Keyboard.Keys.Add(e.Key);
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            Keyboard.Keys.Remove(e.Key);
+            base.OnKeyUp(e);
+        }
+
+        public void MainWindow_Deactivated(object sender, EventArgs e)
+        {
+            Keyboard.Clear();
+        }
+
         private void W_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.F && Keyboard.IsKeyDown(Key.LeftCtrl))
@@ -643,7 +684,7 @@ namespace DominoVisualizer
 
     			SetTitle(true);
 
-                chromeBtnSettings.Visibility = Visibility.Hidden;
+                chromeBtnSettings.IsVisible = false;
 
                 Blur(true);
                 Animation(true, screen);
@@ -653,21 +694,9 @@ namespace DominoVisualizer
             });
         }
         
-        public static IEnumerable<T> FindVisualChilds<T>(DependencyObject depObj) where T : DependencyObject
-        {
-            if (depObj == null) yield return (T)Enumerable.Empty<T>();
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-            {
-                DependencyObject ithChild = VisualTreeHelper.GetChild(depObj, i);
-                if (ithChild == null) continue;
-                if (ithChild is T t) yield return t;
-                foreach (T childOfChild in FindVisualChilds<T>(ithChild)) yield return childOfChild;
-            }
-        }
-        
 		private void Animation(bool fadeInOut, Grid grid)
 		{
-            foreach (var ch in FindVisualChilds<Button>(grid))
+            foreach (var ch in grid.GetVisualDescendants().OfType<Button>())
             {
                 if (fadeInOut)
                     (ch as Button).IsEnabled = true;
@@ -678,10 +707,10 @@ namespace DominoVisualizer
 			if (fadeInOut)
 			{
 				grid.Opacity = 0;
-				grid.Visibility = Visibility.Visible;
+				grid.IsVisible = true;
 			}
 
-			DoubleAnimation doubleAnimation = new DoubleAnimation
+			/*DoubleAnimation doubleAnimation = new DoubleAnimation
 			{
 				From = fadeInOut ? 0 : 1,
 				To = fadeInOut ? 1 : 0,
@@ -697,16 +726,19 @@ namespace DominoVisualizer
 			{
 				if (!fadeInOut)
 				{
-					grid.Visibility = Visibility.Hidden;
+					grid.IsVisible = false;
 					grid.Opacity = 1;
 				}
 			};
-			storyboard.Begin(grid);
-		}
+			storyboard.Begin(grid);*/
+
+            grid.IsVisible = false;
+            grid.Opacity = 1;
+        }
 
 		private void Blur(bool enable)
 		{
-			if (enable)
+			/*if (enable)
 			{
 				canvas.Effect = new BlurEffect
 				{
@@ -718,7 +750,7 @@ namespace DominoVisualizer
 			else
 			{
 				canvas.Effect = null;
-			}
+			}*/
 		}
 
 		private void ButtonExport_Click(object sender, RoutedEventArgs e)
@@ -748,7 +780,7 @@ namespace DominoVisualizer
 
 			if (tag == "1")
             {
-				var a = parser.EditExecBoxSave(paramsList.Items.OfType<ParamEntry>().ToList(), editExecBoxType.SelectedIndex, editExecBoxExec.SelectedIndex, editExecBoxDynInt.Text);
+				var a = parser.EditExecBoxSave(paramsList.ItemsSource.OfType<ParamEntry>().ToList(), editExecBoxType.SelectedIndex, editExecBoxExec.SelectedIndex, editExecBoxDynInt.Text);
                 if (a != "")
                 {
 					OpenInfoDialog("Edit exec box", a);
@@ -772,12 +804,12 @@ namespace DominoVisualizer
 
 		private void ButtonLVArray_Click(object sender, RoutedEventArgs e)
 		{
-            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
+            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.ItemsSource.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
 		}
 
 		private void ButtonLVAdd_Click(object sender, RoutedEventArgs e)
 		{
-            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
+            paramsList.ItemsSource = parser.EditExecBoxParamsAddRow(paramsList.ItemsSource.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
 		}
 
 		private void ButtonLVDelete_Click(object sender, RoutedEventArgs e)
@@ -791,8 +823,8 @@ namespace DominoVisualizer
             {
                 var rowItem = (sender as Button).DataContext as ParamEntry;
                 rowItem.ParamValue = outDta;
-                ICollectionView view = CollectionViewSource.GetDefaultView(paramsList.ItemsSource);
-                view.Refresh();
+                //ICollectionView view = CollectionViewSource.GetDefaultView(paramsList.ItemsSource);
+                //view.Refresh();
             });
         }
 
@@ -903,23 +935,23 @@ namespace DominoVisualizer
 			editDataLblName.Content = name;
 			editDataLblDesc.Text = desc;
 
-			editDataList.Visibility = Visibility.Collapsed;
-            editDataAnchorDynTypeC.Visibility = Visibility.Collapsed;
-            editDataNameC.Visibility = Visibility.Collapsed;
-            editDataDataTypeIDC.Visibility = Visibility.Collapsed;
-            editDataHostExecFuncC.Visibility = Visibility.Collapsed;
-            editDataIsDelayedC.Visibility = Visibility.Collapsed;
+			editDataList.IsVisible = false;
+            editDataAnchorDynTypeC.IsVisible = false;
+            editDataNameC.IsVisible = false;
+            editDataDataTypeIDC.IsVisible = false;
+            editDataHostExecFuncC.IsVisible = false;
+            editDataIsDelayedC.IsVisible = false;
 
             if (anchorDynType != null)
             {
                 editDataAnchorDynType.Text = anchorDynType;
-                editDataAnchorDynTypeC.Visibility = Visibility.Visible;
+                editDataAnchorDynTypeC.IsVisible = true;
             }
 
             if (metaName != null)
             {
                 editDataName.Text = metaName;
-                editDataNameC.Visibility = Visibility.Visible;
+                editDataNameC.IsVisible = true;
             }
 
             if (dataTypeID != null)
@@ -928,25 +960,25 @@ namespace DominoVisualizer
                 var data = parser.GetDataTypes();
                 editDataDataTypeID.ItemsSource = data;
                 editDataDataTypeID.SelectedIndex = data.FindIndex(a => a == dataTypeID);
-                editDataDataTypeIDC.Visibility = Visibility.Visible;
+                editDataDataTypeIDC.IsVisible = true;
             }
 
             if (hostExecFunc != null)
             {
                 editDataHostExecFunc.Text = hostExecFunc;
-                editDataHostExecFuncC.Visibility = Visibility.Visible;
+                editDataHostExecFuncC.IsVisible = true;
             }
 
             if (isDelayed != null)
             {
                 editDataIsDelayed.IsChecked = isDelayed;
-                editDataIsDelayedC.Visibility = Visibility.Visible;
+                editDataIsDelayedC.IsVisible = true;
             }
 
             if (dataList != null)
             {
                 editDataList.ItemsSource = dataList;
-                editDataList.Visibility = Visibility.Visible;
+                editDataList.IsVisible = true;
             }
 
             Animation(true, gridDialogEditData);
@@ -958,7 +990,7 @@ namespace DominoVisualizer
 
             if (tag == "1")
             {
-				parser.EditMetadataInfoCreate(editDataName.Text, editDataAnchorDynType.Text, editDataDataTypeID.Text, editDataHostExecFunc.Text, editDataIsDelayed.IsChecked, editDataList.Items.OfType<ParamEntry>().ToList());
+				parser.EditMetadataInfoCreate(editDataName.Text, editDataAnchorDynType.Text, (string)editDataDataTypeID.SelectedItem, editDataHostExecFunc.Text, editDataIsDelayed.IsChecked, editDataList.ItemsSource.OfType<ParamEntry>().ToList());
             }
 
             Animation(false, gridDialogEditData);
@@ -966,12 +998,12 @@ namespace DominoVisualizer
 
         private void ButtonEDLArray_Click(object sender, RoutedEventArgs e)
         {
-            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
+            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.ItemsSource.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, true);
         }
 
         private void ButtonEDLAdd_Click(object sender, RoutedEventArgs e)
         {
-            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.Items.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
+            editDataList.ItemsSource = parser.EditExecBoxParamsAddRow(editDataList.ItemsSource.OfType<ParamEntry>().ToList(), (string)((Button)sender).Tag, false);
         }
 
         private void ButtonEDLDelete_Click(object sender, RoutedEventArgs e)
@@ -985,8 +1017,8 @@ namespace DominoVisualizer
             {
                 var rowItem = (sender as Button).DataContext as ParamEntry;
                 rowItem.ParamValue = outDta;
-                ICollectionView view = CollectionViewSource.GetDefaultView(editDataList.ItemsSource);
-                view.Refresh();
+                //ICollectionView view = CollectionViewSource.GetDefaultView(editDataList.ItemsSource);
+                //view.Refresh();
             });
         }
 
@@ -1051,7 +1083,7 @@ namespace DominoVisualizer
 		{
             noticeNote.Content = text;
 
-            Storyboard fade = FindResource("gridNoticeNoteFadeIn") as Storyboard;
+            /*Storyboard fade = FindResource("gridNoticeNoteFadeIn") as Storyboard;
             fade.Begin();
 
             Timer aTimer = new Timer(5000);
@@ -1059,12 +1091,12 @@ namespace DominoVisualizer
             aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
             {
                 aTimer.Stop();
-                Dispatcher.Invoke(() =>
+                Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     fade = FindResource("gridNoticeNoteFadeOut") as Storyboard;
                     fade.Begin();
                 });
-            };
+            };*/
         }
 
         private void ButtonAddBorder_Click(object sender, RoutedEventArgs e)
@@ -1153,7 +1185,7 @@ namespace DominoVisualizer
             {
                 addGetDataFromBoxData.ItemsSource = parser.GetDataFromBoxDatas(((ExecEntry)addGetDataFromBoxBox.SelectedItem).Num);
                 addGetDataFromBoxData.SelectedIndex = 0;
-                addGetDataFromBoxData.Items.Refresh();
+                //addGetDataFromBoxData.Items.Refresh();
             }
         }
 
@@ -1196,7 +1228,7 @@ namespace DominoVisualizer
             mainGraphs.ItemsSource = null;
             mainGraphs.ItemsSource = graphs;
             mainGraphs.SelectedIndex = selGraph;
-            mainGraphs.Items.Refresh();
+            //mainGraphs.Items.Refresh();
             allowChangeGraphs = true;
 
             if (forceReload != "")
@@ -1209,7 +1241,7 @@ namespace DominoVisualizer
                     aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                     {
                         aTimer.Stop();
-                        Dispatcher.Invoke(() =>
+                        Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             OpenFile(OpenType.SwapGraph, forceReload, f);
                         });
@@ -1230,7 +1262,7 @@ namespace DominoVisualizer
                     aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
                     {
                         aTimer.Stop();
-                        Dispatcher.Invoke(() =>
+                        Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             string graph = ((DominoGraph)mainGraphs.SelectedItem).UniqueID;
                             OpenFile(OpenType.SwapGraph, graph, f);
@@ -1371,61 +1403,21 @@ namespace DominoVisualizer
             }
         }
 
-        [DllImport("user32.dll")]
-        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
-
-        [DllImport("user32.dll")]
-        static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
-
-        [DllImport("user32.dll")]
-        static extern bool RemoveMenu(IntPtr hMenu, uint uPosition, uint uFlags);
-        
-        private void ShowSystemicMenu(object sender, MouseButtonEventArgs e)
+        private void MoveWnd(object sender, PointerPressedEventArgs e)
         {
-            Point mousePos = PointToScreen(Mouse.GetPosition(this));
-            IntPtr hWnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            //RECT pos;
-            //GetWindowRect(hWnd, out pos);
-            IntPtr hMenu = GetSystemMenu(hWnd, false);
-            //RemoveMenu(hMenu, 0xF030, 0x00000000);
-            //RemoveMenu(hMenu, 0xF120, 0x00000000);
-            int cmd = TrackPopupMenu(hMenu, 0x100, (int)mousePos.X, (int)mousePos.Y, 0, hWnd, IntPtr.Zero);
-            if (cmd > 0) SendMessage(hWnd, 0x112, (IntPtr)cmd, IntPtr.Zero);
-        }
+            var props = e.GetCurrentPoint(this).Properties;
+            if (props.IsLeftButtonPressed && e.ClickCount == 1)
+            {
+                Cursor = new Cursor(StandardCursorType.SizeAll);
+                BeginMoveDrag(e);
+                Cursor = new Cursor(StandardCursorType.Arrow);
+            }
 
-        private void MoveWnd(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
-        }
-
-        private void ChromeClick(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left)
-                if (WindowState == WindowState.Maximized)
-                    WindowState = WindowState.Normal;
-                else
+            if (props.IsLeftButtonPressed && e.ClickCount == 2)
+                if (WindowState == WindowState.Normal)
                     WindowState = WindowState.Maximized;
+                else if (WindowState == WindowState.Maximized)
+                    WindowState = WindowState.Normal;
         }
-
-        /*private void ExportPicture(object sender, RoutedEventArgs e)
-		{
-			RenderTargetBitmap rtb = new RenderTargetBitmap((int)canvas.RenderSize.Width,
-				(int)canvas.RenderSize.Height, 96d, 96d, System.Windows.Media.PixelFormats.Default);
-			rtb.Render(canvas);
-
-			var crop = new CroppedBitmap(rtb, new Int32Rect(50, 50, 250, 250));
-
-			BitmapEncoder pngEncoder = new PngBitmapEncoder();
-			pngEncoder.Frames.Add(BitmapFrame.Create(crop));
-
-			using (var fs = System.IO.File.OpenWrite("logo.png"))
-			{
-				pngEncoder.Save(fs);
-			}
-		}*/
     }
 }

@@ -1,12 +1,15 @@
 ﻿using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using DominoVisualizer.CustomControls;
 using Gibbed.Dunia2.FileFormats;
 using Gibbed.IO;
+using HarfBuzzSharp;
 using Petzold.Media2D;
 using System;
 using System.Collections.Generic;
@@ -2295,9 +2298,10 @@ namespace DominoVisualizer
 			}
 		}
 
-		private Button DrawBtn(string name, string tag, RoutedEventHandler act)
+		private Button DrawBtn(string name, string tag, EventHandler<RoutedEventArgs> act)
 		{
-			Button btn = new Button() { Content = name, Tag = tag, Style = Application.Current.FindResource("BoxBtn") as Style };
+			Button btn = new Button() { Content = name, Tag = tag };
+			btn.Classes.Add("BoxBtn");
 			btn.Click += act;
 			return btn;
 		}
@@ -2321,11 +2325,12 @@ namespace DominoVisualizer
 
 			l.PointBezier = (bool)settings["linePointsBezier"];
 
-            l.Cursor = Cursors.Hand;
+            l.Cursor = new Cursor(StandardCursorType.Hand);
 			l.Points = new();
 
 			canvas.Children.Add(l);
-			Panel.SetZIndex(l, 40);
+			//Panel.SetZIndex(l, 40);
+			l.ZIndex = 40;
 
 			lines.Add(new(startIndex, endIndex, l));
 		}
@@ -2351,15 +2356,17 @@ namespace DominoVisualizer
 			if (execBox.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + execBox.DynIntExec.ToString();
 
 			Grid gh = new() { Height = 18 };
-			gh.Children.Add(new TextBox() { Text = execStr + " > " + execBox.Box.ID, Margin = new(0, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Center, FontWeight = FontWeights.Bold, Width = double.NaN });
+			gh.Children.Add(new TextBox() { Text = execStr + " > " + execBox.Box.ID, Margin = new(0, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Center, FontWeight = FontWeight.Bold, Width = double.NaN });
 
-			Button btn = new Button() { Tag = conn.ID + "|" + execBox.Box.ID, Style = (Application.Current.FindResource("EditBtn") as Style) };
+			Button btn = new Button() { Tag = conn.ID + "|" + execBox.Box.ID };
+			btn.Classes.Add("EditBtn");
 			btn.Click += EditExecBox;
 			gh.Children.Add(btn);
 
-			Button btn2 = new Button() { Tag = conn.ID + "|" + execBox.Box.ID, Style = (Application.Current.FindResource("DelBtn") as Style) };
+			Button btn2 = new Button() { Tag = conn.ID + "|" + execBox.Box.ID };
+			btn.Classes.Add("DelBtn");
 			btn2.Click += RemoveExecBox;
-			gh.Children.Add(btn2);
+            gh.Children.Add(btn2);
 
 			sp.Children.Add(gh);
 
@@ -2389,7 +2396,7 @@ namespace DominoVisualizer
                     }
 
                     Grid g = new() { Height = 30 };
-					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					sp.Children.Add(g);
 
@@ -2414,10 +2421,11 @@ namespace DominoVisualizer
 				StackPanel sp2 = new();
 
 				Grid g = new() { Height = 18 };
-				g.Children.Add(new TextBox() { Text = name + " = " + c.ID, Margin = new(0, 0, 20, 0), FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+				g.Children.Add(new TextBox() { Text = name + " = " + c.ID, Margin = new(0, 0, 20, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
-				Button btnDel = new Button() { Tag = box.ID + "|" + c.ID, Style = (Application.Current.FindResource("DelBtn") as Style), Margin = new(0) };
-				btnDel.Click += RemoveBoxConn;
+				Button btnDel = new Button() { Tag = box.ID + "|" + c.ID, Margin = new(0) };
+                btnDel.Classes.Add("DelBtn");
+                btnDel.Click += RemoveBoxConn;
 				g.Children.Add(btnDel);
 
 				sp2.Children.Add(g);
@@ -2439,9 +2447,9 @@ namespace DominoVisualizer
 			conn.INT_isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
 			conn.INT_isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
 
-			Brush brsh = Brushes.Yellow;
-			if (conn.INT_isIn) brsh = Brushes.Red;
-			if (conn.INT_isOut) brsh = Brushes.Orange;
+			Brush brsh = (Brush)Brushes.Yellow;
+			if (conn.INT_isIn) brsh = (Brush)Brushes.Red;
+			if (conn.INT_isOut) brsh = (Brush)Brushes.Orange;
 
 			var w = new DominoUIConnector();
 			w.Header.Text = (conn.INT_isIn ? "ControlIn - " : "") + conn.ID;
@@ -2462,13 +2470,14 @@ namespace DominoVisualizer
 				});
 			};
 
-			w.editBtn.Visibility = conn.INT_isIn || conn.INT_isOut ? Visibility.Hidden : Visibility.Visible;
+			w.editBtn.IsVisible = conn.INT_isIn || conn.INT_isOut ? false : true;
 			w.editBtn.Tag = conn.ID;
 			w.editBtn.Click += EditConnectorDialog;
 
 			Canvas.SetLeft(w, currX);
 			Canvas.SetTop(w, currY);
-			Panel.SetZIndex(w, 30);
+			//Panel.SetZIndex(w, 30);
+			w.ZIndex = 30;
 			conn.DrawX = currX;
 			conn.DrawY = currY;
 			conn.Widget = w;
@@ -2497,7 +2506,7 @@ namespace DominoVisualizer
 				StackPanel sp2 = new();
 
 				Grid g = new() { Height = 30 };
-				g.Children.Add(new TextBox() { Text = "ControlOut", FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+				g.Children.Add(new TextBox() { Text = "ControlOut", FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 				g.Children.Add(new TextBox() { Text = outFunc, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 				sp2.Children.Add(g);
 
@@ -2529,13 +2538,14 @@ namespace DominoVisualizer
 				});
 			};
 
-			wb.swapBtn.Visibility = Visibility.Visible;
+			wb.swapBtn.IsVisible = true;
 			wb.swapBtn.Tag = box.ID;
 			wb.swapBtn.Click += SwapBox;
 
 			Canvas.SetLeft(wb, currX);
 			Canvas.SetTop(wb, currYBox);
-			Panel.SetZIndex(wb, 30);
+			//Panel.SetZIndex(wb, 30);
+			wb.ZIndex = 30;
 			box.DrawX = currX;
 			box.DrawY = currYBox;
 			box.Widget = wb;
@@ -2557,16 +2567,18 @@ namespace DominoVisualizer
 
 			Grid g2 = new() { Height = 18 };
 
-			g2.Children.Add(new TextBox() { Text = inData.Name, FontWeight = FontWeights.Bold });
+			g2.Children.Add(new TextBox() { Text = inData.Name, FontWeight = FontWeight.Bold });
 
 			string tag = (indt ? "datain" : "dataout") + "|" + inData.UniqueID;
 
-			Button btn = new Button() { Tag = tag, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditMetadataInfo;
+			Button btn = new Button() { Tag = tag };
+            btn.Classes.Add("EditBtn");
+            btn.Click += EditMetadataInfo;
 			g2.Children.Add(btn);
 
-			Button btnDel = new Button() { Tag = tag, Style = (Application.Current.FindResource("DelBtn") as Style) };
-			btnDel.Click += RemoveMetadataInfo;
+			Button btnDel = new Button() { Tag = tag };
+            btnDel.Classes.Add("DelBtn");
+            btnDel.Click += RemoveMetadataInfo;
 			g2.Children.Add(btnDel);
 
 			sp2.Children.Add(g2);
@@ -2594,10 +2606,11 @@ namespace DominoVisualizer
 
 			Grid g2 = new() { Height = 18 };
 
-			g2.Children.Add(new TextBox() { Text = inCtrl.Name, FontWeight = FontWeights.Bold });
+			g2.Children.Add(new TextBox() { Text = inCtrl.Name, FontWeight = FontWeight.Bold });
 
-			Button btn = new Button() { Tag = "controlin|" + inCtrl.Name, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditMetadataInfo;
+			Button btn = new Button() { Tag = "controlin|" + inCtrl.Name };
+            btn.Classes.Add("EditBtn");
+            btn.Click += EditMetadataInfo;
 			g2.Children.Add(btn);
 
 			sp2.Children.Add(g2);
@@ -2623,10 +2636,11 @@ namespace DominoVisualizer
 
 			Grid g2 = new() { Height = 18 };
 
-			g2.Children.Add(new TextBox() { Text = outCtrl.Name, FontWeight = FontWeights.Bold });
+			g2.Children.Add(new TextBox() { Text = outCtrl.Name, FontWeight = FontWeight.Bold });
 
-			Button btn = new Button() { Tag = "controlout|" + outCtrl.Name, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditMetadataInfo;
+			Button btn = new Button() { Tag = "controlout|" + outCtrl.Name };
+            btn.Classes.Add("EditBtn");
+            btn.Click += EditMetadataInfo;
 			g2.Children.Add(btn);
 
 			sp2.Children.Add(g2);
@@ -2711,13 +2725,15 @@ namespace DominoVisualizer
             StackPanel sp2 = new();
 
             Grid g = new() { Height = 18 };
-            g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeights.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+            g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
-            Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
+            Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID };
+            btn.Classes.Add("EditBtn");
             btn.Click += EditMetadataInfo;
             g.Children.Add(btn);
 
-            Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
+            Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID };
+            btn2.Classes.Add("DelBtn");
             btn2.Click += RemoveConnVar;
             g.Children.Add(btn2);
 
@@ -2752,14 +2768,16 @@ namespace DominoVisualizer
 			StackPanel sp2 = new();
 
 			Grid g = new() { Height = 18 };
-			g.Children.Add(new TextBox() { Text = var.Name, FontWeight = FontWeights.Bold });
+			g.Children.Add(new TextBox() { Text = var.Name, FontWeight = FontWeight.Bold });
 
-			Button btn = new Button() { Tag = "globalvar|" + var.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditMetadataInfo;
+			Button btn = new Button() { Tag = "globalvar|" + var.UniqueID };
+            btn.Classes.Add("EditBtn");
+            btn.Click += EditMetadataInfo;
 			g.Children.Add(btn);
 
-			Button btnDel = new Button() { Tag = "globalvar|" + var.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
-			btnDel.Click += RemoveMetadataInfo;
+			Button btnDel = new Button() { Tag = "globalvar|" + var.UniqueID };
+            btnDel.Classes.Add("DelBtn");
+            btnDel.Click += RemoveMetadataInfo;
 			g.Children.Add(btnDel);
 
 			sp2.Children.Add(g);
@@ -2917,12 +2935,14 @@ namespace DominoVisualizer
 			Grid g = new();
 			g.Children.Add(new TextBlock() { Text = c.Name, Foreground = new SolidColorBrush(Colors.White), Margin = new Thickness(0, 0, 50, 0) });
 
-			Button btn = new Button() { Tag = "edit|" + c.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style) };
-			btn.Click += EditCommentDialog;
+			Button btn = new Button() { Tag = "edit|" + c.UniqueID };
+            btn.Classes.Add("EditBtnWhite");
+            btn.Click += EditCommentDialog;
 			g.Children.Add(btn);
 
-			Button btnDel = new Button() { Tag = "delete|" + c.UniqueID, Style = (Application.Current.FindResource("DelBtnWhite") as Style) };
-			btnDel.Click += EditCommentDialog;
+			Button btnDel = new Button() { Tag = "delete|" + c.UniqueID };
+            btnDel.Classes.Add("DelBtnWhite");
+            btnDel.Click += EditCommentDialog;
 			g.Children.Add(btnDel);
 
 			DominoUIComment b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g };
@@ -2932,12 +2952,13 @@ namespace DominoVisualizer
 			canvas.Children.Add(b2);
 			Canvas.SetLeft(b2, currX);
 			Canvas.SetTop(b2, currY);
-			Panel.SetZIndex(b2, 40);
+			//Panel.SetZIndex(b2, 40);
+			b2.ZIndex = 40;
 		}
 
 		private void DrawBorder(DominoBorder b, double currX, double currY, double w, double h, bool? moveChilds)
 		{
-			DoubleCollection lineStyle = null;
+			AvaloniaList<double> lineStyle = null;
 
 			if (b.Style == 0) lineStyle = new(new double[] { 1, 1 });           // . . . . dotted line
 			if (b.Style == 1) lineStyle = new(new double[] { 4, 1, 2, 1 });     // - . - . dash-dotted line
@@ -2946,19 +2967,21 @@ namespace DominoVisualizer
 
 			Grid g = new();
 
-			Button btn = new Button() { Tag = "edit|" + b.UniqueID, Style = (Application.Current.FindResource("EditBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
-			btn.Click += EditBorderDialog;
+			Button btn = new Button() { Tag = "edit|" + b.UniqueID, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
+            btn.Classes.Add("EditBtnWhite");
+            btn.Click += EditBorderDialog;
 			g.Children.Add(btn);
 
-			Button btnDel = new Button() { Tag = "delete|" + b.UniqueID, Style = (Application.Current.FindResource("DelBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 24, 0) };
-			btnDel.Click += EditBorderDialog;
+			Button btnDel = new Button() { Tag = "delete|" + b.UniqueID, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 24, 0) };
+            btnDel.Classes.Add("DelBtnWhite");
+            btnDel.Click += EditBorderDialog;
 			g.Children.Add(btnDel);
 
 			/*Button btnDup = new Button() { Tag = b.UniqueID, Style = (Application.Current.FindResource("DuplBtnWhite") as Style), VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 44, 0) };
 			btnDup.Click += DuplicateBorder;
 			g.Children.Add(btnDup);*/
 
-			System.Windows.Shapes.Rectangle r = new();
+			Avalonia.Controls.Shapes.Rectangle r = new();
 			r.StrokeDashArray = lineStyle;
 			r.Stroke = new SolidColorBrush(linesColors[b.Color]);
 			r.StrokeThickness = 2;
@@ -2989,7 +3012,8 @@ namespace DominoVisualizer
 			canvas.Children.Add(b2);
 			Canvas.SetLeft(b2, currX);
 			Canvas.SetTop(b2, currY);
-			Panel.SetZIndex(b2, 10);
+			//Panel.SetZIndex(b2, 10);
+			b2.ZIndex = 10;
 		}
 
 		private void DrawResource(DominoDict res)
@@ -2998,14 +3022,16 @@ namespace DominoVisualizer
 
 			Grid g2 = new() { Height = 18 };
 
-			g2.Children.Add(new TextBox() { Text = res.Name, FontWeight = FontWeights.Bold });
+			g2.Children.Add(new TextBox() { Text = res.Name, FontWeight = FontWeight.Bold });
 
-			Button btn = new Button() { Tag = "edit|" + res.UniqueID, Style = (Application.Current.FindResource("EditBtn") as Style) };
-			btn.Click += EditResourceDialog;
+			Button btn = new Button() { Tag = "edit|" + res.UniqueID };
+            btn.Classes.Add("EditBtn");
+            btn.Click += EditResourceDialog;
 			g2.Children.Add(btn);
 
-			Button btnDel = new Button() { Tag = "delete|" + res.UniqueID, Style = (Application.Current.FindResource("DelBtn") as Style) };
-			btnDel.Click += EditResourceDialog;
+			Button btnDel = new Button() { Tag = "delete|" + res.UniqueID };
+            btnDel.Classes.Add("DelBtn");
+            btnDel.Click += EditResourceDialog;
 			g2.Children.Add(btnDel);
 
 			sp2.Children.Add(g2);
@@ -3042,8 +3068,8 @@ namespace DominoVisualizer
                     double angleEx = Math.Atan2(p2.X - p1.X, p2.Y - p1.Y) * (180 / Math.PI);
                     double angleNe = Math.Atan2(pn.X - p1.X, pn.Y - p1.Y) * (180 / Math.PI);
 
-                    double distanceEx = Point.Subtract(p2, p1).Length;
-                    double distanceNe = Point.Subtract(pn, p1).Length;
+                    double distanceEx = Vector.Subtract(p2, p1).Length;
+                    double distanceNe = Vector.Subtract(pn, p1).Length;
 
                     if (
                         (angleEx < angleNe + 1 && angleEx > angleNe - 1) &&
@@ -3064,7 +3090,8 @@ namespace DominoVisualizer
             canvas.Children.Add(ui);
             Canvas.SetLeft(ui, drawX + c.X);
             Canvas.SetTop(ui, drawY + c.Y);
-            Panel.SetZIndex(ui, 50);
+			//Panel.SetZIndex(ui, 50);
+			ui.ZIndex = 50;
         }
 
 		private void RemoveComment(DominoComment c)
@@ -3483,11 +3510,11 @@ namespace DominoVisualizer
 						ParamUsed = true,
 						ParamHasArray = false,
 						ParamIsBase = isBase,
-						AddArrayVs = Visibility.Visible,
-						AddVs = Visibility.Hidden,
-						RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
-						ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
-						GetDataVs = Visibility.Visible,
+						AddArrayVs = true,
+						AddVs = false,
+						RemoveVs = isBase ? false : true,
+						ArrayBulletVs = arrayLeft > 0 ? true : false,
+						GetDataVs = true,
 						NameMargin = new(arrayLeft, 0, 5, 0)
 					});
 				}
@@ -3503,11 +3530,11 @@ namespace DominoVisualizer
 						ParamUsed = true,
 						ParamHasArray = true,
 						ParamIsBase = isBase,
-						AddArrayVs = Visibility.Visible,
-						AddVs = Visibility.Visible,
-						RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
-						ArrayBulletVs = arrayLeft > 0 ? Visibility.Visible : Visibility.Collapsed,
-						GetDataVs = Visibility.Hidden,
+						AddArrayVs = true,
+						AddVs = true,
+						RemoveVs = isBase ? false : true,
+						ArrayBulletVs = arrayLeft > 0 ? true : false,
+						GetDataVs = false,
 						NameMargin = new(arrayLeft, 0, 5, 0)
 					});
 
@@ -3527,11 +3554,11 @@ namespace DominoVisualizer
 						ParamUsed = false,
 						ParamHasArray = false,
 						ParamIsBase = isBase,
-						AddArrayVs = Visibility.Hidden,
-						AddVs = Visibility.Hidden,
-						RemoveVs = isBase ? Visibility.Hidden : Visibility.Visible,
-						ArrayBulletVs = Visibility.Collapsed,
-						GetDataVs = Visibility.Visible,
+						AddArrayVs = false,
+						AddVs = false,
+						RemoveVs = isBase ? false : true,
+						ArrayBulletVs = false,
+						GetDataVs = true,
 						NameMargin = new(0, 0, 0, 0)
 					});
 			}
@@ -4970,14 +4997,15 @@ namespace DominoVisualizer
                 doc.Save(writer);
             }
 
-			Clipboard.SetText(builder.ToString());
+			
+			wnd.Clipboard.SetTextAsync(builder.ToString());
 
 			canvas.ResetSelection();
 		}
 
 		public void CopyingPaste()
 		{
-			string strData = Clipboard.GetText();
+			string strData = wnd.Clipboard.GetTextAsync().Result;
 
 			XElement xData = null;
 
@@ -5267,8 +5295,23 @@ namespace DominoVisualizer
 			string fileName = BuildGraphName(dominoGraphs[selGraph], false, debug);
 
 			if (file == "" || file.EndsWith(".lua"))
-			{
-				System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                FolderPickerOpenOptions opts = new();
+                opts.AllowMultiple = false;
+                opts.Title = "Select output folder.";
+                var d = wnd.StorageProvider.OpenFolderPickerAsync(opts).Result;
+
+				if (d != null && d.Count > 0)
+				{
+					string path = d[0].Path.LocalPath;
+
+                    exportPath = path + "\\" + fileName;
+                    exportPathDep = path + "\\" + workspaceName.Replace(" ", "_").ToLowerInvariant();
+                }
+                else
+                    return "r";
+
+                /*System.Windows.Forms.FolderBrowserDialog folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog
 				{
 					Description = "Select output folder.",
 					AutoUpgradeEnabled = false
@@ -5279,7 +5322,7 @@ namespace DominoVisualizer
 					exportPathDep = folderBrowserDialog.SelectedPath + "\\" + workspaceName.Replace(" ", "_").ToLowerInvariant();
 				}
 				else
-					return "r";
+					return "r";*/
 
 				/*SaveFileDialog sfd = new();
 				sfd.Title = "Export Domino Workspace to LUA";
@@ -6078,7 +6121,7 @@ namespace DominoVisualizer
 			return output;
 		}
 
-		private XElement DataToXML(bool afterDelete, List<UIElement> UIList = null)
+		private XElement DataToXML(bool afterDelete, List<Control> UIList = null)
 		{
             static XElement saveConn(DominoConnector c)
 			{
@@ -6334,7 +6377,21 @@ namespace DominoVisualizer
 
 			if (file == "" || file.EndsWith(".lua"))
 			{
-				SaveFileDialog sfd = new();
+                FilePickerSaveOptions opts = new();
+                opts.FileTypeChoices = new FilePickerFileType[] { new("Domino Workspace") { Patterns = new[] { "*.domino.xml", "*.domino" } } };
+                opts.SuggestedFileName = workspaceName.Replace(" ", "_").ToLower();
+                opts.Title = "Save Domino Workspace";
+
+                var d = wnd.StorageProvider.SaveFilePickerAsync(opts).Result;
+
+				if (d != null)
+				{
+					file = d.Path.LocalPath;
+                }
+                else
+                    return "r";
+
+                /*SaveFileDialog sfd = new();
 				sfd.Title = "Save Domino Workspace";
 				sfd.Filter = "Domino Workspace|*.domino.xml;*.domino";
 				sfd.FileName = workspaceName.Replace(" ", "_").ToLower();
@@ -6343,7 +6400,7 @@ namespace DominoVisualizer
 					file = sfd.FileName;
 				}
 				else
-					return "r";
+					return "r";*/
 			}
 
 			if (wnd != null)
@@ -6639,7 +6696,7 @@ namespace DominoVisualizer
 				sX = double.Parse(xGraph.Element("SX").Value, CultureInfo.InvariantCulture);
 				sY = double.Parse(xGraph.Element("SY").Value, CultureInfo.InvariantCulture);
 
-                var mp = canvas.Transform3(Mouse.GetPosition(canvas));
+                var mp = canvas.Transform3(canvas.CurrentMousePos);
 				mX = mp.X;
 				mY = mp.Y;
             }
@@ -6665,8 +6722,7 @@ namespace DominoVisualizer
 
                 if (asNew)
                 {
-                    np.X += mX;
-                    np.Y += mY;
+					np += new Point(mX, mY);
                 }
 
                 DrawComment(c, np.X, np.Y);
@@ -6698,8 +6754,7 @@ namespace DominoVisualizer
 
                 if (asNew)
                 {
-                    np.X += mX;
-                    np.Y += mY;
+                    np += new Point(mX, mY);
                 }
 
                 DrawBorder(b, np.X, np.Y, w, h, moveChilds);
@@ -6749,8 +6804,7 @@ namespace DominoVisualizer
 
                     var np = canvas.Transform4(new(box.DrawX, box.DrawY));
 
-                    np.X += mX;
-                    np.Y += mY;
+                    np += new Point(mX, mY);
 
                     DrawBox(box, np.X, np.Y);
                 }
@@ -6809,8 +6863,7 @@ namespace DominoVisualizer
 
                     var np = canvas.Transform4(new(conn.DrawX, conn.DrawY));
 
-                    np.X += mX;
-                    np.Y += mY;
+                    np += new Point(mX, mY);
 
                     DrawConnector(conn, np.X, np.Y);
                 }
@@ -6914,10 +6967,9 @@ namespace DominoVisualizer
                 {
                     var np = canvas.Transform4(new(lp.DrawX - sX, lp.DrawY - sY));
 
-                    np.X += mX;
-                    np.Y += mY;
+                    np += new Point(mX, mY);
 
-					var npp = canvas.Transform2(np);
+                    var npp = canvas.Transform2(np);
 	
                     foreach (var line in lines)
                         if (line.Point1 == lp.From && line.Point2 == lp.To)

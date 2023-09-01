@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using Avalonia;
 
 namespace DominoVisualizer
 {
@@ -22,14 +22,14 @@ namespace DominoVisualizer
 
         public Thickness NameMargin { set; get; }
 
-        public Visibility AddArrayVs { set; get; }
+        public bool AddArrayVs { set; get; }
 
-        public Visibility AddVs { set; get; }
+        public bool AddVs { set; get; }
 
-        public Visibility RemoveVs { set; get; }
+        public bool RemoveVs { set; get; }
 
-        public Visibility ArrayBulletVs { set; get; }
+        public bool ArrayBulletVs { set; get; }
 
-        public Visibility GetDataVs { set; get; }
+        public bool GetDataVs { set; get; }
     }
 }

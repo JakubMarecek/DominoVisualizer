@@ -5,636 +5,677 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:CustomControlsDV="clr-namespace:DominoVisualizer.CustomControls"
     xmlns:CustomControls="clr-namespace:WpfPanAndZoom.CustomControls"
+    xmlns:globalData="using:DominoVisualizer"
     x:CompileBindings="True"
     ExtendClientAreaToDecorationsHint="True"
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaTitleBarHeightHint="-1"
-    xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown" WindowStartupLocation="CenterScreen" Icon="domino.ico" Closing="Window_Closing">
+    xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown"
+		WindowStartupLocation="CenterScreen" Icon="domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
 
-    <Window.Resources>
-        <Storyboard x:Key="gridNoticeNoteFadeIn">
-            <DoubleAnimation From="0" To="1" Duration="0:0:0.1" Storyboard.TargetName="gridNoticeNote" Storyboard.TargetProperty="Opacity" />
-        </Storyboard>
-        <Storyboard x:Key="gridNoticeNoteFadeOut">
-            <DoubleAnimation From="1" To="0" Duration="0:0:0.3" Storyboard.TargetName="gridNoticeNote" Storyboard.TargetProperty="Opacity" />
-        </Storyboard>
-    </Window.Resources>
-    
-    <Grid>
-        <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True" />
-            <Grid Background="#99000000" Name="gridMainMenu">
-                <Image Source="domino.ico" Margin="-480,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                    <Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,0,-10" />
-                    <Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
-                    <Label Content="by ArmanIII" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,70" />
-                    <Label Content="Import Domino from LUA:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,0,0,15" />
-                    <Button Classes="CBtn" Content="Import" Click="ButtonSelDialog_Click" Tag="0" />
-                    <Label Content="Create a new workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
-                    <Button Classes="CBtn" Content="Create" Click="ButtonSelDialog_Click" Tag="2" />
-                    <Label Content="Or open workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
-                    <Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
-                </StackPanel>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogSelGame" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Game base" Classes="Header" />
-                    <TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
-                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,130,0,10">
-                        <Button Classes="CBtn" Content="Far Cry 5" Click="ButtonSelGame_Click" Tag="fc5" />
-                        <Button Classes="CBtn" Content="Far Cry New Dawn" Click="ButtonSelGame_Click" Tag="fcnd" />
-                        <Button Classes="CBtn" Content="Far Cry 6" Click="ButtonSelGame_Click" Tag="fc6" />
-                        <Button Classes="CBtn" Content="Cancel" Click="ButtonSelGame_Click" Tag="cancel" Margin="0,20,0,10" />
-                    </StackPanel>
-                </Grid>
-            </Grid>
-            <Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden" Margin="0,40,0,0">
-                <Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
-                    <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
-                        <Grid Background="#77000000">
-                            <Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
-                            <Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
+	<Grid>
+		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+			<CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True" />
+			<Grid Background="#99000000" Name="gridMainMenu">
+				<Image Source="domino.ico" Margin="-480,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
+				<StackPanel Orientation="Vertical" VerticalAlignment="Center">
+					<Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,0,-10" />
+					<Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
+					<Label Content="by ArmanIII" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,70" />
+					<Label Content="Import Domino from LUA:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,0,0,15" />
+					<Button Classes="CBtn" Content="Import" Click="ButtonSelDialog_Click" Tag="0" />
+					<Label Content="Create a new workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
+					<Button Classes="CBtn" Content="Create" Click="ButtonSelDialog_Click" Tag="2" />
+					<Label Content="Or open workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
+					<Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
+				</StackPanel>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogSelGame" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Game base" Classes="Header" />
+					<TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
+					<StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,130,0,10">
+						<Button Classes="CBtn" Content="Far Cry 5" Click="ButtonSelGame_Click" Tag="fc5" />
+						<Button Classes="CBtn" Content="Far Cry New Dawn" Click="ButtonSelGame_Click" Tag="fcnd" />
+						<Button Classes="CBtn" Content="Far Cry 6" Click="ButtonSelGame_Click" Tag="fc6" />
+						<Button Classes="CBtn" Content="Cancel" Click="ButtonSelGame_Click" Tag="cancel" Margin="0,20,0,10" />
+					</StackPanel>
+				</Grid>
+			</Grid>
+			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden" Margin="0,40,0,0">
+				<Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
+					<Grid Background="#77000000">
+						<Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
+						<Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
 
-                            <Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+						<Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 
-                            <Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
+						<Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
 
-                            <ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+						<ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
 
-                            <Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-                            <Button Classes="DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-                        </Grid>
-                    </CustomControlsDV:BlurHost>
-                </Grid>
-                <Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
-                    <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
-                        <Grid Background="#77000000">
-                            <Button Classes="CBtn" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                            <Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                        </Grid>
-                    </CustomControlsDV:BlurHost>
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Edit exec box" Classes="Header" />
-                    <TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
+						<Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+						<Button Classes="DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+					</Grid>
+				</Grid>
+				<Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
+					<Grid Background="#77000000">
+						<Button Classes="CBtn" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+						<Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					</Grid>
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Edit exec box" Classes="Header" />
+					<TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <Label Content="Exec type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
-                        <ComboBox Name="editExecBoxType" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBoxItem>Exec</ComboBoxItem>
-                            <ComboBoxItem>Exec Dyn Int</ComboBoxItem>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
-                        <Label Content="Exec" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
-                        <ComboBox Name="editExecBoxExec" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,180,0,0">
-                        <Label Content="Exec Dyn Int" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
-                        <TextBox Name="editExecBoxDynInt" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<Label Content="Exec type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
+						<ComboBox Name="editExecBoxType" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBoxItem>Exec</ComboBoxItem>
+							<ComboBoxItem>Exec Dyn Int</ComboBoxItem>
+						</ComboBox>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
+						<Label Content="Exec" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
+						<ComboBox Name="editExecBoxExec" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,180,0,0">
+						<Label Content="Exec Dyn Int" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
+						<TextBox Name="editExecBoxDynInt" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right" />
+					</StackPanel>
 
-                    <ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
+					<ScrollViewer Margin="10,220,8,60">
+						<ItemsRepeater Name="paramsList">
+							<ItemsRepeater.ItemTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">
+									<Grid Margin="0,2">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="290"></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+										</Grid.ColumnDefinitions>
+										<Grid>
+											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+										</Grid>
+										<CheckBox Grid.Column="1" IsChecked="{Binding ParamUsed}" />
+										<TextBox Grid.Column="2" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
+										<Button Grid.Column="3" Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditExecArrayBtn" />
+										<Button Grid.Column="4" Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditExecAddBtn" />
+										<Button Grid.Column="5" Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditExecRemoveBtn" />
+										<Button Grid.Column="6" Click="ButtonLVGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditExecGetDataBtn" />
+									</Grid>
+								</DataTemplate>
+							</ItemsRepeater.ItemTemplate>
+						</ItemsRepeater>
+					</ScrollViewer>
+					
+					<!--<ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
                       KeyboardNavigation.TabNavigation="Local" Margin="10,220,8,60" Name="paramsList" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                        <ListView.View>
-                            <GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Grid Width="290">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" Visibility="{Binding ArrayBulletVs}" />
-                                                <TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding ParamUsed}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonLVGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+						<ListView.View>
+							<GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Grid Width="290">
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="Auto" />
+													<ColumnDefinition />
+												</Grid.ColumnDefinitions>
+												<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" Visibility="{Binding ArrayBulletVs}" />
+												<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+											</Grid>
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<CheckBox IsChecked="{Binding ParamUsed}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBox Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonLVGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+							</GridView>
+						</ListView.View>
+					</ListView>-->
 
-                    <Button Classes="CBtn" Content="Save" Click="ButtonDialogEditExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddExecBox" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Add exec box" Classes="Header" />
-                    <TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Save" Click="ButtonDialogEditExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddExecBox" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Add exec box" Classes="Header" />
+					<TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
-                        <ComboBox Name="addExecBoxBox" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
+						<ComboBox Name="addExecBoxBox" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddBoxConnector" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Add connector" Classes="Header" />
-                    <TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Add connector" Classes="Header" />
+					<TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <ComboBox Name="addBoxConnectorB" Width="250" Margin="20,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <Label Content=">" HorizontalAlignment="Left" FontSize="16" Margin="15,0,15,0" Foreground="White" Width="20" />
-                        <ComboBox Name="addBoxConnectorC" Width="250" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <CheckBox Name="addBoxConnectorArray" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,150,0,0" Content=" Add as array value" />
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,190,0,0">
-                        <Label Content="Array - item key name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                        <TextBox Name="addBoxConnectorArrayKey" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<ComboBox Name="addBoxConnectorB" Width="250" Margin="20,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+						<Label Content=">" HorizontalAlignment="Left" FontSize="16" Margin="15,0,15,0" Foreground="White" Width="20" />
+						<ComboBox Name="addBoxConnectorC" Width="250" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
+					<CheckBox Name="addBoxConnectorArray" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,150,0,0" Content=" Add as array value" />
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,190,0,0">
+						<Label Content="Array - item key name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
+						<TextBox Name="addBoxConnectorArrayKey" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right" />
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBoxConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddConnector" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Add new connector" Classes="Header" />
-                    <TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBoxConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddConnector" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Add new connector" Classes="Header" />
+					<TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
 
-                    <TextBox Text="" Name="addConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<TextBox Text="" Name="addConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <CheckBox Content=" Is input control" Name="addConnectorIn" Margin="20,150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Is output control" Name="addConnectorOut" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <TextBox Name="addConnectorOutName" Text="" Width="330" Margin="200,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Is input control" Name="addConnectorIn" Margin="20,150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Is output control" Name="addConnectorOut" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<TextBox Name="addConnectorOutName" Text="" Width="330" Margin="200,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddBox" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Add new box" Classes="Header" />
-                    <TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddBox" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Add new box" Classes="Header" />
+					<TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
 
-                    <CheckBox Content=" Is global" Name="addBoxGlobal" Margin="20,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Is global" Name="addBoxGlobal" Margin="20,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,160,0,0">
-                        <Label Content="Box type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
-                        <ComboBox Name="addBoxName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,160,0,0">
+						<Label Content="Box type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
+						<ComboBox Name="addBoxName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogEditData" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Name="editDataLblName" Content="--name--" Classes="Header" />
-                    <TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogEditData" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
+					<Rectangle Classes="DialogRect" />
+					<Label Name="editDataLblName" Content="--name--" Classes="Header" />
+					<TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
 
-                    <StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="0,90,0,70">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataNameC" Visibility="Visible">
-                            <Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
-                            <TextBox Name="editDataName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataAnchorDynTypeC" Visibility="Collapsed">
-                            <Label Content="Anchor Dyn Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                            <TextBox Name="editDataAnchorDynType" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataDataTypeIDC" Visibility="Collapsed">
-                            <Label Content="Data Type ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                            <!--<TextBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />-->
-
-
-                            <ComboBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            </ComboBox>
+					<StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="0,90,0,70">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataNameC" Visibility="Visible">
+							<Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
+							<TextBox Name="editDataName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataAnchorDynTypeC" Visibility="Collapsed">
+							<Label Content="Anchor Dyn Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
+							<TextBox Name="editDataAnchorDynType" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataDataTypeIDC" Visibility="Collapsed">
+							<Label Content="Data Type ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
+							<!--<TextBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />-->
 
 
+							<ComboBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
+							</ComboBox>
 
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataHostExecFuncC" Visibility="Collapsed">
-                            <Label Content="Host Exec Func" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                            <TextBox Name="editDataHostExecFunc" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataIsDelayedC" Visibility="Collapsed">
-                            <Label Content="Is Delayed" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
-                            <CheckBox Name="editDataIsDelayed" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                        </StackPanel>
-                    </StackPanel>
 
-                    <ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
+
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataHostExecFuncC" Visibility="Collapsed">
+							<Label Content="Host Exec Func" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
+							<TextBox Name="editDataHostExecFunc" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataIsDelayedC" Visibility="Collapsed">
+							<Label Content="Is Delayed" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
+							<CheckBox Name="editDataIsDelayed" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
+						</StackPanel>
+					</StackPanel>
+
+					<ScrollViewer Margin="10,140,10,60">
+						<ItemsRepeater Name="editDataList">
+							<ItemsRepeater.ItemTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">
+									<Grid Margin="0,2">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="290"></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition></ColumnDefinition>
+										</Grid.ColumnDefinitions>
+										<Grid>
+											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+										</Grid>
+										<TextBox Grid.Column="1" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
+										<Button Grid.Column="2" Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditExecArrayBtn" />
+										<Button Grid.Column="3" Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditExecAddBtn" />
+										<Button Grid.Column="4" Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditExecRemoveBtn" />
+										<Button Grid.Column="5" Click="ButtonEDLGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditExecGetDataBtn" />
+									</Grid>
+								</DataTemplate>
+							</ItemsRepeater.ItemTemplate>
+						</ItemsRepeater>
+					</ScrollViewer>
+
+					<!--<ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
                       KeyboardNavigation.TabNavigation="Local" Margin="10,140,10,60" Name="editDataList" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                        <ListView.View>
-                            <GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Grid Width="290">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" Visibility="{Binding ArrayBulletVs}" />
-                                                <TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBox Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Click="ButtonEDLGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+						<ListView.View>
+							<GridView ColumnHeaderContainerClasses="ParamsListHeader" AllowsColumnReorder="False">
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Grid Width="290">
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="Auto" />
+													<ColumnDefinition />
+												</Grid.ColumnDefinitions>
+												<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" Visibility="{Binding ArrayBulletVs}" />
+												<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+											</Grid>
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBox Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddArrayVs}" Classes="EditExecArrayBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" Visibility="{Binding AddVs}" Classes="EditExecAddBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" Visibility="{Binding RemoveVs}" Classes="EditExecRemoveBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn Header="">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<Button Click="ButtonEDLGetData_Click" Visibility="{Binding GetDataVs}" Classes="EditExecGetDataBtn}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+							</GridView>
+						</ListView.View>
+					</ListView>-->
 
-                    <Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditData_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Edit comment" Classes="Header" />
+					<Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditData_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Edit comment" Classes="Header" />
 
-                    <TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" AcceptsReturn="True" VerticalContentAlignment="Top" />
+					<TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" AcceptsReturn="True" VerticalContentAlignment="Top" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,455,0,0">
-                        <Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
-                        <ComboBox Name="addCommentColor" Width="300" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Grid Height="20" Width="280" Background="{Binding Color}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,455,0,0">
+						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
+						<ComboBox Name="addCommentColor" Width="300" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<Grid Height="20" Width="280" Background="{Binding Color}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogAddComment_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Edit border" Classes="Header" />
+					<Button Classes="CBtn" Content="Set" Click="ButtonDialogAddComment_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Edit border" Classes="Header" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
-                        <Label Content="Style" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
-                        <ComboBox Name="addBorderStyle" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBoxItem>Dotted line</ComboBoxItem>
-                            <ComboBoxItem>Dash-dotted line</ComboBoxItem>
-                            <ComboBoxItem>Dashed line</ComboBoxItem>
-                            <ComboBoxItem>Solid line</ComboBoxItem>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
+						<Label Content="Style" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
+						<ComboBox Name="addBorderStyle" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBoxItem>Dotted line</ComboBoxItem>
+							<ComboBoxItem>Dash-dotted line</ComboBoxItem>
+							<ComboBoxItem>Dashed line</ComboBoxItem>
+							<ComboBoxItem>Solid line</ComboBoxItem>
+						</ComboBox>
+					</StackPanel>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
-                        <ComboBox Name="addBorderColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Grid Height="20" Width="280" Background="{Binding Color}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
+						<ComboBox Name="addBorderColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<Grid Height="20" Width="280" Background="{Binding Color}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
-                        <Label Content="Background color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
-                        <ComboBox Name="addBorderBgColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Grid Height="20" Width="280" Background="{Binding Color}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
+						<Label Content="Background color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
+						<ComboBox Name="addBorderBgColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<Grid Height="20" Width="280" Background="{Binding Color}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <CheckBox Content=" Transparent background" Name="addBorderBgTr" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" When moving border, children will move too" Name="addBorderMove" Margin="20,230,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Transparent background" Name="addBorderBgTr" Margin="20,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" When moving border, children will move too" Name="addBorderMove" Margin="20,230,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogEditResource" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Edit resource" Classes="Header" />
-                    
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
-                        <Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
-                        <TextBox Name="editResourceName" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right" />
-                    </StackPanel>
+					<Button Classes="CBtn" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogEditResource" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Edit resource" Classes="Header" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <Label Content="Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
-                        <ComboBox Name="editResourceType" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
+						<Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
+						<TextBox Name="editResourceName" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right" />
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Set" Click="ButtonDialogEditResource_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogEditName" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
-                    <TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<Label Content="Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
+						<ComboBox Name="editResourceType" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <TextBox Text="" Name="dialogEditName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<Button Classes="CBtn" Content="Set" Click="ButtonDialogEditResource_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogEditName" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
+					<Rectangle Classes="DialogRect" />
+					<Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
+					<TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
 
-                    <Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditName_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogGetDataFromBox" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Get data from box" Classes="Header" />
+					<TextBox Text="" Name="dialogEditName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
-                        <Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
-                        <ComboBox Name="addGetDataFromBoxBox" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right" SelectionChanged="addGetDataFromBoxBox_SelectionChanged">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditName_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Get data from box" Classes="Header" />
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
-                        <Label Content="Data out" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
-                        <ComboBox Name="addGetDataFromBoxData" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
+						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
+						<ComboBox Name="addGetDataFromBoxBox" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right" SelectionChanged="addGetDataFromBoxBox_SelectionChanged">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogGetDataFromBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Workspace" Classes="Header" />
+					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
+						<Label Content="Data out" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
+						<ComboBox Name="addGetDataFromBoxData" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding Name}" />
+									</StackPanel>
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+					</StackPanel>
 
-                    <TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
-                    <TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogGetDataFromBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Workspace" Classes="Header" />
 
-                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
-                    <TextBox Text="" Name="wrkspGraph" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <TextBlock Text="Set path which will be used inside DAT FAT:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
-                    <TextBox Text="domino\user\" Name="wrkspDat" Width="510" Margin="20,260,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBox Text="" Name="wrkspGraph" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <Button Classes="CBtn" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAddGraph" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Add graph" Classes="Header" />
+					<TextBlock Text="Set path which will be used inside DAT FAT:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBox Text="domino\user\" Name="wrkspDat" Width="510" Margin="20,260,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
-                    <TextBox Text="" Name="addGraphName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<Button Classes="CBtn" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAddGraph" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Add graph" Classes="Header" />
 
-                    <Button Classes="CBtn" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogSettings" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Settings" Classes="Header" />
+					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
+					<TextBox Text="" Name="addGraphName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-                    <CheckBox Content=" Use Bezier curve on lines" Name="settingsBezier" Margin="20,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Use Bezier on line points" Name="settingsLinePointsBezier" Margin="40,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" When moving, snap everything to grid" Name="settingsSnap" Margin="20,140,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Use Lua bytecode for production files" Name="settingsBytecode" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <CheckBox Content=" Use Lua bytecode for debug files" Name="settingsBytecodeDebug" Margin="20,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogSettings" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Settings" Classes="Header" />
 
-                    <Button Classes="CBtn" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
+					<CheckBox Content=" Use Bezier curve on lines" Name="settingsBezier" Margin="20,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Use Bezier on line points" Name="settingsLinePointsBezier" Margin="40,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" When moving, snap everything to grid" Name="settingsSnap" Margin="20,140,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Use Lua bytecode for production files" Name="settingsBytecode" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+					<CheckBox Content=" Use Lua bytecode for debug files" Name="settingsBytecodeDebug" Margin="20,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-            <Grid Width="Auto" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
-                <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
-                    <Grid Background="#77000000">
-                        <Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
-                    </Grid>
-                </CustomControlsDV:BlurHost>
-            </Grid>
-            <Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
-                <Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />
-            </Grid>
-            <Grid Background="#cc000000" Name="gridException" Visibility="Hidden">
-                <Label Content="An exception occured" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="40" Margin="50,50,0,0" FontWeight="Bold" Foreground="Red" />
-                <Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
-                <TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
-            </Grid>
-            <Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" Visibility="Hidden">
-                <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
-                    <Grid Background="#77000000">
-                        <TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
-                        <Button Classes="CBtn" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                        <Button Classes="CBtn" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                    </Grid>
-                </CustomControlsDV:BlurHost>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Content="Info" Name="dialogInfoName" Classes="Header" />
-                    <TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
-                    <Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <Grid Background="#99000000" Name="gridDialogAsk" Visibility="Hidden">
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-                    <Rectangle Classes="DialogRect" />
-                    <Label Name="dialogAskName" Content="--name--" Classes="Header" />
-                    <TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
-                    <Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                    <Button Classes="CBtn" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-                </Grid>
-            </Grid>
-            <!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
-        </Grid>
+					<Button Classes="CBtn" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
 
-        <Grid Background="Black" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-            <CustomControlsDV:BlurHost BlurBackground="{Binding ElementName=canvas}">
-                <Grid Background="#77000000" MouseRightButtonUp="ShowSystemicMenu" MouseDown="MoveWnd" PreviewMouseDown="ChromeClick">
-                    <Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
-                    <Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-                    <Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" Visibility="Hidden" />
-                    <Button Classes="MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
-                    <Button Classes="MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
-                    <Button Classes="CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
-                </Grid>
-            </CustomControlsDV:BlurHost>
-        </Grid>
-    </Grid>
+			<Grid Width="Auto" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
+				<Grid Background="#77000000">
+					<Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
+				<Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />
+			</Grid>
+			<Grid Background="#cc000000" Name="gridException" Visibility="Hidden">
+				<Label Content="An exception occured" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="40" Margin="50,50,0,0" FontWeight="Bold" Foreground="Red" />
+				<Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
+				<TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
+			</Grid>
+			<Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" Visibility="Hidden">
+				<Grid Background="#77000000">
+					<TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
+					<Button Classes="CBtn" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+					<Rectangle Classes="DialogRect" />
+					<Label Content="Info" Name="dialogInfoName" Classes="Header" />
+					<TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<Grid Background="#99000000" Name="gridDialogAsk" Visibility="Hidden">
+				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+					<Rectangle Classes="DialogRect" />
+					<Label Name="dialogAskName" Content="--name--" Classes="Header" />
+					<TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
+					<Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+					<Button Classes="CBtn" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+				</Grid>
+			</Grid>
+			<!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
+		</Grid>
+
+		<Grid Background="Black" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+			<Grid Background="#77000000" PointerPressed="MoveWnd">
+				<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
+				<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
+				<Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" Visibility="Hidden" />
+				<Button Classes="MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
+				<Button Classes="MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
+				<Button Classes="CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
+			</Grid>
+		</Grid>
+	</Grid>
 </Window>

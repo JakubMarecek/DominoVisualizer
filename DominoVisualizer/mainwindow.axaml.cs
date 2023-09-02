@@ -710,7 +710,7 @@ namespace DominoVisualizer
 				grid.IsVisible = true;
 			}
 
-			/*DoubleAnimation doubleAnimation = new DoubleAnimation
+            /*DoubleAnimation doubleAnimation = new DoubleAnimation
 			{
 				From = fadeInOut ? 0 : 1,
 				To = fadeInOut ? 1 : 0,
@@ -732,8 +732,13 @@ namespace DominoVisualizer
 			};
 			storyboard.Begin(grid);*/
 
-            grid.IsVisible = false;
-            grid.Opacity = 1;
+            grid.Opacity = fadeInOut ? 1 : 0;
+
+            if (!fadeInOut)
+            {
+                grid.IsVisible = false;
+                grid.Opacity = 1;
+            }
         }
 
 		private void Blur(bool enable)

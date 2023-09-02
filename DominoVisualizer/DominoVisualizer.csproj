@@ -1,70 +1,71 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <ApplicationIcon>domino.ico</ApplicationIcon>
-    <Copyright>Copyright © ArmanIII 2022-2023</Copyright>
-    <Company>ArmanIII</Company>
-    <Product>Domino Visualizer</Product>
-    <PackageId>DominoVisualizer</PackageId>
-    <Authors>ArmanIII</Authors>
-    <Description>Domino Visualizer</Description>
-	  <AssemblyTitle>Domino Visualizer</AssemblyTitle>
-    <TieredPGO>true</TieredPGO>
-	  <Platforms>x64</Platforms>
-  </PropertyGroup>
-	
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ApplicationIcon>domino.ico</ApplicationIcon>
+		<Copyright>Copyright © ArmanIII 2022-2023</Copyright>
+		<Company>ArmanIII</Company>
+		<Product>Domino Visualizer</Product>
+		<PackageId>DominoVisualizer</PackageId>
+		<Authors>ArmanIII</Authors>
+		<Description>Domino Visualizer</Description>
+		<AssemblyTitle>Domino Visualizer</AssemblyTitle>
+		<TieredPGO>true</TieredPGO>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
 		<PlatformTarget>x64</PlatformTarget>
 		<OutputPath>..\bin_debug\</OutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
-	
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>..\bin\</OutputPath>
-    <DebugType>None</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-	  <PublishSingleFile>true</PublishSingleFile>
-	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-	  <SelfContained>false</SelfContained>
-	  <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
-	  <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-  </PropertyGroup>
-	
-  <ItemGroup>
-	  <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
-	  <PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
-	  <PackageReference Include="Avalonia.Themes.Simple" Version="11.0.4" />
-    <PackageReference Include="DiscordRichPresence" Version="1.1.3.18" />
-    <PackageReference Include="Obfuscar" Version="2.2.37">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<PlatformTarget>x64</PlatformTarget>
+		<OutputPath>..\bin\</OutputPath>
+		<DebugType>None</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+		<PublishSingleFile>true</PublishSingleFile>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>false</SelfContained>
+		<IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-  <ItemGroup>
-    <Resource Include="domino.ico" />
-    <AvaloniaResource Include="OpenSans.ttf" />
-  </ItemGroup>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	</PropertyGroup>
 
-  <ItemGroup>
-	  <None Update="DominoLib.bin">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	  </None>
-	  <None Update="DominoLibCustom.zip">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	  </None>
-    <None Update="luac51.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
+		<PackageReference Include="Avalonia.Themes.Simple" Version="11.0.4" />
+		<PackageReference Include="DiscordRichPresence" Version="1.1.3.18" />
+		<PackageReference Include="Obfuscar" Version="2.2.37">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="domino.ico" />
+		<AvaloniaResource Include="OpenSans-Bold.ttf" />
+		<AvaloniaResource Include="OpenSans-Regular.ttf" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="DominoLib.bin">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</None>
+		<None Update="DominoLibCustom.zip">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</None>
+		<None Update="luac51.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="AfterCompile" Condition="$(ConfigurationName) == Release">
 		<Exec Command="&quot;$(Obfuscar)&quot; .\obfuscar.xml" />

@@ -2447,9 +2447,9 @@ namespace DominoVisualizer
 			conn.INT_isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
 			conn.INT_isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
 
-			Brush brsh = (Brush)Brushes.Yellow;
-			if (conn.INT_isIn) brsh = (Brush)Brushes.Red;
-			if (conn.INT_isOut) brsh = (Brush)Brushes.Orange;
+			var brsh = Brushes.Yellow;
+			if (conn.INT_isIn) brsh = Brushes.Red;
+			if (conn.INT_isOut) brsh = Brushes.Orange;
 
 			var w = new DominoUIConnector();
 			w.Header.Text = (conn.INT_isIn ? "ControlIn - " : "") + conn.ID;

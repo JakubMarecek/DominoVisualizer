@@ -12,7 +12,11 @@
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaTitleBarHeightHint="-1"
     xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown"
-		WindowStartupLocation="CenterScreen" Icon="domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
+		WindowStartupLocation="CenterScreen" Icon="avares://DominoVisualizer/domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
+
+	<Window.Styles>
+		<StyleInclude Source="avares://DominoVisualizer/Style.axaml" />
+	</Window.Styles>
 
 	<Grid>
 		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
@@ -141,7 +145,7 @@
 							</ItemsRepeater.ItemTemplate>
 						</ItemsRepeater>
 					</ScrollViewer>
-					
+
 					<!--<ListView Classes="ParamsList" ItemContainerClasses="ParamsListContainer"
                       KeyboardNavigation.TabNavigation="Local" Margin="10,220,8,60" Name="paramsList" ScrollViewer.VerticalScrollBarVisibility="Auto">
 						<ListView.View>
@@ -672,10 +676,10 @@
 			<Grid Background="#77000000" PointerPressed="MoveWnd">
 				<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
 				<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-				<Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
-				<Button Classes="MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
-				<Button Classes="MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
-				<Button Classes="CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
+				<Button Classes="EditBtn CloseBtnWhite SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
+				<Button Classes="EditBtn CloseBtnWhite MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
+				<Button Classes="EditBtn CloseBtnWhite MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
+				<Button Classes="EditBtn CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
 			</Grid>
 		</Grid>
 	</Grid>

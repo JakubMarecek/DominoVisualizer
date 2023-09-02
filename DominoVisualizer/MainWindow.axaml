@@ -6,6 +6,7 @@
     xmlns:CustomControlsDV="clr-namespace:DominoVisualizer.CustomControls"
     xmlns:CustomControls="clr-namespace:WpfPanAndZoom.CustomControls"
     xmlns:globalData="using:DominoVisualizer"
+    xmlns:sys="using:System"
     x:CompileBindings="True"
     ExtendClientAreaToDecorationsHint="True"
     ExtendClientAreaChromeHints="NoChrome"
@@ -30,11 +31,11 @@
 					<Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
 				</StackPanel>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogSelGame" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogSelGame" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Game base" Classes="Header" />
-					<TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
 					<StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,130,0,10">
 						<Button Classes="CBtn" Content="Far Cry 5" Click="ButtonSelGame_Click" Tag="fc5" />
 						<Button Classes="CBtn" Content="Far Cry New Dawn" Click="ButtonSelGame_Click" Tag="fcnd" />
@@ -43,7 +44,7 @@
 					</StackPanel>
 				</Grid>
 			</Grid>
-			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" Visibility="Hidden" Margin="0,40,0,0">
+			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" IsVisible="false" Margin="0,40,0,0">
 				<Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
 					<Grid Background="#77000000">
 						<Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
@@ -55,7 +56,7 @@
 
 						<ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:DominoGraph}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -81,11 +82,11 @@
 					</Grid>
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditExecBox" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogEditExecBox" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit exec box" Classes="Header" />
-					<TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Exec type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
@@ -98,7 +99,7 @@
 						<Label Content="Exec" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
 						<ComboBox Name="editExecBoxExec" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -209,17 +210,17 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddExecBox" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddExecBox" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add exec box" Classes="Header" />
-					<TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addExecBoxBox" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -232,16 +233,16 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add connector" Classes="Header" />
-					<TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<ComboBox Name="addBoxConnectorB" Width="250" Margin="20,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -251,7 +252,7 @@
 						<Label Content=">" HorizontalAlignment="Left" FontSize="16" Margin="15,0,15,0" Foreground="White" Width="20" />
 						<ComboBox Name="addBoxConnectorC" Width="250" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -269,11 +270,11 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddConnector" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddConnector" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add new connector" Classes="Header" />
-					<TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
 
 					<TextBox Text="" Name="addConnectorName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -285,11 +286,11 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBox" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddBox" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add new box" Classes="Header" />
-					<TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
 
 					<CheckBox Content=" Is global" Name="addBoxGlobal" Margin="20,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -297,7 +298,7 @@
 						<Label Content="Box type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addBoxName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -310,22 +311,22 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditData" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogEditData" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="editDataLblName" Content="--name--" Classes="Header" />
-					<TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
 
 					<StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="0,90,0,70">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataNameC" Visibility="Visible">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataNameC" IsVisible="true">
 							<Label Content="Name" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
 							<TextBox Name="editDataName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
 						</StackPanel>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataAnchorDynTypeC" Visibility="Collapsed">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataAnchorDynTypeC" IsVisible="false">
 							<Label Content="Anchor Dyn Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
 							<TextBox Name="editDataAnchorDynType" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
 						</StackPanel>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataDataTypeIDC" Visibility="Collapsed">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataDataTypeIDC" IsVisible="false">
 							<Label Content="Data Type ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
 							<!--<TextBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />-->
 
@@ -336,11 +337,11 @@
 
 
 						</StackPanel>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataHostExecFuncC" Visibility="Collapsed">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataHostExecFuncC" IsVisible="false">
 							<Label Content="Host Exec Func" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
 							<TextBox Name="editDataHostExecFunc" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
 						</StackPanel>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataIsDelayedC" Visibility="Collapsed">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,0" Name="editDataIsDelayedC" IsVisible="false">
 							<Label Content="Is Delayed" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="250" />
 							<CheckBox Name="editDataIsDelayed" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right" />
 						</StackPanel>
@@ -435,18 +436,18 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddComment" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddComment" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit comment" Classes="Header" />
 
-					<TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" AcceptsReturn="True" VerticalContentAlignment="Top" />
+					<TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" AcceptsReturn="True" VerticalContentAlignment="Top" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,455,0,0">
 						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addCommentColor" Width="300" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
 										<Grid Height="20" Width="280" Background="{Binding Color}" />
 									</StackPanel>
@@ -459,7 +460,7 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBorder" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddBorder" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit border" Classes="Header" />
@@ -478,7 +479,7 @@
 						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
 						<ComboBox Name="addBorderColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
 										<Grid Height="20" Width="280" Background="{Binding Color}" />
 									</StackPanel>
@@ -491,7 +492,7 @@
 						<Label Content="Background color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
 						<ComboBox Name="addBorderBgColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
 										<Grid Height="20" Width="280" Background="{Binding Color}" />
 									</StackPanel>
@@ -507,7 +508,7 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditResource" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogEditResource" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit resource" Classes="Header" />
@@ -521,7 +522,7 @@
 						<Label Content="Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
 						<ComboBox Name="editResourceType" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type sys:String}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding}" />
 									</StackPanel>
@@ -534,11 +535,11 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditName" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogEditName" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
-					<TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
 
 					<TextBox Text="" Name="dialogEditName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
@@ -546,7 +547,7 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Get data from box" Classes="Header" />
@@ -555,7 +556,7 @@
 						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addGetDataFromBoxBox" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right" SelectionChanged="addGetDataFromBoxBox_SelectionChanged">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -568,7 +569,7 @@
 						<Label Content="Data out" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addGetDataFromBoxData" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right">
 							<ComboBox.ItemTemplate>
-								<DataTemplate>
+								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
 										<TextBlock Text="{Binding Name}" />
 									</StackPanel>
@@ -581,37 +582,37 @@
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogWorkspace" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogWorkspace" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Workspace" Classes="Header" />
 
-					<TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
 					<TextBox Text="" Name="wrkspName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,145,0,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
 					<TextBox Text="" Name="wrkspGraph" Width="510" Margin="20,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
-					<TextBlock Text="Set path which will be used inside DAT FAT:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Set path which will be used inside DAT FAT:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,225,0,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
 					<TextBox Text="domino\user\" Name="wrkspDat" Width="510" Margin="20,260,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
 					<Button Classes="CBtn" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddGraph" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAddGraph" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add graph" Classes="Header" />
 
-					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
 					<TextBox Text="" Name="addGraphName" Width="510" Margin="20,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
 
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogSettings" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogSettings" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Settings" Classes="Header" />
@@ -627,39 +628,39 @@
 				</Grid>
 			</Grid>
 
-			<Grid Width="Auto" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
+			<Grid Width="NaN" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
 				<Grid Background="#77000000">
 					<Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridLoading" Visibility="Hidden" Cursor="Wait">
+			<Grid Background="#99000000" Name="gridLoading" IsVisible="false" Cursor="Wait">
 				<Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />
 			</Grid>
-			<Grid Background="#cc000000" Name="gridException" Visibility="Hidden">
+			<Grid Background="#cc000000" Name="gridException" IsVisible="false">
 				<Label Content="An exception occured" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="40" Margin="50,50,0,0" FontWeight="Bold" Foreground="Red" />
 				<Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
-				<TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding ActualWidth, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
+				<TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
 			</Grid>
-			<Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" Visibility="Hidden">
+			<Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" IsVisible="false">
 				<Grid Background="#77000000">
 					<TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
 					<Button Classes="CBtn" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
 					<Button Classes="CBtn" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogInfo" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogInfo" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Info" Name="dialogInfoName" Classes="Header" />
-					<TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding ActualWidth, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
 					<Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAsk" Visibility="Hidden">
+			<Grid Background="#99000000" Name="gridDialogAsk" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="dialogAskName" Content="--name--" Classes="Header" />
-					<TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding ActualWidth, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
+					<TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
 					<Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
@@ -671,7 +672,7 @@
 			<Grid Background="#77000000" PointerPressed="MoveWnd">
 				<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
 				<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-				<Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" Visibility="Hidden" />
+				<Button Classes="SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
 				<Button Classes="MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
 				<Button Classes="MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
 				<Button Classes="CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />

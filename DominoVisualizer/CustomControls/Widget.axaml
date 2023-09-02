@@ -6,18 +6,64 @@
              xmlns:local="clr-namespace:WpfPanAndZoom.CustomControls"
              mc:Ignorable="d" 
              x:CompileBindings="True"
-             d:DesignHeight="150" d:DesignWidth="200">
+             d:DesignHeight="150" d:DesignWidth="200"
+			 RenderTransformOrigin="0,0">
 
     <UserControl.Styles>
         
 		<StyleInclude Source="avares://DominoVisualizer/Style.axaml" />
         
-        <Style Selector="TextBox">
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
-        </Style>
+		<Style Selector="TextBox">
+			<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="CaretBrush" Value="Black" />
+			<Setter Property="Foreground" Value="Black" />
+			<Setter Property="SelectionBrush">
+				<Setter.Value>
+					<SolidColorBrush Color="#9c5a1a" />
+				</Setter.Value>
+			</Setter>
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+			<Setter Property="AcceptsReturn" Value="True" />
+			<Setter Property="Cursor" Value="Ibeam"/>
+			<Setter Property="BorderThickness" Value="0" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="IsReadOnly" Value="True" />
+			<Setter Property="ToolTip.Tip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+			<Setter Property="ToolTip.ShowDelay" Value="100" />
+
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="TextBox">
+						<Grid>
+							<ScrollViewer Margin="0,0,0,0"
+										  Name="PART_ScrollViewer"
+										  AllowAutoHide="{TemplateBinding (ScrollViewer.AllowAutoHide)}"
+										  BringIntoViewOnFocusChange="{TemplateBinding (ScrollViewer.BringIntoViewOnFocusChange)}"
+										  HorizontalScrollBarVisibility="Hidden"
+										  IsScrollChainingEnabled="{TemplateBinding (ScrollViewer.IsScrollChainingEnabled)}"
+										  VerticalScrollBarVisibility="Hidden">
+								<TextPresenter
+									Name="PART_TextPresenter"
+									CaretBrush="{TemplateBinding CaretBrush}"
+									CaretIndex="{TemplateBinding CaretIndex}"
+									LineHeight="{TemplateBinding LineHeight}"
+									LetterSpacing="{TemplateBinding LetterSpacing}"
+									PasswordChar="{TemplateBinding PasswordChar}"
+									RevealPassword="{TemplateBinding RevealPassword}"
+									SelectionBrush="{TemplateBinding SelectionBrush}"
+									SelectionEnd="{TemplateBinding SelectionEnd}"
+									SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}"
+									SelectionStart="{TemplateBinding SelectionStart}"
+									Text="{TemplateBinding Text,Mode=TwoWay}"
+									TextAlignment="{TemplateBinding TextAlignment}"
+									TextWrapping="{TemplateBinding TextWrapping}" />
+							</ScrollViewer>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
 
     </UserControl.Styles>
 
@@ -31,9 +77,9 @@
                 </VisualBrush.Visual>
             </VisualBrush>
         </Border.BorderBrush> -->
-                    <Rectangle x:Name="Border" Stroke="Black" StrokeThickness="2" />
+        <Rectangle x:Name="Border" Stroke="Black" StrokeThickness="2" />
         
-        <Grid>
+        <Grid Margin="2,2,2,2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="*" />
@@ -42,9 +88,9 @@
             <Rectangle x:Name="HeaderRectangle"  Grid.Row="0" Fill="Lime" />
             <Grid Grid.Row="0" Name="HeaderGrid">
                 <TextBox x:Name="Header" Text="Widget" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                <Button Name="swapBtn" Classes="SwapBtn" />
+                <Button Name="swapBtn" Classes="EditBtn SwapBtn" />
                 <Button Name="editBtn" Classes="EditBtn" Margin="0,0,20,0" IsVisible="False" />
-                <Button Name="delBtn" Classes="DelBtn" Margin="0" />
+                <Button Name="delBtn" Classes="EditBtn DelBtn" Margin="0" />
             </Grid>
             <Rectangle Grid.Row="1" Fill="LightGray" />
 

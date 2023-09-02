@@ -176,8 +176,9 @@ namespace WpfPanAndZoom.CustomControls
                 {
                     Stroke = new SolidColorBrush(_lineColor),
                     StartPoint = new(x, MinY - 100),
-                    EndPoint = new(x, MaxY + 1000)
-                };
+                    EndPoint = new(x, MaxY + 1000),
+                    RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute)
+            };
 
                 if (x % 1000 == 0)
                 {
@@ -199,7 +200,8 @@ namespace WpfPanAndZoom.CustomControls
                 {
                     Stroke = new SolidColorBrush(_lineColor),
                     StartPoint = new(MinX - 100, y),
-                    EndPoint = new(MaxX + 1000, y)
+                    EndPoint = new(MaxX + 1000, y),
+                    RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute)
                 };
 
                 if (y % 1000 == 0)
@@ -221,6 +223,7 @@ namespace WpfPanAndZoom.CustomControls
         {
             foreach (Control child in this.Children)
             {
+                child.RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute);
                 child.RenderTransform = _transform;
             }
         }
@@ -741,7 +744,6 @@ namespace WpfPanAndZoom.CustomControls
                 Canvas.SetLeft(child, sx);
                 Canvas.SetTop(child, sy);
 
-                child.RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute);
                 child.RenderTransform = _transform;
             }
         }

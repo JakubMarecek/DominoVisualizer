@@ -2580,6 +2580,7 @@ namespace DominoVisualizer
 			g2.Children.Add(btn);
 
 			Button btnDel = new Button() { Tag = tag };
+            btnDel.Classes.Add("EditBtn");
             btnDel.Classes.Add("DelBtn");
             btnDel.Click += RemoveMetadataInfo;
 			g2.Children.Add(btnDel);
@@ -2736,6 +2737,7 @@ namespace DominoVisualizer
             g.Children.Add(btn);
 
             Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID };
+            btn2.Classes.Add("EditBtn");
             btn2.Classes.Add("DelBtn");
             btn2.Click += RemoveConnVar;
             g.Children.Add(btn2);
@@ -2779,6 +2781,7 @@ namespace DominoVisualizer
 			g.Children.Add(btn);
 
 			Button btnDel = new Button() { Tag = "globalvar|" + var.UniqueID };
+            btnDel.Classes.Add("EditBtn");
             btnDel.Classes.Add("DelBtn");
             btnDel.Click += RemoveMetadataInfo;
 			g.Children.Add(btnDel);
@@ -2939,11 +2942,14 @@ namespace DominoVisualizer
 			g.Children.Add(new TextBlock() { Text = c.Name, Foreground = new SolidColorBrush(Colors.White), Margin = new Thickness(0, 0, 50, 0) });
 
 			Button btn = new Button() { Tag = "edit|" + c.UniqueID };
+            btn.Classes.Add("EditBtn");
             btn.Classes.Add("EditBtnWhite");
             btn.Click += EditCommentDialog;
 			g.Children.Add(btn);
 
 			Button btnDel = new Button() { Tag = "delete|" + c.UniqueID };
+            btnDel.Classes.Add("EditBtn");
+            btnDel.Classes.Add("DelBtn");
             btnDel.Classes.Add("DelBtnWhite");
             btnDel.Click += EditCommentDialog;
 			g.Children.Add(btnDel);
@@ -2971,11 +2977,14 @@ namespace DominoVisualizer
 			Grid g = new();
 
 			Button btn = new Button() { Tag = "edit|" + b.UniqueID, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 4, 0) };
+            btn.Classes.Add("EditBtn");
             btn.Classes.Add("EditBtnWhite");
             btn.Click += EditBorderDialog;
 			g.Children.Add(btn);
 
 			Button btnDel = new Button() { Tag = "delete|" + b.UniqueID, VerticalAlignment = VerticalAlignment.Top, Margin = new(0, 4, 24, 0) };
+            btnDel.Classes.Add("EditBtn");
+            btnDel.Classes.Add("DelBtn");
             btnDel.Classes.Add("DelBtnWhite");
             btnDel.Click += EditBorderDialog;
 			g.Children.Add(btnDel);
@@ -3033,6 +3042,7 @@ namespace DominoVisualizer
 			g2.Children.Add(btn);
 
 			Button btnDel = new Button() { Tag = "delete|" + res.UniqueID };
+            btnDel.Classes.Add("EditBtn");
             btnDel.Classes.Add("DelBtn");
             btnDel.Click += EditResourceDialog;
 			g2.Children.Add(btnDel);
@@ -4748,8 +4758,8 @@ namespace DominoVisualizer
 
 		private void LoadSettings()
 		{
-            settings.Add("useBezier", true);
-            settings.Add("linePointsBezier", true);
+            settings.Add("useBezier", false);
+            settings.Add("linePointsBezier", false);
             settings.Add("snapToGrid", false);
             settings.Add("bytecode", false);
             settings.Add("bytecodeDebug", false);

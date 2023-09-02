@@ -16,7 +16,7 @@ namespace WpfPanAndZoom.CustomControls
     /// </summary>
     public partial class PanAndZoomCanvas : Canvas
     {
-        private  MatrixTransform _transform = new MatrixTransform();
+        private MatrixTransform _transform = new MatrixTransform();
         private Point _initialMousePosition;
 
         public Point CurrentMousePos { set; get; } = new(0, 0);
@@ -723,7 +723,8 @@ namespace WpfPanAndZoom.CustomControls
                 scaleFactor = 1f / scaleFactor;
             }
 
-            Point mousePostion = e.GetPosition(this);
+            //Point mousePostion = e.GetPosition(this);
+            Point mousePostion = _transform.Matrix.Invert().Transform(e.GetPosition(this));
 
             Matrix scaleMatrix = _transform.Matrix;
             //scaleMatrix.ScaleAt(scaleFactor, scaleFactor, mousePostion.X, mousePostion.Y);
@@ -740,6 +741,7 @@ namespace WpfPanAndZoom.CustomControls
                 Canvas.SetLeft(child, sx);
                 Canvas.SetTop(child, sy);
 
+                child.RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute);
                 child.RenderTransform = _transform;
             }
         }

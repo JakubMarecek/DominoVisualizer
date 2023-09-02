@@ -798,8 +798,9 @@ namespace DominoVisualizer
             {
                 // parse nebo conv - ziskat xml
                 //string ff = runPath + "\\lib" + f.ToLower().Replace("domino", "").Replace("/", "\\");
-                string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace("/", "\\");
+                string ff2 = file.Split("domino\\")[0] + f.ToLower().Replace('/', Helpers.DS);
                 string ff3 = file.Replace(Path.GetFileName(file), "") + Path.GetFileName(f);
+				ff3 = ff3.Replace('/', Helpers.DS).Replace('\\', Helpers.DS);
 
                 Stream fs = new MemoryStream();
 
@@ -824,7 +825,7 @@ namespace DominoVisualizer
 		{
 			void a(string file)
             {
-                ZipArchive zip = ZipFile.OpenRead(runPath + "\\" + file);
+                ZipArchive zip = ZipFile.OpenRead(runPath + Helpers.DS + file);
 
                 string zipFileStr = "";
                 if (game == "fc5") zipFileStr = "FC5";
@@ -2447,9 +2448,11 @@ namespace DominoVisualizer
 			conn.INT_isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
 			conn.INT_isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
 
-			var brsh = Brushes.Yellow;
+			/*var brsh = Brushes.Yellow;
 			if (conn.INT_isIn) brsh = Brushes.Red;
-			if (conn.INT_isOut) brsh = Brushes.Orange;
+			if (conn.INT_isOut) brsh = Brushes.Orange;*/
+
+			var brsh = new SolidColorBrush(Colors.Yellow).ToImmutable();
 
 			var w = new DominoUIConnector();
 			w.Header.Text = (conn.INT_isIn ? "ControlIn - " : "") + conn.ID;

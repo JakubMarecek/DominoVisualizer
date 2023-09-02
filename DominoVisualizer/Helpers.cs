@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace DominoVisualizer
 {
     public static class Helpers
     {
+        public static char DS = Path.DirectorySeparatorChar;
+        
         public static string RandomString()
         {
             Random random = new Random();

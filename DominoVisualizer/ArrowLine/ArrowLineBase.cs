@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using DominoVisualizer;
+using Newtonsoft.Json.Linq;
 using System;
 
 namespace Petzold.Media2D
@@ -24,6 +25,12 @@ namespace Petzold.Media2D
         PolyLineSegment polysegHead1;
         PathFigure pathfigHead2;
         PolyLineSegment polysegHead2;
+
+        static ArrowLineBase()
+        {
+            AffectsMeasure<ArrowLineBase>(ArrowAngleProperty, ArrowLengthProperty, IsArrowClosedProperty);
+            AffectsRender<ArrowLineBase>(ArrowAngleProperty, ArrowLengthProperty, IsArrowClosedProperty);
+        }
 
         /// <summary>
         ///     Identifies the ArrowAngle dependency property.
@@ -179,7 +186,7 @@ namespace Petzold.Media2D
 
         PathFigure CalculateArrow(PathFigure pathfig, Point pt1, Point pt2)
         {
-            Matrix matx = new Matrix();
+            //Matrix matx = new Matrix();
             Vector vect = pt1 - pt2;
             vect.Normalize();
             vect *= ArrowLength;

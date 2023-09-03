@@ -7,7 +7,7 @@ namespace DominoVisualizer
 {
     class LinesVal
     {
-        public LinesVal(string point1, string point2, ArrowLine ui)
+        public LinesVal(string point1, string point2, ArrowLineNew ui)
         {
             Point1 = point1;
             Point2 = point2;
@@ -18,7 +18,7 @@ namespace DominoVisualizer
 
         public string Point2 { set; get; }
 
-        public ArrowLine UI { set; get; }
+        public ArrowLineNew UI { set; get; }
     }
 
     public class LinePointCl

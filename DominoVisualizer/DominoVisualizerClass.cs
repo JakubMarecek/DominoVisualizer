@@ -2309,7 +2309,7 @@ namespace DominoVisualizer
 
 		private void DrawLine(double x1, double y1, double x2, double y2, string startIndex, string endIndex, int clrIndx)
 		{
-			ArrowLine l = new()
+            ArrowLineNew l = new()
 			{
 				StrokeThickness = 2,
 				Stroke = new SolidColorBrush(clrIndx == -1 ? Color.FromArgb(150, 150, 150, 150) : linesColors[clrIndx]),
@@ -3382,6 +3382,7 @@ namespace DominoVisualizer
                     {
                         line.UI.X2 = b.X;
                         line.UI.Y2 = b.Y + 17;
+                        //line.UI.Margin = line.UI.Margin == new Thickness(0, 0, 0, 0) ? new Thickness(1, 1, 0, 0) : new Thickness(0, 0, 0, 0);
                     }
                 }
             }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using DominoVisualizer;
 using DominoVisualizer.CustomControls;
 using System.Collections.Generic;
@@ -291,7 +292,9 @@ namespace WpfPanAndZoom.CustomControls
             {
                 Cursor = new(StandardCursorType.SizeAll);
 
-                if (this.Children.Contains((Control)e.Source))
+                var ct = ((Control)e.Source).FindAncestorOfType<Widget>();
+
+                if (this.Children.Contains(ct)) //(Control)e.Source
                 {
                     if (e.Source is Widget widget)
                         if (widget.DisableMove)
@@ -299,7 +302,7 @@ namespace WpfPanAndZoom.CustomControls
 
                     //ResetZoom();
 
-                    _selectedElement = (Control)e.Source;
+                    _selectedElement = ct; // (Control)e.Source;
                     Point mousePosition = e.GetPosition(this);
                     double x = Canvas.GetLeft(_selectedElement);
                     double y = Canvas.GetTop(_selectedElement);

@@ -15,6 +15,12 @@ namespace Petzold.Media2D
     /// </summary>
     public class ArrowLine : ArrowLineBase
     {
+        static ArrowLine()
+        {
+            AffectsMeasure<ArrowLine>(X1Property, Y1Property, X2Property, Y2Property);
+            AffectsRender<ArrowLine>(X1Property, Y1Property, X2Property, Y2Property);
+        }
+
         /// <summary>
         ///     Identifies the X1 dependency property.
         /// </summary>

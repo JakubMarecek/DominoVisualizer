@@ -67,7 +67,7 @@
 
     </UserControl.Styles>
 
-    <Grid>
+    <Grid Name="widgetMainGrid">
 <!--         <Border.BorderBrush>
             <VisualBrush>
                 <VisualBrush.Visual>

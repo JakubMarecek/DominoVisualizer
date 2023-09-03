@@ -5,10 +5,6 @@ using Avalonia.Media;
 using Avalonia;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Petzold.Media2D;
 using DominoVisualizer.CustomControls;
 
 namespace DominoVisualizer
@@ -345,101 +341,53 @@ namespace DominoVisualizer
             {
                 if (Points != null && Points.Count > 0)
                 {
-                    double lineLen1 = Vector.Subtract(Points[0].Point, new Point(X1, Y1)).Length;
-                    double lineLen2 = Vector.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
-
-                    BezierSegment bezierSegment1 = new BezierSegment();
-                    bezierSegment1.Point1 = new Point(X1 + Math.Min(100, lineLen1 / 3), Y1);
-                    bezierSegment1.Point2 = Points[0].Point;
-                    bezierSegment1.Point3 = Points[0].Point;
+                    pathfigLine.IsClosed = false;
+                    pathfigLine.StartPoint = new Point(X1, Y1);
 
                     for (int i = 0; i < Points.Count; i++)
                     {
+                        Point previousPoint = new Point(X1, Y1);
+                        if (i > 0)
+                            previousPoint = Points[i - 1].Point;
 
+                        double lineLen = Vector.Subtract(Points[i].Point, previousPoint).Length;
+
+                        BezierSegment bezierSegment = new BezierSegment();
+                        bezierSegment.Point1 = new Point(previousPoint.X + Math.Min(100, lineLen / 3), previousPoint.Y);
+                        bezierSegment.Point2 = new Point(Points[i].Point.X - Math.Min(100, lineLen / 3), Points[i].Point.Y);
+                        bezierSegment.Point3 = Points[i].Point;
+                        pathfigLine.Segments.Add(bezierSegment);
+
+                        if (i == 0)
+                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, bezierSegment.Point1, pathfigLine.StartPoint));
                     }
 
+                    double lineLenLast = Vector.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
+
                     BezierSegment bezierSegment2 = new BezierSegment();
-                    bezierSegment2.Point1 = Points[^1].Point;
-                    bezierSegment2.Point2 = new Point(X2 - Math.Min(100, lineLen2 / 3), Y2);
+                    bezierSegment2.Point1 = new Point(Points[^1].Point.X + Math.Min(100, lineLenLast / 3), Points[^1].Point.Y);
+                    bezierSegment2.Point2 = new Point(X2 - Math.Min(100, lineLenLast / 3), Y2);
                     bezierSegment2.Point3 = new Point(X2, Y2);
-
-                    pathfigLine.IsClosed = false;
-                    pathfigLine.Segments.Add(bezierSegment1);
                     pathfigLine.Segments.Add(bezierSegment2);
-                    pathfigLine.StartPoint = new Point(X1, Y1);
 
-                    pathgeo.Figures.Add(pathfigLine);
-
-
+                    pathgeo.Figures.Add(CalculateArrow(pathfigHead2, bezierSegment2.Point2, bezierSegment2.Point3));
                 }
                 else
                 {
-                    var p1 = new Point(X1, Y1);
-                    var p2 = new Point(X2, Y2);
-
-                    double lineLen1 = Vector.Subtract(p2, p1).Length;
-                    double lineLen2 = Vector.Subtract(p2, p1).Length;
+                    double lineLen = Vector.Subtract(new Point(X2, Y2), new Point(X1, Y1)).Length;
 
                     BezierSegment bezierSegment1 = new BezierSegment();
-                    bezierSegment1.Point1 = new Point(X1 + Math.Min(100, lineLen1 / 3), Y1);
-                    bezierSegment1.Point2 = new Point(X2 - Math.Min(100, lineLen2 / 3), Y2);
+                    bezierSegment1.Point1 = new Point(X1 + Math.Min(100, lineLen / 3), Y1);
+                    bezierSegment1.Point2 = new Point(X2 - Math.Min(100, lineLen / 3), Y2);
                     bezierSegment1.Point3 = new Point(X2, Y2);
 
                     pathfigLine.IsClosed = false;
                     pathfigLine.Segments.Add(bezierSegment1);
                     pathfigLine.StartPoint = new Point(X1, Y1);
 
-                    // Draw the arrow at the start of the line.
-                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
-                    {
-                        Point pt1 = pathfigLine.StartPoint;
-                        Point pt2 = bezierSegment1.Point1;
-                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
-                    }
-
-                    // Draw the arrow at the end of the line.
-                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
-                    {
-                        Point pt1 = bezierSegment1.Point2;
-                        Point pt2 = bezierSegment1.Point3;
-                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
-                    }
+                    pathgeo.Figures.Add(CalculateDot(pathfigHead1, bezierSegment1.Point1, pathfigLine.StartPoint));
+                    pathgeo.Figures.Add(CalculateArrow(pathfigHead2, bezierSegment1.Point2, bezierSegment1.Point3));
                 }
-
-
-
-                /*PolyLineSegment polysegLine = new PolyLineSegment();
-
-                pathfigLine.Segments.Add(polysegLine);
-                pathfigLine.StartPoint = new Point(X1, Y1);
-
-                if (Points != null)
-                    foreach (var p in Points)
-                        polysegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
-
-                polysegLine.Points.Add(new Point(X2, Y2));
-
-                int count = polysegLine.Points.Count;
-
-                if (count > 0)
-                {
-                    // Draw the arrow at the start of the line.
-                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
-                    {
-                        Point pt1 = pathfigLine.StartPoint;
-                        Point pt2 = polysegLine.Points[0];
-                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
-                    }
-
-                    // Draw the arrow at the end of the line.
-                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
-                    {
-                        Point pt1 = count == 1 ? pathfigLine.StartPoint :
-                                                 polysegLine.Points[count - 2];
-                        Point pt2 = polysegLine.Points[count - 1];
-                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
-                    }
-                }*/
             }
             /*if (bezsegLine != null)
             {

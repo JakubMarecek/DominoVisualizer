@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using DominoVisualizer.CustomControls;
-using Petzold.Media2D;
 using System.Collections.Generic;
 
 namespace DominoVisualizer

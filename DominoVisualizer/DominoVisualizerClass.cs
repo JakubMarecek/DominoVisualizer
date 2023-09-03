@@ -10,7 +10,6 @@ using DominoVisualizer.CustomControls;
 using Gibbed.Dunia2.FileFormats;
 using Gibbed.IO;
 using HarfBuzzSharp;
-using Petzold.Media2D;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1742,7 +1741,7 @@ namespace DominoVisualizer
 				}
 			}
 
-            if (e.ClickCount == 1 && props.IsMiddleButtonPressed)
+            if (e.ClickCount == 1 && (props.IsMiddleButtonPressed || (props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Shift)))
             {
                 if (e.Source is ArrowLineNew)
                 {

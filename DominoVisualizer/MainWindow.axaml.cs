@@ -42,7 +42,7 @@ namespace DominoVisualizer
             SwapGraph
 		}
 
-        DiscordRPC.DiscordRpcClient discordClient;
+        /*DiscordRPC.DiscordRpcClient discordClient;
         DiscordRPC.RichPresence discordPresence;
         System.Threading.Timer discordTimer;
 
@@ -108,7 +108,7 @@ namespace DominoVisualizer
             catch (Exception)
             {
             }
-        }
+        }*/
 
         public MainWindow()
 		{
@@ -133,7 +133,7 @@ namespace DominoVisualizer
 
 		private async void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-            DiscordPresence();
+            //DiscordPresence();
 
             /*gridLoading.IsVisible = false;
 			gridException.IsVisible = false;
@@ -582,7 +582,7 @@ namespace DominoVisualizer
         bool closeWait = false;
         private void Window_Closing(object sender, WindowClosingEventArgs e)
         {
-            DiscordClose();
+            //DiscordClose();
 
             if (parser != null && !canClose)
             {

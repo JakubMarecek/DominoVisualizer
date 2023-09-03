@@ -715,4 +715,54 @@
 			<Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
 		</Style>
 	</Style>
+
+  <Style Selector="CheckBox">
+    <Setter Property="Foreground" Value="White" />
+	<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
+    <Setter Property="FontSize" Value="16"/>
+	<Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid ColumnDefinitions="Auto,*">
+          <Border Name="border" Width="30" Height="30" CornerRadius="0" BorderThickness="1" BorderBrush="#F28C28" Background="#1b1b1b">
+            <Panel>
+              <Path Name="checkMark"
+                    Width="15"
+                    Height="15"
+                    StrokeThickness="2"
+					Stroke="#F28C28"
+					Margin="1,0,0,0"
+                    Data="M 0 0 L 15 15 M 0 15 L 15 0" />
+            </Panel>
+          </Border>
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Grid.Column="1"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            IsVisible="{TemplateBinding Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            RecognizesAccessKey="True"
+                            TextElement.Foreground="{TemplateBinding Foreground}" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#border">
+      <Setter Property="BorderBrush" Value="#F28C28" />
+      <Setter Property="Background" Value="#333" />
+    </Style>
+    <Style Selector="^:pressed /template/ Border#border">
+      <Setter Property="Background" Value="#F28C28" />
+    </Style>
+    <Style Selector="^ /template/ Path#checkMark">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="^:checked /template/ Path#checkMark">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="^:disabled /template/ Border#border">
+      <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+    </Style>
+  </Style>
 </Styles>

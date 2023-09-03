@@ -292,7 +292,11 @@ namespace WpfPanAndZoom.CustomControls
             {
                 Cursor = new(StandardCursorType.SizeAll);
 
-                var ct = ((Control)e.Source).FindAncestorOfType<Widget>();
+                Control ct = ((Control)e.Source).FindAncestorOfType<Widget>();
+                if (ct == null && e.Source is DominoUILinePoint)
+                {
+                    ct = (Control)e.Source;
+                }
 
                 if (this.Children.Contains(ct)) //(Control)e.Source
                 {

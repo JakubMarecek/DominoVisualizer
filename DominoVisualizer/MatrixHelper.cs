@@ -106,6 +106,18 @@ namespace DominoVisualizer
         }
 
         /// <summary>
+        /// Creates a matrix that rotates.
+        /// </summary>
+        /// <param name="radians">Angle of rotation in radians. Angles are measured clockwise when looking along the rotation axis.</param>
+        /// <returns>The created rotation matrix.</returns>
+        public static Matrix RotationPrepend(Matrix matrix, double radians)
+        {
+            double cos = Cos(radians);
+            double sin = Sin(radians);
+            return new Matrix(cos, sin, -sin, cos, 0, 0) * matrix;
+        }
+
+        /// <summary>
         /// Creates a matrix that rotates about a specified center.
         /// </summary>
         /// <param name="angle">Angle of rotation in radians.</param>
@@ -147,11 +159,11 @@ namespace DominoVisualizer
         /// <param name="matrix">The matrix to use as a transformation matrix.</param>
         /// <param name="point">>The original point to apply the transformation.</param>
         /// <returns>The result of the transformation for the input point.</returns>
-        public static Point TransformVector(Matrix matrix, Vector vector)
+        public static Vector TransformVector(Matrix matrix, Vector vector)
         {
-            return new Point(
-                (vector.X * matrix.M11) + (vector.Y * matrix.M21) + matrix.M31,
-                (vector.X * matrix.M12) + (vector.Y * matrix.M22) + matrix.M32);
+            return new Vector(
+                (vector.X * matrix.M11) + (vector.Y * matrix.M21),
+                (vector.X * matrix.M12) + (vector.Y * matrix.M22));
         }
     }
 }

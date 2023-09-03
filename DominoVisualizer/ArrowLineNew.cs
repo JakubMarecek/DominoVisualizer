@@ -73,6 +73,78 @@ namespace DominoVisualizer
             AvaloniaProperty.Register<ArrowLineNew, double>(nameof(ArrowAngle), 45);
 
         /// <summary>
+        /// Gets or sets the <see cref="IBrush"/> that specifies how the shape's interior is painted.
+        /// </summary>
+        public IBrush? Fill
+        {
+            get => GetValue(FillProperty);
+            set => SetValue(FillProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a <see cref="Stretch"/> enumeration value that describes how the shape fills its allocated space.
+        /// </summary>
+        public Stretch Stretch
+        {
+            get => GetValue(StretchProperty);
+            set => SetValue(StretchProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IBrush"/> that specifies how the shape's outline is painted.
+        /// </summary>
+        public IBrush? Stroke
+        {
+            get => GetValue(StrokeProperty);
+            set => SetValue(StrokeProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="double"/> values that indicate the pattern of dashes and gaps that is used to outline shapes.
+        /// </summary>
+        public AvaloniaList<double>? StrokeDashArray
+        {
+            get => GetValue(StrokeDashArrayProperty);
+            set => SetValue(StrokeDashArrayProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a value that specifies the distance within the dash pattern where a dash begins.
+        /// </summary>
+        public double StrokeDashOffset
+        {
+            get => GetValue(StrokeDashOffsetProperty);
+            set => SetValue(StrokeDashOffsetProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the width of the shape outline.
+        /// </summary>
+        public double StrokeThickness
+        {
+            get => GetValue(StrokeThicknessProperty);
+            set => SetValue(StrokeThicknessProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a <see cref="PenLineCap"/> enumeration value that describes the shape at the ends of a line.
+        /// </summary>
+        public PenLineCap StrokeLineCap
+        {
+            get => GetValue(StrokeLineCapProperty);
+            set => SetValue(StrokeLineCapProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a <see cref="PenLineJoin"/> enumeration value that specifies the type of join that is used at the vertices of a Shape.
+        /// </summary>
+        public PenLineJoin StrokeJoin
+        {
+            get => GetValue(StrokeJoinProperty);
+            set => SetValue(StrokeJoinProperty, value);
+        }
+
+        /// <summary>
         ///     Gets or sets the angle between the two sides of the arrowhead.
         /// </summary>
         public double ArrowAngle
@@ -172,23 +244,19 @@ namespace DominoVisualizer
             get { return (double)GetValue(Y2Property); }
         }
 
-        private Matrix _transform = Matrix.Identity;
+        /*private Matrix _transform = Matrix.Identity;
         private Geometry? _definingGeometry;
-        private Geometry? _renderedGeometry;
-
-        protected PathGeometry pathgeo;
-        protected PathFigure pathfigLine;
-        //protected PolyBezierSegment bezsegLine;
-        protected PolyLineSegment polysegLine;
-
-        PathFigure pathfigHead1;
-        PolyLineSegment polysegHead1;
-        PathFigure pathfigHead2;
-        PolyLineSegment polysegHead2;
+        private Geometry? _renderedGeometry;*/
 
         public List<DominoUILinePoint> Points { set; get; }
 
         public bool PointBezier { set; get; } = true;
+
+        public bool MakeBezier { set; get; } = false;
+
+        public bool MakeBezierAlt { set; get; } = false;
+
+        public bool MakePoly { set; get; } = true;
 
         static ArrowLineNew()
         {
@@ -206,19 +274,9 @@ namespace DominoVisualizer
 
         public ArrowLineNew()
         {
-            pathgeo = new PathGeometry();
-
-            pathfigLine = new PathFigure();
-
-            pathfigHead1 = new PathFigure();
-            polysegHead1 = new PolyLineSegment();
-            pathfigHead1.Segments.Add(polysegHead1);
-
-            pathfigHead2 = new PathFigure();
-            polysegHead2 = new PolyLineSegment();
-            pathfigHead2.Segments.Add(polysegHead2);
         }
 
+        /*
         /// <summary>
         /// Gets a value that represents the <see cref="Geometry"/> of the shape.
         /// </summary>
@@ -226,217 +284,12 @@ namespace DominoVisualizer
         {
             get
             {
-                pathgeo.Figures.Clear();
-
-                /*if (bezsegLine != null)
-                {
-                    double lineLen1;
-                    double lineLen2;
-
-                    if (Points != null && Points.Count > 0)
-                    {
-                        lineLen1 = Point.Subtract(Points[0].Point, new Point(X1, Y1)).Length;
-                        lineLen2 = Point.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
-                    }
-                    else
-                    {
-                        var p1 = new Point(X1, Y1);
-                        var p2 = new Point(X2, Y2);
-
-                        lineLen1 = Point.Subtract(p2, p1).Length;
-                        lineLen2 = Point.Subtract(p2, p1).Length;
-                    }
-
-                    pathfigLine.StartPoint = new Point(X1, Y1);
-                    bezsegLine.Points.Clear();
-                    bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen1 / 3), Y1)); // (lineLen / 5)
-
-                    if (Points != null)
-                        for (int i = 0; i < Points.Count; i++)
-                        {
-                            Point currPoint = Points[i].Point;
-
-                            if (PointBezier)
-                            {
-                                Point refPoint;
-                                double lineLenRef;
-                                bool refEnd = false;
-
-                                if (i == 0)
-                                {
-                                    refPoint = new Point(X1, Y1);
-                                    lineLenRef = Point.Subtract(currPoint, refPoint).Length;
-                                    double lineTmp;
-
-                                    if (Points.Count == 1)
-                                        lineTmp = Point.Subtract(new Point(X2, Y2), currPoint).Length;
-                                    else
-                                        lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
-
-                                    if (lineTmp < lineLenRef)
-                                    {
-                                        lineLenRef = lineTmp;
-                                        refEnd = true;
-
-                                        if (Points.Count == 1)
-                                            refPoint = new Point(X2, Y2);
-                                        else
-                                            refPoint = Points[i + 1].Point;
-                                    }
-                                }
-                                else if (i == Points.Count - 1)
-                                {
-                                    refPoint = new Point(X2, Y2);
-                                    lineLenRef = Point.Subtract(currPoint, refPoint).Length;
-                                    double lineTmp = Point.Subtract(Points[i - 1].Point, currPoint).Length;
-                                    refEnd = true;
-
-                                    if (lineTmp < lineLenRef)
-                                    {
-                                        lineLenRef = lineTmp;
-                                        refEnd = false;
-
-                                        refPoint = Points[i - 1].Point;
-                                    }
-                                }
-                                else
-                                {
-                                    refPoint = Points[i - 1].Point;
-                                    lineLenRef = Point.Subtract(currPoint, refPoint).Length;
-                                    double lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
-
-                                    if (lineTmp < lineLenRef)
-                                    {
-                                        lineLenRef = lineTmp;
-                                        refEnd = true;
-                                        refPoint = Points[i + 1].Point;
-                                    }
-                                }
-
-                                double alX1 = 0;
-                                double alX2 = 0;
-                                double alY1 = 0;
-                                double alY2 = 0;
-
-                                double angle = Math.Atan2(refPoint.X - currPoint.X, refPoint.Y - currPoint.Y) * (180 / Math.PI);
-                                if (refEnd)
-                                    angle = Math.Atan2(currPoint.X - refPoint.X, currPoint.Y - refPoint.Y) * (180 / Math.PI);
-
-                                if (angle >= -45 && angle <= 45)
-                                {
-                                    alX1 = 0;
-                                    alX2 = 0;
-                                    alY1 = +Math.Min(100, lineLenRef / 3);
-                                    alY2 = -Math.Min(100, lineLenRef / 3);
-                                }
-                                if (angle < -45 && angle >= -135)
-                                {
-                                    alX1 = -Math.Min(100, lineLenRef / 3);
-                                    alX2 = +Math.Min(100, lineLenRef / 3);
-                                    alY1 = 0;
-                                    alY2 = 0;
-                                }
-                                if ((angle < -135 && angle >= -180) || (angle > 135 && angle <= 180))
-                                {
-                                    alX1 = 0;
-                                    alX2 = 0;
-                                    alY1 = -Math.Min(100, lineLenRef / 3);
-                                    alY2 = +Math.Min(100, lineLenRef / 3);
-                                }
-                                if (angle > 45 && angle <= 135)
-                                {
-                                    alX1 = +Math.Min(100, lineLenRef / 3);
-                                    alX2 = -Math.Min(100, lineLenRef / 3);
-                                    alY1 = 0;
-                                    alY2 = 0;
-                                }
-
-                                bezsegLine.Points.Add(new Point(currPoint.X + alX1, currPoint.Y + alY1));
-                                bezsegLine.Points.Add(currPoint);
-                                bezsegLine.Points.Add(new Point(currPoint.X + alX2, currPoint.Y + alY2));
-                            }
-                            else
-                            {
-                                bezsegLine.Points.Add(currPoint);
-                                bezsegLine.Points.Add(currPoint);
-                                bezsegLine.Points.Add(currPoint);
-                            }
-                        }
-
-                    bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen2 / 3), Y2)); // (lineLen / 5)
-                    bezsegLine.Points.Add(new Point(X2, Y2));
-                }
-                else*/
-                {
-                    // Define a single PathFigure with the points.
-                    pathfigLine.StartPoint = new Point(X1, Y1);
-                    polysegLine.Points.Clear();
-
-                    if (Points != null)
-                        foreach (var p in Points)
-                            polysegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
-
-                    polysegLine.Points.Add(new Point(X2, Y2));
-                }
-
-                pathgeo.Figures.Add(pathfigLine);
-
-                /*if (bezsegLine != null)
-                {
-                    int count = bezsegLine.Points.Count;
-
-                    if (count > 0)
-                    {
-                        // Draw the arrow at the start of the line.
-                        //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
-                        {
-                            Point pt1 = pathfigLine.StartPoint;
-                            Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[1], bezsegLine.Points[2], 0.03);
-                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
-                        }
-
-                        // Draw the arrow at the end of the line.
-                        //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
-                        {
-                            Point pt1 = GetPos(bezsegLine.Points.Count > 4 ? bezsegLine.Points[^4] : pathfigLine.StartPoint, bezsegLine.Points[^3], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.97);
-                            Point pt2 = bezsegLine.Points[^1];
-                            pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
-                        }
-                    }
-                }
-                else*/
-                {
-                    int count = polysegLine.Points.Count;
-
-                    if (count > 0)
-                    {
-                        // Draw the arrow at the start of the line.
-                        //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
-                        {
-                            Point pt1 = pathfigLine.StartPoint;
-                            Point pt2 = polysegLine.Points[0];
-                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
-                        }
-
-                        // Draw the arrow at the end of the line.
-                        //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
-                        {
-                            Point pt1 = count == 1 ? pathfigLine.StartPoint :
-                                                     polysegLine.Points[count - 2];
-                            Point pt2 = polysegLine.Points[count - 1];
-                            pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
-                        }
-                    }
-                }
-
-                return pathgeo;
-
-                /*if (_definingGeometry == null)
+                if (_definingGeometry == null)
                 {
                     _definingGeometry = CreateDefiningGeometry();
                 }
 
-                return _definingGeometry;*/
+                return _definingGeometry;
             }
         }
 
@@ -447,7 +300,7 @@ namespace DominoVisualizer
         {
             get
             {
-                //if (_renderedGeometry == null && DefiningGeometry != null)
+                if (_renderedGeometry == null && DefiningGeometry != null)
                 {
                     if (_transform == Matrix.Identity)
                     {
@@ -472,83 +325,327 @@ namespace DominoVisualizer
 
                 return _renderedGeometry;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IBrush"/> that specifies how the shape's interior is painted.
-        /// </summary>
-        public IBrush? Fill
-        {
-            get => GetValue(FillProperty);
-            set => SetValue(FillProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a <see cref="Stretch"/> enumeration value that describes how the shape fills its allocated space.
-        /// </summary>
-        public Stretch Stretch
-        {
-            get => GetValue(StretchProperty);
-            set => SetValue(StretchProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IBrush"/> that specifies how the shape's outline is painted.
-        /// </summary>
-        public IBrush? Stroke
-        {
-            get => GetValue(StrokeProperty);
-            set => SetValue(StrokeProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a collection of <see cref="double"/> values that indicate the pattern of dashes and gaps that is used to outline shapes.
-        /// </summary>
-        public AvaloniaList<double>? StrokeDashArray
-        {
-            get => GetValue(StrokeDashArrayProperty);
-            set => SetValue(StrokeDashArrayProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value that specifies the distance within the dash pattern where a dash begins.
-        /// </summary>
-        public double StrokeDashOffset
-        {
-            get => GetValue(StrokeDashOffsetProperty);
-            set => SetValue(StrokeDashOffsetProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the width of the shape outline.
-        /// </summary>
-        public double StrokeThickness
-        {
-            get => GetValue(StrokeThicknessProperty);
-            set => SetValue(StrokeThicknessProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a <see cref="PenLineCap"/> enumeration value that describes the shape at the ends of a line.
-        /// </summary>
-        public PenLineCap StrokeLineCap
-        {
-            get => GetValue(StrokeLineCapProperty);
-            set => SetValue(StrokeLineCapProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a <see cref="PenLineJoin"/> enumeration value that specifies the type of join that is used at the vertices of a Shape.
-        /// </summary>
-        public PenLineJoin StrokeJoin
-        {
-            get => GetValue(StrokeJoinProperty);
-            set => SetValue(StrokeJoinProperty, value);
-        }
+        }*/
 
         public sealed override void Render(DrawingContext context)
         {
-            var geometry = RenderedGeometry;
+            PathGeometry pathgeo = new PathGeometry();
+
+            PathFigure pathfigLine = new PathFigure();
+
+            PathFigure pathfigHead1 = new PathFigure();
+            PolyLineSegment polysegHead1 = new PolyLineSegment();
+            pathfigHead1.Segments.Add(polysegHead1);
+
+            PathFigure pathfigHead2 = new PathFigure();
+            PolyLineSegment polysegHead2 = new PolyLineSegment();
+            pathfigHead2.Segments.Add(polysegHead2);
+
+            if (MakeBezierAlt)
+            {
+                if (Points != null && Points.Count > 0)
+                {
+                    double lineLen1 = Vector.Subtract(Points[0].Point, new Point(X1, Y1)).Length;
+                    double lineLen2 = Vector.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
+
+                    BezierSegment bezierSegment1 = new BezierSegment();
+                    bezierSegment1.Point1 = new Point(X1 + Math.Min(100, lineLen1 / 3), Y1);
+                    bezierSegment1.Point2 = Points[0].Point;
+                    bezierSegment1.Point3 = Points[0].Point;
+
+                    for (int i = 0; i < Points.Count; i++)
+                    {
+
+                    }
+
+                    BezierSegment bezierSegment2 = new BezierSegment();
+                    bezierSegment2.Point1 = Points[^1].Point;
+                    bezierSegment2.Point2 = new Point(X2 - Math.Min(100, lineLen2 / 3), Y2);
+                    bezierSegment2.Point3 = new Point(X2, Y2);
+
+                    pathfigLine.IsClosed = false;
+                    pathfigLine.Segments.Add(bezierSegment1);
+                    pathfigLine.Segments.Add(bezierSegment2);
+                    pathfigLine.StartPoint = new Point(X1, Y1);
+
+                    pathgeo.Figures.Add(pathfigLine);
+
+
+                }
+                else
+                {
+                    var p1 = new Point(X1, Y1);
+                    var p2 = new Point(X2, Y2);
+
+                    double lineLen1 = Vector.Subtract(p2, p1).Length;
+                    double lineLen2 = Vector.Subtract(p2, p1).Length;
+
+                    BezierSegment bezierSegment1 = new BezierSegment();
+                    bezierSegment1.Point1 = new Point(X1 + Math.Min(100, lineLen1 / 3), Y1);
+                    bezierSegment1.Point2 = new Point(X2 - Math.Min(100, lineLen2 / 3), Y2);
+                    bezierSegment1.Point3 = new Point(X2, Y2);
+
+                    pathfigLine.IsClosed = false;
+                    pathfigLine.Segments.Add(bezierSegment1);
+                    pathfigLine.StartPoint = new Point(X1, Y1);
+
+                    // Draw the arrow at the start of the line.
+                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                    {
+                        Point pt1 = pathfigLine.StartPoint;
+                        Point pt2 = bezierSegment1.Point1;
+                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                    }
+
+                    // Draw the arrow at the end of the line.
+                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    {
+                        Point pt1 = bezierSegment1.Point2;
+                        Point pt2 = bezierSegment1.Point3;
+                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                    }
+                }
+
+
+
+                /*PolyLineSegment polysegLine = new PolyLineSegment();
+
+                pathfigLine.Segments.Add(polysegLine);
+                pathfigLine.StartPoint = new Point(X1, Y1);
+
+                if (Points != null)
+                    foreach (var p in Points)
+                        polysegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
+
+                polysegLine.Points.Add(new Point(X2, Y2));
+
+                int count = polysegLine.Points.Count;
+
+                if (count > 0)
+                {
+                    // Draw the arrow at the start of the line.
+                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                    {
+                        Point pt1 = pathfigLine.StartPoint;
+                        Point pt2 = polysegLine.Points[0];
+                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                    }
+
+                    // Draw the arrow at the end of the line.
+                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    {
+                        Point pt1 = count == 1 ? pathfigLine.StartPoint :
+                                                 polysegLine.Points[count - 2];
+                        Point pt2 = polysegLine.Points[count - 1];
+                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                    }
+                }*/
+            }
+            /*if (bezsegLine != null)
+            {
+                PolyBezierSegment bezsegLine = new PolyBezierSegment();
+                pathfigLine.Segments.Add(bezsegLine);
+
+                double lineLen1;
+                double lineLen2;
+
+                if (Points != null && Points.Count > 0)
+                {
+                    lineLen1 = Point.Subtract(Points[0].Point, new Point(X1, Y1)).Length;
+                    lineLen2 = Point.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
+                }
+                else
+                {
+                    var p1 = new Point(X1, Y1);
+                    var p2 = new Point(X2, Y2);
+
+                    lineLen1 = Point.Subtract(p2, p1).Length;
+                    lineLen2 = Point.Subtract(p2, p1).Length;
+                }
+
+                pathfigLine.StartPoint = new Point(X1, Y1);
+                bezsegLine.Points.Clear();
+                bezsegLine.Points.Add(new Point(X1 + Math.Min(100, lineLen1 / 3), Y1)); // (lineLen / 5)
+
+                if (Points != null)
+                    for (int i = 0; i < Points.Count; i++)
+                    {
+                        Point currPoint = Points[i].Point;
+
+                        if (PointBezier)
+                        {
+                            Point refPoint;
+                            double lineLenRef;
+                            bool refEnd = false;
+
+                            if (i == 0)
+                            {
+                                refPoint = new Point(X1, Y1);
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp;
+
+                                if (Points.Count == 1)
+                                    lineTmp = Point.Subtract(new Point(X2, Y2), currPoint).Length;
+                                else
+                                    lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
+
+                                if (lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refEnd = true;
+
+                                    if (Points.Count == 1)
+                                        refPoint = new Point(X2, Y2);
+                                    else
+                                        refPoint = Points[i + 1].Point;
+                                }
+                            }
+                            else if (i == Points.Count - 1)
+                            {
+                                refPoint = new Point(X2, Y2);
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp = Point.Subtract(Points[i - 1].Point, currPoint).Length;
+                                refEnd = true;
+
+                                if (lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refEnd = false;
+
+                                    refPoint = Points[i - 1].Point;
+                                }
+                            }
+                            else
+                            {
+                                refPoint = Points[i - 1].Point;
+                                lineLenRef = Point.Subtract(currPoint, refPoint).Length;
+                                double lineTmp = Point.Subtract(Points[i + 1].Point, currPoint).Length;
+
+                                if (lineTmp < lineLenRef)
+                                {
+                                    lineLenRef = lineTmp;
+                                    refEnd = true;
+                                    refPoint = Points[i + 1].Point;
+                                }
+                            }
+
+                            double alX1 = 0;
+                            double alX2 = 0;
+                            double alY1 = 0;
+                            double alY2 = 0;
+
+                            double angle = Math.Atan2(refPoint.X - currPoint.X, refPoint.Y - currPoint.Y) * (180 / Math.PI);
+                            if (refEnd)
+                                angle = Math.Atan2(currPoint.X - refPoint.X, currPoint.Y - refPoint.Y) * (180 / Math.PI);
+
+                            if (angle >= -45 && angle <= 45)
+                            {
+                                alX1 = 0;
+                                alX2 = 0;
+                                alY1 = +Math.Min(100, lineLenRef / 3);
+                                alY2 = -Math.Min(100, lineLenRef / 3);
+                            }
+                            if (angle < -45 && angle >= -135)
+                            {
+                                alX1 = -Math.Min(100, lineLenRef / 3);
+                                alX2 = +Math.Min(100, lineLenRef / 3);
+                                alY1 = 0;
+                                alY2 = 0;
+                            }
+                            if ((angle < -135 && angle >= -180) || (angle > 135 && angle <= 180))
+                            {
+                                alX1 = 0;
+                                alX2 = 0;
+                                alY1 = -Math.Min(100, lineLenRef / 3);
+                                alY2 = +Math.Min(100, lineLenRef / 3);
+                            }
+                            if (angle > 45 && angle <= 135)
+                            {
+                                alX1 = +Math.Min(100, lineLenRef / 3);
+                                alX2 = -Math.Min(100, lineLenRef / 3);
+                                alY1 = 0;
+                                alY2 = 0;
+                            }
+
+                            bezsegLine.Points.Add(new Point(currPoint.X + alX1, currPoint.Y + alY1));
+                            bezsegLine.Points.Add(currPoint);
+                            bezsegLine.Points.Add(new Point(currPoint.X + alX2, currPoint.Y + alY2));
+                        }
+                        else
+                        {
+                            bezsegLine.Points.Add(currPoint);
+                            bezsegLine.Points.Add(currPoint);
+                            bezsegLine.Points.Add(currPoint);
+                        }
+                    }
+
+                bezsegLine.Points.Add(new Point(X2 - Math.Min(100, lineLen2 / 3), Y2)); // (lineLen / 5)
+                bezsegLine.Points.Add(new Point(X2, Y2));
+            
+                int count = bezsegLine.Points.Count;
+
+                if (count > 0)
+                {
+                    // Draw the arrow at the start of the line.
+                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                    {
+                        Point pt1 = pathfigLine.StartPoint;
+                        Point pt2 = GetPos(pathfigLine.StartPoint, bezsegLine.Points[0], bezsegLine.Points[1], bezsegLine.Points[2], 0.03);
+                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                    }
+
+                    // Draw the arrow at the end of the line.
+                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    {
+                        Point pt1 = GetPos(bezsegLine.Points.Count > 4 ? bezsegLine.Points[^4] : pathfigLine.StartPoint, bezsegLine.Points[^3], bezsegLine.Points[^2], bezsegLine.Points[^1], 0.97);
+                        Point pt2 = bezsegLine.Points[^1];
+                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                    }
+                }
+            }*/
+            else
+            {
+                PolyLineSegment polysegLine = new PolyLineSegment();
+                pathfigLine.Segments.Add(polysegLine);
+
+                // Define a single PathFigure with the points.
+                pathfigLine.StartPoint = new Point(X1, Y1);
+                polysegLine.Points.Clear();
+
+                if (Points != null)
+                    foreach (var p in Points)
+                        polysegLine.Points.Add(new Point(p.Point.X, p.Point.Y));
+
+                polysegLine.Points.Add(new Point(X2, Y2));
+
+                int count = polysegLine.Points.Count;
+
+                if (count > 0)
+                {
+                    // Draw the arrow at the start of the line.
+                    //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
+                    {
+                        Point pt1 = pathfigLine.StartPoint;
+                        Point pt2 = polysegLine.Points[0];
+                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                    }
+
+                    // Draw the arrow at the end of the line.
+                    //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
+                    {
+                        Point pt1 = count == 1 ? pathfigLine.StartPoint :
+                                                 polysegLine.Points[count - 2];
+                        Point pt2 = polysegLine.Points[count - 1];
+                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                    }
+                }
+            }
+
+            pathgeo.Figures.Add(pathfigLine);
+
+            //=========================================
+
+            var geometry = pathgeo;
 
             if (geometry != null)
             {
@@ -607,13 +704,13 @@ namespace DominoVisualizer
         /// </summary>
         protected void InvalidateGeometry()
         {
-            _renderedGeometry = null;
-            _definingGeometry = null;
+            //_renderedGeometry = null;
+            //_definingGeometry = null;
 
             InvalidateMeasure();
         }
 
-        protected override Size MeasureOverride(Size availableSize)
+        /*protected override Size MeasureOverride(Size availableSize)
         {
             if (DefiningGeometry is null)
             {
@@ -641,7 +738,7 @@ namespace DominoVisualizer
             }
 
             return default;
-        }
+        }*/
 
         internal static (Size size, Matrix transform) CalculateSizeAndTransform(Size availableSize, Rect shapeBounds, Stretch Stretch)
         {
@@ -736,24 +833,6 @@ namespace DominoVisualizer
             control.InvalidateGeometry();
         }
 
-        public void MakeBezier()
-        {
-            pathfigLine.Segments.Clear();
-            polysegLine = null;
-
-            /*bezsegLine = new PolyBezierSegment();
-            pathfigLine.Segments.Add(bezsegLine);*/
-        }
-
-        public void MakePoly()
-        {
-            pathfigLine.Segments.Clear();
-            //bezsegLine = null;
-
-            polysegLine = new PolyLineSegment();
-            pathfigLine.Segments.Add(polysegLine);
-        }
-
         private Point GetPos(Point p1, Point p2, Point p3, Point p4, double t)
         {
             double x = ((1 - t) * (1 - t) * (1 - t)) * p1.X
@@ -771,24 +850,31 @@ namespace DominoVisualizer
 
         PathFigure CalculateArrow(PathFigure pathfig, Point pt1, Point pt2)
         {
-            //Matrix matx = new Matrix();
+            Matrix matx = new Matrix();
             Vector vect = pt1 - pt2;
-            vect.Normalize();
+            vect = vect.Normalize();
             vect *= ArrowLength;
 
             PolyLineSegment polyseg = pathfig.Segments[0] as PolyLineSegment;
             polyseg.Points.Clear();
             //matx.Rotate(ArrowAngle / 2);
             //pathfig.StartPoint = pt2 + vect * matx;
-            pathfig.StartPoint = pt2 + (MatrixHelper.TransformVector(MatrixHelper.Rotation(ArrowAngle / 2), vect));
+            matx = MatrixHelper.Rotation(ToRad(ArrowAngle / 2));
+            pathfig.StartPoint = pt2 + MatrixHelper.TransformVector(matx, vect);
             polyseg.Points.Add(pt2);
 
             //matx.Rotate(-ArrowAngle);
             //polyseg.Points.Add(pt2 + vect * matx);
-            polyseg.Points.Add(pt2 + (MatrixHelper.TransformVector(MatrixHelper.Rotation(-ArrowAngle), vect)));
+            matx = MatrixHelper.RotationPrepend(matx, ToRad(-ArrowAngle));
+            polyseg.Points.Add(pt2 + MatrixHelper.TransformVector(matx, vect));
             pathfig.IsClosed = IsArrowClosed;
 
             return pathfig;
+        }
+
+        private double ToRad(double deg)
+        {
+            return (Math.PI / 180) * deg;
         }
 
         PathFigure CalculateDot(PathFigure pathfig, Point pt1, Point pt2)

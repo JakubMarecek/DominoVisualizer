@@ -1609,10 +1609,10 @@ namespace DominoVisualizer
 					foreach (var point in line.UI.Points)
 					{
 						if (point.ID == id)
-						{
-							point.Point += new Point(7.5, 7.5);
+                        {
+							point.Point = new(x + 7.5, y + 7.5);
 
-                            line.UI.Measure(new(1, 1));
+                            line.UI.InvalidateVisual();
                         }
 					}
 			}
@@ -1717,9 +1717,9 @@ namespace DominoVisualizer
 				foreach (var child in canvas.Children)
 					((Control)child).Opacity = 1;
 
-				if (except is Widget || except is ArrowLine)
+				if (except is Widget || except is ArrowLineNew)
 					foreach (var child in canvas.Children)
-						if (child != except && (child is Widget || child is ArrowLine))
+						if (child != except && (child is Widget || child is ArrowLineNew))
 							((Control)child).Opacity = 0.25;
 
 				if (e.Source is Widget)
@@ -1727,7 +1727,7 @@ namespace DominoVisualizer
 						if (child == (Control)e.Source && child is Widget chW)
 							MarkBox(chW.ID);
 
-				if (e.Source is ArrowLine)
+				if (e.Source is ArrowLineNew)
 				{
 					foreach (var line in lines)
 					{
@@ -1744,7 +1744,7 @@ namespace DominoVisualizer
 
             if (e.ClickCount == 1 && props.IsMiddleButtonPressed)
             {
-                if (e.Source is ArrowLine)
+                if (e.Source is ArrowLineNew)
                 {
                     foreach (var line in lines)
                     {
@@ -2319,12 +2319,10 @@ namespace DominoVisualizer
 				Y2 = y2
 			};
 
-			if ((bool)settings["useBezier"])
-                l.MakeBezier();
-			else
-				l.MakePoly();
+            l.MakeBezierAlt = (bool)settings["useBezier"];
+            l.MakePoly = !(bool)settings["useBezier"];
 
-			l.PointBezier = (bool)settings["linePointsBezier"];
+            l.PointBezier = (bool)settings["linePointsBezier"];
 
             l.Cursor = new Cursor(StandardCursorType.Hand);
 			l.Points = new();
@@ -2365,7 +2363,8 @@ namespace DominoVisualizer
 			gh.Children.Add(btn);
 
 			Button btn2 = new Button() { Tag = conn.ID + "|" + execBox.Box.ID };
-			btn.Classes.Add("DelBtn");
+            btn2.Classes.Add("EditBtn");
+            btn2.Classes.Add("DelBtn");
 			btn2.Click += RemoveExecBox;
             gh.Children.Add(btn2);
 
@@ -2425,6 +2424,7 @@ namespace DominoVisualizer
 				g.Children.Add(new TextBox() { Text = name + " = " + c.ID, Margin = new(0, 0, 20, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
 				Button btnDel = new Button() { Tag = box.ID + "|" + c.ID, Margin = new(0) };
+                btnDel.Classes.Add("EditBtn");
                 btnDel.Classes.Add("DelBtn");
                 btnDel.Click += RemoveBoxConn;
 				g.Children.Add(btnDel);
@@ -3098,7 +3098,7 @@ namespace DominoVisualizer
 			else
 				line.UI.Points.Add(ui);
 
-            line.UI.Measure(new(1, 1));
+            line.UI.InvalidateVisual();
 
             canvas.Children.Add(ui);
             Canvas.SetLeft(ui, drawX + c.X);
@@ -3130,7 +3130,7 @@ namespace DominoVisualizer
                     int rem = line.UI.Points.RemoveAll(a => a.ID == lp.ID);
 					if (rem > 0)
 					{
-                        line.UI.Measure(new(1, 1));
+                        line.UI.InvalidateVisual();
                     }
                 }
             }
@@ -4759,8 +4759,8 @@ namespace DominoVisualizer
 
 		private void LoadSettings()
 		{
-            settings.Add("useBezier", false);
-            settings.Add("linePointsBezier", false);
+            settings.Add("useBezier", true);
+            settings.Add("linePointsBezier", true);
             settings.Add("snapToGrid", false);
             settings.Add("bytecode", false);
             settings.Add("bytecodeDebug", false);
@@ -4772,12 +4772,10 @@ namespace DominoVisualizer
 
 			foreach (var l in lines)
 			{
-				if ((bool)settings["useBezier"])
-					l.UI.MakeBezier();
-				else
-					l.UI.MakePoly();
+                l.UI.MakeBezierAlt = (bool)settings["useBezier"];
+                l.UI.MakePoly = !(bool)settings["useBezier"];
 
-				l.UI.PointBezier = (bool)settings["linePointsBezier"];
+                l.UI.PointBezier = (bool)settings["linePointsBezier"];
 
                 l.UI.Measure(new(1, 1));
             }

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace DominoVisualizer
@@ -130,7 +131,7 @@ namespace DominoVisualizer
             }
         }
 
-		private void Window_Loaded(object sender, RoutedEventArgs e)
+		private async void Window_Loaded(object sender, RoutedEventArgs e)
 		{
             DiscordPresence();
 
@@ -146,7 +147,7 @@ namespace DominoVisualizer
 			arguments = new(args);
 
 			if (arguments["bytes"] != null && arguments["fcver"] != null && arguments["fileFolder"] != null && arguments["fn"] != null)
-				OpenFile(OpenType.Binary, null);
+				await OpenFileAsync(OpenType.Binary, null);
 			else if (args.Length > 0)
 			{
 				foreach (string a in args)
@@ -161,7 +162,7 @@ namespace DominoVisualizer
 					}
 					if (File.Exists(a) && (a.EndsWith(".domino.xml") || a.EndsWith(".domino")))
 					{
-                		OpenFile(OpenType.OpenParam, null, a);
+                        await OpenFileAsync(OpenType.OpenParam, null, a);
 						break;
 					}
 				}
@@ -216,7 +217,7 @@ namespace DominoVisualizer
 			}*/
 		}
 
-		private void OpenFile(OpenType type, string game, string directFile = "")
+		private async Task OpenFileAsync(OpenType type, string game, string directFile = "")
 		{
 			void Loading()
             {
@@ -307,7 +308,7 @@ namespace DominoVisualizer
                 var d = StorageProvider.OpenFilePickerAsync(opts).Result;
                 if (d != null && d.Count > 0)
                 {
-                    OpenFile(OpenType.ImportParam, game, d[0].Path.LocalPath);
+                    await OpenFileAsync(OpenType.ImportParam, game, d[0].Path.LocalPath);
                 }
 
                 /*OpenFileDialog ofdI = new OpenFileDialog();
@@ -336,10 +337,10 @@ namespace DominoVisualizer
                 opts.FileTypeFilter = new FilePickerFileType[] { new("Domino script") { Patterns = new[] { "*.domino.xml", "*.domino" } } };
                 opts.Title = "Select Domino Workspace";
 
-                var d = StorageProvider.OpenFilePickerAsync(opts).Result;
+                var d = await StorageProvider.OpenFilePickerAsync(opts);
                 if (d != null && d.Count > 0)
                 {
-                    OpenFile(OpenType.OpenParam, game, d[0].Path.LocalPath);
+                    await OpenFileAsync(OpenType.OpenParam, game, d[0].Path.LocalPath);
                 }
 
                 /*OpenFileDialog ofdO = new OpenFileDialog();
@@ -510,7 +511,7 @@ namespace DominoVisualizer
 			Focus();
 		}*/
 
-		private void ButtonSelGame_Click(object sender, RoutedEventArgs e)
+		private async void ButtonSelGame_Click(object sender, RoutedEventArgs e)
 		{
 			string tag = (string)((Button)sender).Tag;
 
@@ -519,10 +520,10 @@ namespace DominoVisualizer
 			if (tag == "cancel")
 				return;
 
-			OpenFile(selDialogType, tag, selDialogFile);
+            await OpenFileAsync(selDialogType, tag, selDialogFile);
         }
 
-		private void ButtonSelDialog_Click(object sender, RoutedEventArgs e)
+		private async void ButtonSelDialog_Click(object sender, RoutedEventArgs e)
 		{
 			int tag = int.Parse((string)((Button)sender).Tag);
 
@@ -533,7 +534,7 @@ namespace DominoVisualizer
             }
             if (tag == 1) //open
             {
-                OpenFile(OpenType.Open, null);
+                await OpenFileAsync(OpenType.Open, null);
             }
             if (tag == 2) //create
             {
@@ -1248,7 +1249,7 @@ namespace DominoVisualizer
                         aTimer.Stop();
                         Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            OpenFile(OpenType.SwapGraph, forceReload, f);
+                            OpenFileAsync(OpenType.SwapGraph, forceReload, f);
                         });
                     };
                 });
@@ -1270,7 +1271,7 @@ namespace DominoVisualizer
                         Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             string graph = ((DominoGraph)mainGraphs.SelectedItem).UniqueID;
-                            OpenFile(OpenType.SwapGraph, graph, f);
+                            OpenFileAsync(OpenType.SwapGraph, graph, f);
                         });
                     };
                 });

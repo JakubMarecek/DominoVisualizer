@@ -29,6 +29,7 @@
 			<Setter Property="BorderThickness" Value="0" />
 			<Setter Property="Background" Value="Transparent" />
 			<Setter Property="IsReadOnly" Value="True" />
+			<Setter Property="Margin" Value="3,0,3,0"/>
 			<Setter Property="ToolTip.Tip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
 			<Setter Property="ToolTip.ShowDelay" Value="100" />
 

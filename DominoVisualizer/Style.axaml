@@ -106,6 +106,9 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
+		<Style Selector="^[IsReadOnly=true] Rectangle#outerRectangle">
+			<Setter Property="Opacity" Value="0" />
+		</Style>
 	</Style>
 
 	<Style Selector="Button.CBtn">
@@ -240,7 +243,7 @@
 
 	<Style Selector="Button.EditExecArrayBtn">
 		<Setter Property="ToolTip.Tip" Value="Toggle array for the item" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -263,7 +266,7 @@
 
 	<Style Selector="Button.EditExecAddBtn">
 		<Setter Property="ToolTip.Tip" Value="Add item to the array" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -286,7 +289,7 @@
 
 	<Style Selector="Button.EditExecRemoveBtn">
 		<Setter Property="ToolTip.Tip" Value="Remove item from the array" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -309,7 +312,7 @@
 
 	<Style Selector="Button.EditExecGetDataBtn">
 		<Setter Property="ToolTip.Tip" Value="Get data from box" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -377,7 +380,7 @@
 
 	<Style Selector="Button.DuplBtnWhite">
 		<Setter Property="ToolTip.Tip" Value="Duplicate" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -424,7 +427,7 @@
 
 	<Style Selector="Button.MaxBtnWhite">
 		<Setter Property="ToolTip.Tip" Value="Maximize / restore" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -447,7 +450,8 @@
 
 	<Style Selector="Button.MinBtnWhite">
 		<Setter Property="ToolTip.Tip" Value="Minimize" />
-		
+		<Setter Property="VerticalAlignment" Value="Bottom"/>
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -470,7 +474,7 @@
 
 	<Style Selector="Button.SettBtnWhite">
 		<Setter Property="ToolTip.Tip" Value="Settings" />
-		
+
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Button">
@@ -548,7 +552,7 @@
 									</Track.IncreaseButton>
 									<Thumb
 										   Width="8"
-										   MinHeight="{DynamicResource ScrollBarSize}"
+										   MinHeight="20"
 										   RenderTransform="{DynamicResource VerticalSmallScrollThumbScaleTransform}"
 										   RenderTransformOrigin="100%,50%" />
 								</Track>
@@ -580,7 +584,7 @@
 									</Track.IncreaseButton>
 									<Thumb
 										   Height="8"
-										   MinWidth="{DynamicResource ScrollBarSize}"
+										   MinWidth="20"
 										   RenderTransform="{DynamicResource HorizontalSmallScrollThumbScaleTransform}"
 										   RenderTransformOrigin="50%,100%" />
 								</Track>
@@ -612,6 +616,7 @@
 	</Style>
 
 	<Style Selector="MenuFlyoutPresenter">
+		<Setter Property="Cursor" Value="Hand"/>
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="MenuFlyoutPresenter">
@@ -630,6 +635,7 @@
 		</Setter>
 	</Style>
 	<Style Selector="MenuItem">
+		<Setter Property="Cursor" Value="Hand"/>
 		<Setter Property="Template">
 			<ControlTemplate>
 				<Border Name="root"
@@ -716,53 +722,175 @@
 		</Style>
 	</Style>
 
-  <Style Selector="CheckBox">
-    <Setter Property="Foreground" Value="White" />
-	<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
-    <Setter Property="FontSize" Value="16"/>
-	<Setter Property="Cursor" Value="Hand"/>
-    <Setter Property="Template">
-      <ControlTemplate>
-        <Grid ColumnDefinitions="Auto,*">
-          <Border Name="border" Width="30" Height="30" CornerRadius="0" BorderThickness="1" BorderBrush="#F28C28" Background="#1b1b1b">
-            <Panel>
-              <Path Name="checkMark"
-                    Width="15"
-                    Height="15"
-                    StrokeThickness="2"
-					Stroke="#F28C28"
-					Margin="1,0,0,0"
-                    Data="M 0 0 L 15 15 M 0 15 L 15 0" />
-            </Panel>
-          </Border>
-          <ContentPresenter Name="PART_ContentPresenter"
-                            Grid.Column="1"
-                            Margin="{TemplateBinding Padding}"
-                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                            Content="{TemplateBinding Content}"
-                            ContentTemplate="{TemplateBinding ContentTemplate}"
-                            IsVisible="{TemplateBinding Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                            RecognizesAccessKey="True"
-                            TextElement.Foreground="{TemplateBinding Foreground}" />
-        </Grid>
-      </ControlTemplate>
-    </Setter>
-    <Style Selector="^:pointerover /template/ Border#border">
-      <Setter Property="BorderBrush" Value="#F28C28" />
-      <Setter Property="Background" Value="#333" />
-    </Style>
-    <Style Selector="^:pressed /template/ Border#border">
-      <Setter Property="Background" Value="#F28C28" />
-    </Style>
-    <Style Selector="^ /template/ Path#checkMark">
-      <Setter Property="IsVisible" Value="False" />
-    </Style>
-    <Style Selector="^:checked /template/ Path#checkMark">
-      <Setter Property="IsVisible" Value="True" />
-    </Style>
-    <Style Selector="^:disabled /template/ Border#border">
-      <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
-    </Style>
-  </Style>
+	<Style Selector="CheckBox">
+		<Setter Property="Foreground" Value="White" />
+		<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
+		<Setter Property="FontSize" Value="16"/>
+		<Setter Property="Cursor" Value="Hand"/>
+		<Setter Property="Template">
+			<ControlTemplate>
+				<Grid ColumnDefinitions="Auto,*">
+					<Border Name="border" Width="30" Height="30" CornerRadius="0" BorderThickness="1" BorderBrush="#F28C28" Background="#1b1b1b">
+						<Panel>
+							<Path Name="checkMark"
+								  Width="15"
+								  Height="15"
+								  StrokeThickness="2"
+								  Stroke="#F28C28"
+								  Margin="1,0,0,0"
+								  Data="M 0 0 L 15 15 M 0 15 L 15 0" />
+						</Panel>
+					</Border>
+					<ContentPresenter Name="PART_ContentPresenter"
+									  Grid.Column="1"
+									  Margin="{TemplateBinding Padding}"
+									  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+									  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+									  Content="{TemplateBinding Content}"
+									  ContentTemplate="{TemplateBinding ContentTemplate}"
+									  IsVisible="{TemplateBinding Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+									  RecognizesAccessKey="True"
+									  TextElement.Foreground="{TemplateBinding Foreground}" />
+				</Grid>
+			</ControlTemplate>
+		</Setter>
+		<Style Selector="^:pointerover /template/ Border#border">
+			<Setter Property="BorderBrush" Value="#F28C28" />
+			<Setter Property="Background" Value="#333" />
+		</Style>
+		<Style Selector="^:pressed /template/ Border#border">
+			<Setter Property="Background" Value="#F28C28" />
+		</Style>
+		<Style Selector="^ /template/ Path#checkMark">
+			<Setter Property="IsVisible" Value="False" />
+		</Style>
+		<Style Selector="^:checked /template/ Path#checkMark">
+			<Setter Property="IsVisible" Value="True" />
+		</Style>
+		<Style Selector="^:disabled /template/ Border#border">
+			<Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+		</Style>
+	</Style>
+
+	<Style Selector="ComboBox">
+		<Setter Property="Background" Value="Transparent" />
+		<Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+		<Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
+		<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+		<Setter Property="VerticalContentAlignment" Value="Center" />
+		<Setter Property="Padding" Value="4" />
+		<Setter Property="MinWidth" Value="120"/>
+		<Setter Property="MinHeight" Value="20"/>
+		<Setter Property="Foreground" Value="White"/>
+		<Setter Property="FontFamily" Value="/DominoVisualizer;component/OpenSans.ttf#Open Sans" />
+		<Setter Property="FontSize" Value="16"/>
+		<Setter Property="PlaceholderForeground" Value="{DynamicResource ThemeForegroundBrush}" />
+		<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+		<Setter Property="Cursor" Value="Hand"/>
+		<Setter Property="Template">
+			<ControlTemplate>
+				<Border Name="border"
+						Background="#1b1b1b"
+						BorderBrush="#F28C28"
+						BorderThickness="1"
+						CornerRadius="3">
+					<Grid ColumnDefinitions="*,Auto">
+						<TextBlock Name="PlaceholderTextBlock"
+								   Grid.Column="0"
+								   Margin="{TemplateBinding Padding}"
+								   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+								   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+								   Foreground="{TemplateBinding PlaceholderForeground}"
+								   IsVisible="{TemplateBinding SelectionBoxItem, Converter={x:Static ObjectConverters.IsNull}}"
+								   Text="{TemplateBinding PlaceholderText}" />
+						<ContentControl Margin="{TemplateBinding Padding}"
+										HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+										VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+										Content="{TemplateBinding SelectionBoxItem}"
+										ContentTemplate="{TemplateBinding ItemTemplate}" />
+						<ToggleButton Name="toggle"
+									  Grid.Column="1"
+									  Background="Transparent"
+									  BorderThickness="0"
+									  ClickMode="Press"
+									  Focusable="False"
+									  IsChecked="{TemplateBinding IsDropDownOpen, Mode=TwoWay}">
+							<Path Width="10"
+								  Height="10"
+								  Margin="5,0,5,0"
+								  HorizontalAlignment="Center"
+								  VerticalAlignment="Center"
+								  Data="M0,0 L0,2 L4,6 L8,2 L8,0 L4,4 z"
+								  Fill="White"
+								  Stretch="Uniform" />
+						</ToggleButton>
+						<Popup Name="PART_Popup"
+							   MinWidth="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"
+							   MaxHeight="500"
+							   IsLightDismissEnabled="True"
+							   IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
+							   PlacementTarget="{TemplateBinding}">
+							<Border Background="#1b1b1b"
+									Padding="0,5,0,5"
+									BorderThickness="1"
+                                    CornerRadius="3"
+                                    BorderBrush="#F28C28">
+								<ScrollViewer HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+											  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+									<ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+								</ScrollViewer>
+							</Border>
+						</Popup>
+					</Grid>
+				</Border>
+			</ControlTemplate>
+		</Setter>
+		<Style Selector="^:pointerover /template/ Border#border">
+			<Setter Property="BorderBrush" Value="#F28C28" />
+		</Style>
+		<Style Selector="^:disabled /template/ Border#border">
+			<Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+		</Style>
+	</Style>
+
+	<Style Selector="ComboBoxItem">
+		<Setter Property="Background" Value="Transparent" />
+		<Setter Property="Padding" Value="2" />
+		<Setter Property="HorizontalAlignment" Value="Stretch" />
+		<Setter Property="HorizontalContentAlignment" Value="Left" />
+		<Setter Property="Foreground" Value="White" />
+		<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
+		<Setter Property="FontSize" Value="16"/>
+		<Setter Property="Template">
+			<ControlTemplate>
+				<Border Name="Border" Padding="2" CornerRadius="3">
+					<ContentPresenter Name="PART_ContentPresenter"
+									  Padding="{TemplateBinding Padding}"
+									  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+									  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+									  Background="{TemplateBinding Background}"
+									  BorderBrush="{TemplateBinding BorderBrush}"
+									  BorderThickness="{TemplateBinding BorderThickness}"
+									  Content="{TemplateBinding Content}"
+									  ContentTemplate="{TemplateBinding ContentTemplate}"
+									  CornerRadius="{TemplateBinding CornerRadius}" />
+				</Border>
+			</ControlTemplate>
+		</Setter>
+		<Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#9c5a19" />
+		</Style>
+		<Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#9c5a19" />
+		</Style>
+		<Style Selector="^:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#9c5a19" />
+		</Style>
+		<Style Selector="^:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#9c5a19" />
+		</Style>
+		<Style Selector="^:selected:focus:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#9c5a19" />
+		</Style>
+	</Style>
 </Styles>

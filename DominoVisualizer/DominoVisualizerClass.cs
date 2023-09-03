@@ -1623,7 +1623,7 @@ namespace DominoVisualizer
 		{
 			foreach (var b in dominoBoxes.Values)
 			{
-				b.Widget.list.IsVisible = zoom < -15 ? false : true;
+                b.Widget.list.IsVisible = zoom < -15 ? false : true;
 				//b.Widget.delBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 				//b.Widget.swapBtn.Visibility = zoom < -15 ? Visibility.Hidden : Visibility.Visible;
 				b.Widget.HeaderGrid.IsVisible = zoom < -15 ? false : true;

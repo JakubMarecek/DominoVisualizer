@@ -23,7 +23,7 @@ namespace DominoVisualizer
 		//string fileSel = "";
 		bool loaded = false;
 		bool externalLaunch = false;
-		const string appVer = "v1.10";
+		const string appVer = "v2.00";
 		public const string appName = "Domino Visualizer " + appVer + " by ArmanIII";
         //int actInx = 0;
         Arguments arguments;

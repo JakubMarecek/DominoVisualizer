@@ -21,10 +21,10 @@
 	<Grid>
 		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
 			<CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True" />
-			<Grid Background="#99000000" Name="gridMainMenu">
-				<Image Source="domino.ico" Margin="-480,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
+			<Grid Background="#99000000" Name="gridMainMenu" Margin="0,-100,0,0">
+				<Image Source="avares://DominoVisualizer/domino.ico" Margin="-450,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
 				<StackPanel Orientation="Vertical" VerticalAlignment="Center">
-					<Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,0,-10" />
+					<Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,-30,-10" />
 					<Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
 					<Label Content="by ArmanIII" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,70" />
 					<Label Content="Import Domino from LUA:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,0,0,15" />
@@ -34,6 +34,7 @@
 					<Label Content="Or open workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
 					<Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
 				</StackPanel>
+				<Image Source="avares://DominoVisualizer/BuiltWithAvalonia.png" Margin="0,0,0,-800" Height="70" VerticalAlignment="Center" HorizontalAlignment="Center" />
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogSelGame" IsVisible="false">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
@@ -49,41 +50,42 @@
 				</Grid>
 			</Grid>
 			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" IsVisible="false" Margin="0,40,0,0">
-				<Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
-					<Grid Background="#77000000">
-						<Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
-						<Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
+				<Grid Background="#cc000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
+					<Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
+					<Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
 
-						<Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+					<Button Classes="EditBtn EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="workspace" Margin="0,12,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 
-						<Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
+					<Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
 
-						<ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
-							<ComboBox.ItemTemplate>
-								<DataTemplate x:DataType="{x:Type globalData:DominoGraph}">
-									<StackPanel Orientation="Horizontal">
-										<TextBlock Text="{Binding Name}" />
-									</StackPanel>
-								</DataTemplate>
-							</ComboBox.ItemTemplate>
-						</ComboBox>
+					<ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+						<ComboBox.ItemsPanel>
+							<ItemsPanelTemplate>
+								<StackPanel/>
+							</ItemsPanelTemplate>
+						</ComboBox.ItemsPanel>
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="{x:Type globalData:DominoGraph}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding Name}" />
+								</StackPanel>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
 
-						<Button Classes="EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-						<Button Classes="DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-					</Grid>
+					<Button Classes="EditBtn EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+					<Button Classes="EditBtn DelBtn DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 				</Grid>
-				<Grid Background="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
-					<Grid Background="#77000000">
-						<Button Classes="CBtn" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-						<Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
-					</Grid>
+				<Grid Background="#cc000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
+					<Button Classes="CBtn" Content="Save" Click="ButtonSave_Click" Margin="10,10,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Export" Click="ButtonExport_Click" Margin="10,60,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Close" Click="ButtonClose_Click" Margin="10,110,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Add graph" Click="ButtonAddGraph_Click" Margin="10,200,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Edit path" Click="ButtonWorkspaceRename_Click" Tag="path" Margin="10,250,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Add connector" Click="ButtonAddConn_Click" Margin="10,350,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Add box" Click="ButtonAddBox_Click" Margin="10,400,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
+					<Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
 				</Grid>
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogEditExecBox" IsVisible="false">
@@ -95,6 +97,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Exec type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
 						<ComboBox Name="editExecBoxType" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBoxItem>Exec</ComboBoxItem>
 							<ComboBoxItem>Exec Dyn Int</ComboBoxItem>
 						</ComboBox>
@@ -102,6 +109,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
 						<Label Content="Exec" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="300" />
 						<ComboBox Name="editExecBoxExec" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -124,7 +136,7 @@
 										<Grid.ColumnDefinitions>
 											<ColumnDefinition Width="290"></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition Width="320"></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
@@ -135,11 +147,11 @@
 											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<CheckBox Grid.Column="1" IsChecked="{Binding ParamUsed}" />
-										<TextBox Grid.Column="2" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
-										<Button Grid.Column="3" Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditExecArrayBtn" />
-										<Button Grid.Column="4" Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditExecAddBtn" />
-										<Button Grid.Column="5" Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditExecRemoveBtn" />
-										<Button Grid.Column="6" Click="ButtonLVGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditExecGetDataBtn" />
+										<TextBox Grid.Column="2" Text="{Binding ParamValue}" IsReadOnly="{Binding ParamHasArray}" />
+										<Button Grid.Column="3" Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditBtn EditExecArrayBtn" />
+										<Button Grid.Column="4" Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditBtn EditExecAddBtn" />
+										<Button Grid.Column="5" Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditBtn EditExecRemoveBtn" />
+										<Button Grid.Column="6" Click="ButtonLVGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditBtn EditExecGetDataBtn" />
 									</Grid>
 								</DataTemplate>
 							</ItemsRepeater.ItemTemplate>
@@ -223,6 +235,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addExecBoxBox" Width="310" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -245,6 +262,11 @@
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<ComboBox Name="addBoxConnectorB" Width="250" Margin="20,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -255,6 +277,11 @@
 						</ComboBox>
 						<Label Content=">" HorizontalAlignment="Left" FontSize="16" Margin="15,0,15,0" Foreground="White" Width="20" />
 						<ComboBox Name="addBoxConnectorC" Width="250" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -301,6 +328,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,160,0,0">
 						<Label Content="Box type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addBoxName" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -336,6 +368,11 @@
 
 
 							<ComboBox Name="editDataDataTypeID" Width="500" Margin="0,0,0,0" HorizontalAlignment="Right">
+								<ComboBox.ItemsPanel>
+									<ItemsPanelTemplate>
+										<StackPanel/>
+									</ItemsPanelTemplate>
+								</ComboBox.ItemsPanel>
 							</ComboBox>
 
 
@@ -369,10 +406,10 @@
 											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<TextBox Grid.Column="1" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
-										<Button Grid.Column="2" Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditExecArrayBtn" />
-										<Button Grid.Column="3" Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditExecAddBtn" />
-										<Button Grid.Column="4" Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditExecRemoveBtn" />
-										<Button Grid.Column="5" Click="ButtonEDLGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditExecGetDataBtn" />
+										<Button Grid.Column="2" Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditBtn EditExecArrayBtn" />
+										<Button Grid.Column="3" Click="ButtonEDLAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditBtn EditExecAddBtn" />
+										<Button Grid.Column="4" Click="ButtonEDLDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditBtn EditExecRemoveBtn" />
+										<Button Grid.Column="5" Click="ButtonEDLGetData_Click" IsVisible="{Binding GetDataVs}" Classes="EditBtn EditExecGetDataBtn" />
 									</Grid>
 								</DataTemplate>
 							</ItemsRepeater.ItemTemplate>
@@ -450,6 +487,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,455,0,0">
 						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addCommentColor" Width="300" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -472,6 +514,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
 						<Label Content="Style" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
 						<ComboBox Name="addBorderStyle" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBoxItem>Dotted line</ComboBoxItem>
 							<ComboBoxItem>Dash-dotted line</ComboBoxItem>
 							<ComboBoxItem>Dashed line</ComboBoxItem>
@@ -482,6 +529,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
 						<ComboBox Name="addBorderColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -495,6 +547,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,140,0,0">
 						<Label Content="Background color" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="200" />
 						<ComboBox Name="addBorderBgColor" Width="318" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ColorEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -525,6 +582,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Type" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="150" />
 						<ComboBox Name="editResourceType" Width="360" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type sys:String}">
 									<StackPanel Orientation="Horizontal">
@@ -559,6 +621,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
 						<Label Content="Box ID" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addGetDataFromBoxBox" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right" SelectionChanged="addGetDataFromBoxBox_SelectionChanged">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -572,6 +639,11 @@
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,100,0,0">
 						<Label Content="Data out" HorizontalAlignment="Left" FontSize="16" Margin="15,0,0,0" Foreground="White" Width="100" />
 						<ComboBox Name="addGetDataFromBoxData" Width="400" Margin="0,0,0,0" HorizontalAlignment="Right">
+							<ComboBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel/>
+								</ItemsPanelTemplate>
+							</ComboBox.ItemsPanel>
 							<ComboBox.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ExecEntry}">
 									<StackPanel Orientation="Horizontal">
@@ -672,15 +744,13 @@
 			<!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
 		</Grid>
 
-		<Grid Background="Black" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top">
-			<Grid Background="#77000000" PointerPressed="MoveWnd">
-				<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
-				<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-				<Button Classes="EditBtn CloseBtnWhite SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
-				<Button Classes="EditBtn CloseBtnWhite MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
-				<Button Classes="EditBtn CloseBtnWhite MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
-				<Button Classes="EditBtn CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
-			</Grid>
+		<Grid Background="#cc000000" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top" PointerPressed="MoveWnd">
+			<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
+			<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
+			<Button Classes="EditBtn CloseBtnWhite SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
+			<Button Classes="EditBtn CloseBtnWhite MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
+			<Button Classes="EditBtn CloseBtnWhite MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
+			<Button Classes="EditBtn CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
 		</Grid>
 	</Grid>
 </Window>

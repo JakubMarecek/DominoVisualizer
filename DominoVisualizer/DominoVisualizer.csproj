@@ -51,6 +51,7 @@
 		<AvaloniaResource Include="domino.ico" />
 		<AvaloniaResource Include="OpenSans-Bold.ttf" />
 		<AvaloniaResource Include="OpenSans-Regular.ttf" />
+		<AvaloniaResource Include="BuiltWithAvalonia.png" />
 	</ItemGroup>
 
 	<ItemGroup>

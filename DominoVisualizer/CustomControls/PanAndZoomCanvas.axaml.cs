@@ -159,8 +159,8 @@ namespace WpfPanAndZoom.CustomControls
         {
             MinX = 0;
             MinY = 0;
-            MaxX = 1000; //(int)window.Screens.Primary.WorkingArea.Width;
-            MaxY = 1000; //(int)System.Windows.SystemParameters.PrimaryScreenHeight;
+            MaxX = 4000; //(int)window.Screens.Primary.WorkingArea.Width;
+            MaxY = 2000; //(int)System.Windows.SystemParameters.PrimaryScreenHeight;
         }
 
         public void MakeGrid()

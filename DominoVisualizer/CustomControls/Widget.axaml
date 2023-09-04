@@ -14,7 +14,7 @@
 		<StyleInclude Source="avares://DominoVisualizer/Style.axaml" />
         
 		<Style Selector="TextBox">
-			<Setter Property="FontFamily" Value="avares://DominoVisualizer/#Open Sans" />
+			<Setter Property="FontFamily" Value="{StaticResource MainFont}" />
 			<Setter Property="FontSize" Value="13"/>
 			<Setter Property="CaretBrush" Value="Black" />
 			<Setter Property="Foreground" Value="Black" />
@@ -29,7 +29,6 @@
 			<Setter Property="BorderThickness" Value="0" />
 			<Setter Property="Background" Value="Transparent" />
 			<Setter Property="IsReadOnly" Value="True" />
-			<Setter Property="Margin" Value="3,0,3,0"/>
 			<Setter Property="ToolTip.Tip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
 			<Setter Property="ToolTip.ShowDelay" Value="100" />
 

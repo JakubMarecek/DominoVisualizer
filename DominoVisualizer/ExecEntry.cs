@@ -1,6 +1,6 @@
 ﻿namespace DominoVisualizer
 {
-    internal class ExecEntry
+    public class ExecEntry
     {
         public string Name { set; get; }
 

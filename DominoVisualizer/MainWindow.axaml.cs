@@ -1,12 +1,12 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,18 +14,13 @@ using System.Timers;
 
 namespace DominoVisualizer
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
 	{
-        DVClass parser;
-		//string fileSel = "";
+        public static DVClass parser;
 		bool loaded = false;
 		bool externalLaunch = false;
 		const string appVer = "v2.00";
 		public const string appName = "Domino Visualizer " + appVer + " by ArmanIII";
-        //int actInx = 0;
         Arguments arguments;
 		OpenType selDialogType = OpenType.None;
         string selDialogFile = "";
@@ -42,87 +37,23 @@ namespace DominoVisualizer
             SwapGraph
 		}
 
-        /*DiscordRPC.DiscordRpcClient discordClient;
-        DiscordRPC.RichPresence discordPresence;
-        System.Threading.Timer discordTimer;
-
-        private void DiscordPresence()
-        {
-            try
-            {
-                discordClient = new("1127168424334856224", -1);
-                discordClient.Initialize();
-                discordPresence = new DiscordRPC.RichPresence()
-                {
-                    Details = "No workspace opened",
-                    Timestamps = DiscordRPC.Timestamps.Now,
-                    Buttons = new DiscordRPC.Button[] { new DiscordRPC.Button() { Label = "Visit FCModding.com", Url = "https://fcmodding.com/" } },
-                    State = "",
-                    Assets = new DiscordRPC.Assets()
-                    {
-                        LargeImageKey = "domino",
-                        LargeImageText = appName
-                    }
-                };
-                discordClient.SetPresence(discordPresence);
-                discordTimer = new System.Threading.Timer(_ => DiscordTimer_Tick(), null, 0, 5000);
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private void DiscordClose()
-        {
-            try
-            {
-                discordTimer.Dispose();
-                discordClient.Dispose();
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private void DiscordTimer_Tick()
-        {
-            try
-            {
-                if (parser == null)
-                {
-                    discordPresence.Details = "No workspace opened";
-                    discordPresence.State = "";
-                }
-                else
-                {
-                    discordPresence.Details = "Workspace: " + parser.GetWorkspaceName;
-                    discordPresence.State = "Graph: " + parser.GetGraphName;
-                }
-                discordClient.SetPresence(discordPresence);
-
-                if (Process.GetProcessesByName("discord").Length == 0)
-                {
-                    DiscordClose();
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }*/
+        public static Window MainWnd;
 
         public MainWindow()
 		{
 			InitializeComponent();
 			SetTitle(true);
 			Blur(true);
+
+            MainWnd = this;
 		}
 
         public void SetTitle(bool clean, string file = "", bool edit = false)
         {
             if (clean)
             {
-			    wndTitle.Content = Title = appName;
-			    wndTitleW.Content = "";
+			        wndTitle.Content = Title = appName;
+			        wndTitleW.Content = "";
             }
             else
             {
@@ -134,13 +65,8 @@ namespace DominoVisualizer
 		private async void Window_Loaded(object sender, RoutedEventArgs e)
 		{
             //DiscordPresence();
+            DiscordOwnRPC.Connect();
 
-            /*gridLoading.IsVisible = false;
-			gridException.IsVisible = false;
-			gridNotice.IsVisible = false;
-			gridSearch.IsVisible = false;
-			gridDialog.IsVisible = false;
-			gridDialogRun.IsVisible = false;*/
             verT.Content = appVer;
 
             string[] args = Environment.GetCommandLineArgs();
@@ -167,137 +93,10 @@ namespace DominoVisualizer
 					}
 				}
 			}
-
-			/*
-			if (arguments["bytes"] != null && arguments["fcver"] != null && arguments["fileFolder"] != null && arguments["fn"] != null)
-			{
-				Animation(false, gridMainMenu);
-				Animation(true, gridLoading);
-
-				Title = appName + " - " + arguments["fn"];
-
-				externalLaunch = true;
-
-				Timer aTimer = new Timer(500);
-				aTimer.Enabled = true;
-				aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-				{
-					aTimer.Stop();
-
-					parser = new(arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
-
-					Dispatcher.Invoke(() =>
-					{
-						Call();
-
-						Timer bTimer = new Timer(1000);
-						bTimer.Enabled = true;
-						bTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-						{
-							bTimer.Stop();
-							Dispatcher.Invoke(() =>
-							{
-								Blur(false);
-								Animation(false, gridLoading);
-							});
-						};
-					});
-				};
-			}
-			else if (args.Length > 0)
-			{
-				foreach (string a in args)
-				{
-					if (File.Exists(a) && a.EndsWith(".lua"))
-					{
-						fileSel = a;
-						// todo
-					}
-				}
-			}*/
 		}
 
 		private async Task OpenFileAsync(OpenType type, string game, string directFile = "")
 		{
-			void Loading()
-            {
-                Timer bTimer = new Timer(500);
-                bTimer.Enabled = true;
-                bTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-                {
-                    bTimer.Stop();
-                    Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        bool eS = false;
-
-                        try
-				        {
-				        	string r = "";
-
-                            parser.setWorkspaceName = SetWorkspaceName;
-
-                            if (type == OpenType.Open || type == OpenType.OpenParam) r = parser.Load();
-                            if (type == OpenType.SwapGraph) r = parser.Load(game);
-        	                if (type == OpenType.Import || type == OpenType.ImportParam || type == OpenType.Binary) (eS, r) = parser.Parse();
-				            if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
-
-				        	if (r != "")
-				        	{
-				        		OpenInfoDialog("Notice", r);
-
-                                if (eS)
-                                {
-                                    CloseWorkspace(gridMainMenu, () => { });
-                                    Animation(false, gridLoading);
-                                    return;
-                                }
-				        	}
-
-				        	parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
-				        	parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
-				        	parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
-				        	parser.openEditDataDialog = OpenEditDataDialog;
-				        	parser.openAskDialog = OpenAskDialog;
-				        	parser.openAddCommentDialog = OpenAddCommentDialog;
-				        	parser.openAddBorderDialog = OpenAddBorderDialog;
-				        	parser.openEditResourceDialog = OpenEditResourceDialog;
-				        	parser.openEditConnectorDialog = OpenEditConnectorDialog;
-                            parser.openInfoDialog = OpenInfoDialog;
-                            parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
-                            parser.openNotice = ShowNotice;
-
-                            chromeBtnSettings.IsVisible = true;
-
-                            loaded = true;
-				        	Animation(true, gridMainClose);
-				        }
-				        catch (Exception ex)
-				        {
-				        	Animation(false, gridDialogSelGame);
-				        	Animation(false, gridLoading);
-				        	Animation(true, gridException);
-
-				        	excLabel.Text = ex.ToString();
-                        }
-
-                        if (!eS)
-                        {
-                            Timer aTimer = new Timer(1000);
-                            aTimer.Enabled = true;
-                            aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-                            {
-                                aTimer.Stop();
-                                Dispatcher.UIThread.InvokeAsync(() =>
-                                {
-                                    Blur(false);
-                                    Animation(false, gridLoading);
-                                });
-                            };
-                        }
-                    });
-                };
-            }
-
             if (type == OpenType.Import)
             {
                 FilePickerOpenOptions opts = new();
@@ -311,26 +110,9 @@ namespace DominoVisualizer
                     await OpenFileAsync(OpenType.ImportParam, game, d[0].Path.LocalPath);
                 }
 
-                /*OpenFileDialog ofdI = new OpenFileDialog();
-                //ofd.InitialDirectory = Path.GetDirectoryName(filenamesel);
-                //ofd.FileName = filenamesel;
-                ofdI.Title = "Select compiled Domino script";
-                ofdI.Filter = "Domino script|*.lua";
-
-                if (ofdI.ShowDialog() == true)
-                {
-                    OpenFile(OpenType.ImportParam, game, ofdI.FileName);
-                }*/
-                /*else
-                {
-                    Animation(true, gridMainMenu);
-                    Animation(false, gridLoading);
-                }*/
-
                 return;
             }
-
-            if (type == OpenType.Open)
+            else if (type == OpenType.Open)
             {
                 FilePickerOpenOptions opts = new();
                 opts.AllowMultiple = false;
@@ -343,173 +125,138 @@ namespace DominoVisualizer
                     await OpenFileAsync(OpenType.OpenParam, game, d[0].Path.LocalPath);
                 }
 
-                /*OpenFileDialog ofdO = new OpenFileDialog();
-                ofdO.Title = "Select Domino Workspace";
-                ofdO.Filter = "Domino Workspace|*.domino.xml;*.domino";
-
-                if (ofdO.ShowDialog() == true)
-                {
-                    OpenFile(OpenType.OpenParam, game, ofdO.FileName);
-                }*/
-                /*else
-                {
-                    Animation(true, gridMainMenu);
-                    Animation(false, gridLoading);
-                }*/
-
                 return;
             }
-
+            
             if (type != OpenType.SwapGraph)
             {
 			    Animation(false, gridMainMenu);
 			    Animation(true, gridLoading);
             }
 
-			if (type == OpenType.Binary)
-			{
-    			SetTitle(false, arguments["fn"]);
-
-				externalLaunch = true;
-
-				Timer aTimer = new Timer(500);
-				aTimer.Enabled = true;
-				aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-				{
-					aTimer.Stop();
-
-					parser = new(this, arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
-
-                    Dispatcher.UIThread.InvokeAsync(() =>
-					{
-						Loading();
-					});
-				};
-
-				return;
-			}
-
-            if (type == OpenType.ImportParam)
-            {
-                parser = new(this, directFile, canvas, game);
-
-    			SetTitle(false, directFile);
-
-                Loading();
-            }
-
-            if (type == OpenType.OpenParam)
-            {
-                parser = new(this, directFile, canvas);
-
-    			SetTitle(false, directFile);
-
-                Loading();
-            }
-
-			if (type == OpenType.SwapGraph)
-			{
-				parser = new(this, directFile, canvas);
-    			SetTitle(false, directFile);
-                Loading();
-			}
-
-			if (type == OpenType.Create)
-			{
-    			SetTitle(false, "Unsaved workspace");
-
-				parser = new(this, canvas, game);
-                //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
-
-                Loading();
-			}
+            Loading(type, game, directFile);
 
             selDialogType = OpenType.None;
             selDialogFile = "";
         }
 
-/*
-		private void Button_Click(object sender, RoutedEventArgs e)
-		{
-			string tag = (string)((Button)sender).Tag;
+        private void Loading(OpenType type, string game, string directFile = "")
+        {
+            Timer bTimer = new Timer(500);
+            bTimer.Enabled = true;
+            bTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+            {
+                bTimer.Stop();
+                
+                Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    bool eS = false;
 
-			Animation(false, gridMainMenu);
-			if (actInx == 0 || actInx == 3) Animation(false, gridDialogSelGame);
-			Animation(true, gridLoading);
+                    try
+			        {
+			            if (type == OpenType.Binary)
+			            {
+    		            	SetTitle(false, arguments["fn"]);
 
-			if (fileSel != "")
-			{
-				if (actInx == 1) parser = new(fileSel, canvas);
-				if (actInx == 0) parser = new(fileSel, canvas, tag);
+			            	externalLaunch = true;
 
-				Call();
+			            	parser = new(this, arguments["bytes"], arguments["fileFolder"], canvas, arguments["fcver"]);
+			            }
 
-				Title = appName + " - " + fileSel;
-
-				Blur(false);
-				Animation(false, gridLoading);
-			}
-			else
-			{
-				void a()
-				{
-                    Call();
-
-                    Timer aTimer = new Timer(1000);
-                    aTimer.Enabled = true;
-                    aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
-                    {
-                        aTimer.Stop();
-                        Dispatcher.Invoke(() =>
+                        if (type == OpenType.ImportParam)
                         {
-                            Blur(false);
-                            Animation(false, gridLoading);
-                        });
-                    };
-                }
+                            parser = new(this, directFile, canvas, game);
 
-                if (actInx == 3)
-                {
-                    Title = appName + " - Unsaved workspace";
-					parser = new(canvas, tag);
-					parser.Create();
-                    a();
-					return;
-                }
+    		            	SetTitle(false, directFile);
+                        }
 
-                OpenFileDialog ofd = new OpenFileDialog();
-                //ofd.InitialDirectory = Path.GetDirectoryName(filenamesel);
-                //ofd.FileName = filenamesel;
+                        if (type == OpenType.OpenParam)
+                        {
+                            parser = new(this, directFile, canvas);
 
-                if (actInx == 1)
-                {
-				    ofd.Title = "Select Domino Workspace";
-				    ofd.Filter = "Domino Workspace|*.domino.xml";
-                }
-                if (actInx == 0)
-                {
-				    ofd.Title = "Select compiled Domino script";
-				    ofd.Filter = "Domino script|*.lua";
-                }
+    		            	SetTitle(false, directFile);
+                        }
 
-				if (ofd.ShowDialog() == true)
-				{
-					if (actInx == 1) parser = new(ofd.FileName, canvas);
-					if (actInx == 0) parser = new(ofd.FileName, canvas, tag);
+			            if (type == OpenType.SwapGraph)
+			            {
+			            	parser = new(this, directFile, canvas);
+    		            	SetTitle(false, directFile);
+			            }
 
-                    Title = appName + " - " + ofd.FileName;
+			            if (type == OpenType.Create)
+			            {
+    		            	SetTitle(false, "Unsaved workspace");
 
-                    a();
-                }
-				else
-				{
-					Animation(true, gridMainMenu);
-					Animation(false, gridLoading);
-				}
-			}
+			            	parser = new(this, canvas, game);
+                            //SetWorkspaceName(wrkspName.Text, wrkspGraph.Text);
+			            }
 
-			Focus();
-		}*/
+			        	string r = "";
+
+                        parser.setWorkspaceName = SetWorkspaceName;
+
+                        if (type == OpenType.Open || type == OpenType.OpenParam) r = parser.Load();
+                        if (type == OpenType.SwapGraph) r = parser.Load(game);
+        	            if (type == OpenType.Import || type == OpenType.ImportParam || type == OpenType.Binary) (eS, r) = parser.Parse();
+			            if (type == OpenType.Create) parser.Create(wrkspName.Text, wrkspGraph.Text, wrkspDat.Text);
+
+			        	if (r != "")
+			        	{
+			        		OpenInfoDialog("Notice", r);
+
+                            if (eS)
+                            {
+                                CloseWorkspace(gridMainMenu, () => { });
+                                Animation(false, gridLoading);
+                                return;
+                            }
+			        	}
+
+			        	parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
+			        	parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
+			        	parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
+			        	parser.openEditDataDialog = OpenEditDataDialog;
+			        	parser.openAskDialog = OpenAskDialog;
+			        	parser.openAddCommentDialog = OpenAddCommentDialog;
+			        	parser.openAddBorderDialog = OpenAddBorderDialog;
+			        	parser.openEditResourceDialog = OpenEditResourceDialog;
+			        	parser.openEditConnectorDialog = OpenEditConnectorDialog;
+                        parser.openInfoDialog = OpenInfoDialog;
+                        parser.openGetDataFromBoxDialog = OpenGetDataFromBoxDialog;
+                        parser.openNotice = ShowNotice;
+
+                        chromeBtnSettings.IsVisible = true;
+
+                        loaded = true;
+			        	Animation(true, gridMainClose);
+			        }
+			        catch (Exception ex)
+			        {
+			        	Animation(false, gridDialogSelGame);
+			        	Animation(false, gridLoading);
+			        	Animation(true, gridException);
+
+			        	excLabel.Text = ex.ToString();
+                    }
+
+                    if (!eS)
+                    {
+                        Timer aTimer = new Timer(1000);
+                        aTimer.Enabled = true;
+                        aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                        {
+                            aTimer.Stop();
+                            
+                            Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                Blur(false);
+                                Animation(false, gridLoading);
+                            });
+                        };
+                    }
+                });
+            };
+        }
 
 		private async void ButtonSelGame_Click(object sender, RoutedEventArgs e)
 		{
@@ -542,47 +289,12 @@ namespace DominoVisualizer
             }
         }
 
-        /*
-                void Call()
-                {
-                    try
-                    {
-                        string r = "";
-
-                        if (actInx == 1) r = parser.Load();
-                        if (actInx == 0) r = parser.Parse();
-
-                        if (r != "")
-                        {
-                            descTB.Text = r;
-                            Animation(true, gridNotice);
-                        }
-
-                        parser.openRunDialog = OpenRunDialog;
-                        parser.openEditExecBoxDialog = OpenEditExecBoxDialog;
-                        parser.openAddExecBoxDialog = OpenAddExecBoxDialog;
-                        parser.openAddBoxConnectorDialog = OpenAddBoxConnectorDialog;
-                        parser.openEditDataDialog = OpenEditDataDialog;
-                        parser.openEditConnVarDialog = OpenEditConnVarDialog;
-                        loaded = true;
-                        Animation(true, gridMainClose);
-                    }
-                    catch (Exception ex)
-                    {
-                        Animation(false, gridDialogSelGame);
-                        Animation(false, gridLoading);
-                        Animation(true, gridException);
-
-                        excLabel.Text = ex.ToString();
-                    }
-                }
-        */
-
         bool canClose = false;
         bool closeWait = false;
         private void Window_Closing(object sender, WindowClosingEventArgs e)
         {
             //DiscordClose();
+            DiscordOwnRPC.Disconnect();
 
             if (parser != null && !canClose)
             {
@@ -681,7 +393,7 @@ namespace DominoVisualizer
 
                 canvas.Clean();
                 parser = null;
-                GC.Collect();
+                //GC.Collect();
 
     			SetTitle(true);
 
@@ -707,56 +419,41 @@ namespace DominoVisualizer
 
 			if (fadeInOut)
 			{
-				grid.Opacity = 0;
 				grid.IsVisible = true;
 			}
-
-            /*DoubleAnimation doubleAnimation = new DoubleAnimation
-			{
-				From = fadeInOut ? 0 : 1,
-				To = fadeInOut ? 1 : 0,
-				Duration = new Duration(TimeSpan.FromMilliseconds(200))
-			};
-
-			Storyboard.SetTargetName(doubleAnimation, grid.Name);
-			Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(Grid.OpacityProperty));
-
-			Storyboard storyboard = new();
-			storyboard.Children.Add(doubleAnimation);
-			storyboard.Completed += (object? sender, EventArgs e) =>
-			{
-				if (!fadeInOut)
-				{
-					grid.IsVisible = false;
-					grid.Opacity = 1;
-				}
-			};
-			storyboard.Begin(grid);*/
-
+            
             grid.Opacity = fadeInOut ? 1 : 0;
 
             if (!fadeInOut)
             {
-                grid.IsVisible = false;
-                grid.Opacity = 1;
+                Timer aTimer = new Timer(300);
+                aTimer.Enabled = true;
+                aTimer.Elapsed += (object source, ElapsedEventArgs e) =>
+                {
+                    aTimer.Stop();
+                    Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        grid.IsVisible = false;
+                    });
+                };
             }
         }
 
 		private void Blur(bool enable)
 		{
-			/*if (enable)
+			if (enable)
 			{
 				canvas.Effect = new BlurEffect
 				{
 					Radius = 10,
-					KernelType = KernelType.Gaussian,
-					RenderingBias = RenderingBias.Quality
+					//KernelType = KernelType.Gaussian,
+					//RenderingBias = RenderingBias.Quality
 				};
 			}
 			else
 			{
 				canvas.Effect = null;
-			}*/
+			}
 		}
 
 		private void ButtonExport_Click(object sender, RoutedEventArgs e)
@@ -1089,8 +786,7 @@ namespace DominoVisualizer
 		{
             noticeNote.Content = text;
 
-            /*Storyboard fade = FindResource("gridNoticeNoteFadeIn") as Storyboard;
-            fade.Begin();
+            gridNoticeNote.Opacity = 1;
 
             Timer aTimer = new Timer(5000);
             aTimer.Enabled = true;
@@ -1099,10 +795,9 @@ namespace DominoVisualizer
                 aTimer.Stop();
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    fade = FindResource("gridNoticeNoteFadeOut") as Storyboard;
-                    fade.Begin();
+                    gridNoticeNote.Opacity = 0;
                 });
-            };*/
+            };
         }
 
         private void ButtonAddBorder_Click(object sender, RoutedEventArgs e)

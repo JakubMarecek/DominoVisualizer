@@ -97,57 +97,6 @@ namespace WpfPanAndZoom.CustomControls
 
             ResetGridArea();
             MakeGrid();
-
-            // draw lines
-            /*for (int x = -1000; x <= 50000; x += 100)
-            {
-                Line verticalLine = new Line
-                {
-                    Stroke = new SolidColorBrush(_lineColor),
-                    X1 = x,
-                    Y1 = -1000,
-                    X2 = x,
-                    Y2 = 10000
-                };
-
-                if (x % 1000 == 0)
-                {
-                    verticalLine.StrokeThickness = 6;
-                }
-                else
-                {
-                    verticalLine.StrokeThickness = 2;
-                    _gridLinesSmall.Add(verticalLine);
-                }
-
-                Children.Add(verticalLine);
-                _gridLines.Add(verticalLine);
-            }
-
-            for (int y = -1000; y <= 10000; y += 100)
-            {
-                Line horizontalLine = new Line
-                {
-                    Stroke = new SolidColorBrush(_lineColor),
-                    X1 = -1000,
-                    Y1 = y,
-                    X2 = 50000,
-                    Y2 = y
-                };
-
-                if (y % 1000 == 0)
-                {
-                    horizontalLine.StrokeThickness = 6;
-                }
-                else
-                {
-                    horizontalLine.StrokeThickness = 2;
-                    _gridLinesSmall.Add(horizontalLine);
-                }
-
-                Children.Add(horizontalLine);
-                _gridLines.Add(horizontalLine);
-            }*/
         }
 
         public int MinX { set; get; }
@@ -497,9 +446,44 @@ namespace WpfPanAndZoom.CustomControls
                 var translate = new TranslateTransform(delta.X, delta.Y);
                 _transform.Matrix = translate.Value * _transform.Matrix;
 
+				Point wndStart = Transform3(new(100, 100));
+				Point wndEnd = Transform3(new(MainWindow.MainWnd.Bounds.Width - 100, MainWindow.MainWnd.Bounds.Height - 100));
+                
                 foreach (Control child in this.Children)
                 {
-                    child.RenderTransform = _transform;
+                    if (child is ArrowLineNew)
+                    {
+                        var arrowB = ((ArrowLineNew)child).GetStartEnd();
+                        Point ps = Transform4(arrowB.Item1);
+                        Point pe = Transform4(arrowB.Item2);
+
+				        if (
+                            (ps.X > wndEnd.X) ||
+                            (pe.X < wndStart.X) ||
+                            (ps.Y > wndEnd.Y) ||
+                            (pe.Y < wndStart.Y)
+                            )
+				        	child.IsVisible = false;
+                        else
+				        	child.IsVisible = true;
+                    }
+                    else
+                    {
+                        Point childBounds = Transform4(new(child.Bounds.Width, child.Bounds.Height));
+
+				        if (
+                            (Canvas.GetLeft(child) > wndEnd.X) ||
+                            (Canvas.GetLeft(child) + childBounds.X < wndStart.X) ||
+                            (Canvas.GetTop(child) > wndEnd.Y) ||
+                            (Canvas.GetTop(child) + childBounds.Y < wndStart.Y)
+                            )
+				        	child.IsVisible = false;
+                        else
+				        	child.IsVisible = true;
+                    }
+                    
+                    if (child.IsVisible)
+                        child.RenderTransform = _transform;
                 }
             }
 

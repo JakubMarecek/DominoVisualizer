@@ -325,17 +325,12 @@ namespace DominoVisualizer
 
         public sealed override void Render(DrawingContext context)
         {
+            if (!IsVisible)
+                return;
+
             PathGeometry pathgeo = new PathGeometry();
 
             PathFigure pathfigLine = new PathFigure();
-
-            PathFigure pathfigHead1 = new PathFigure();
-            PolyLineSegment polysegHead1 = new PolyLineSegment();
-            pathfigHead1.Segments.Add(polysegHead1);
-
-            PathFigure pathfigHead2 = new PathFigure();
-            PolyLineSegment polysegHead2 = new PolyLineSegment();
-            pathfigHead2.Segments.Add(polysegHead2);
 
             if (MakeBezierAlt)
             {
@@ -359,7 +354,7 @@ namespace DominoVisualizer
                         pathfigLine.Segments.Add(bezierSegment);
 
                         if (i == 0)
-                            pathgeo.Figures.Add(CalculateDot(pathfigHead1, bezierSegment.Point1, pathfigLine.StartPoint));
+                            pathgeo.Figures.Add(CalculateDot(pathfigLine.StartPoint));
                     }
 
                     double lineLenLast = Vector.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
@@ -370,7 +365,8 @@ namespace DominoVisualizer
                     bezierSegment2.Point3 = new Point(X2, Y2);
                     pathfigLine.Segments.Add(bezierSegment2);
 
-                    pathgeo.Figures.Add(CalculateArrow(pathfigHead2, bezierSegment2.Point2, bezierSegment2.Point3));
+                    pathgeo.Figures.Add(pathfigLine);
+                    pathgeo.Figures.Add(CalculateArrow(bezierSegment2.Point2, bezierSegment2.Point3));
                 }
                 else
                 {
@@ -385,8 +381,9 @@ namespace DominoVisualizer
                     pathfigLine.Segments.Add(bezierSegment1);
                     pathfigLine.StartPoint = new Point(X1, Y1);
 
-                    pathgeo.Figures.Add(CalculateDot(pathfigHead1, bezierSegment1.Point1, pathfigLine.StartPoint));
-                    pathgeo.Figures.Add(CalculateArrow(pathfigHead2, bezierSegment1.Point2, bezierSegment1.Point3));
+                    pathgeo.Figures.Add(CalculateDot(pathfigLine.StartPoint));
+                    pathgeo.Figures.Add(pathfigLine);
+                    pathgeo.Figures.Add(CalculateArrow(bezierSegment1.Point2, bezierSegment1.Point3));
                 }
             }
             /*if (bezsegLine != null)
@@ -573,18 +570,15 @@ namespace DominoVisualizer
                     // Draw the arrow at the start of the line.
                     //if ((ArrowEnds & ArrowEnds.Start) == ArrowEnds.Start)
                     {
-                        Point pt1 = pathfigLine.StartPoint;
-                        Point pt2 = polysegLine.Points[0];
-                        pathgeo.Figures.Add(CalculateDot(pathfigHead1, pt2, pt1));
+                        pathgeo.Figures.Add(CalculateDot(pathfigLine.StartPoint));
                     }
 
                     // Draw the arrow at the end of the line.
                     //if ((ArrowEnds & ArrowEnds.End) == ArrowEnds.End)
                     {
-                        Point pt1 = count == 1 ? pathfigLine.StartPoint :
-                                                 polysegLine.Points[count - 2];
+                        Point pt1 = count == 1 ? pathfigLine.StartPoint : polysegLine.Points[count - 2];
                         Point pt2 = polysegLine.Points[count - 1];
-                        pathgeo.Figures.Add(CalculateArrow(pathfigHead2, pt1, pt2));
+                        pathgeo.Figures.Add(CalculateArrow(pt1, pt2));
                     }
                 }
             }
@@ -781,6 +775,35 @@ namespace DominoVisualizer
             control.InvalidateGeometry();
         }
 
+        public (Point, Point) GetStartEnd()
+        {
+            double sx = double.MaxValue;
+            double sy = double.MaxValue;
+            double ex = double.MinValue;
+            double ey = double.MinValue;
+
+            sx = double.Min(sx, X1);
+            sy = double.Min(sy, Y1);
+            ex = double.Max(ex, X1);
+            ey = double.Max(ey, Y1);
+            
+            sx = double.Min(sx, X2);
+            sy = double.Min(sy, Y2);
+            ex = double.Max(ex, X2);
+            ey = double.Max(ey, Y2);
+
+            if (Points != null)
+                for (int i = 0; i < Points.Count; i++)
+                {
+                    sx = double.Min(sx, Points[i].Point.X);
+                    sy = double.Min(sy, Points[i].Point.Y);
+                    ex = double.Max(ex, Points[i].Point.X);
+                    ey = double.Max(ey, Points[i].Point.Y);
+                }
+
+            return (new(sx, sy), new(ex, ey));
+        }
+
         private Point GetPos(Point p1, Point p2, Point p3, Point p4, double t)
         {
             double x = ((1 - t) * (1 - t) * (1 - t)) * p1.X
@@ -796,15 +819,16 @@ namespace DominoVisualizer
             return new Point(x, y);
         }
 
-        PathFigure CalculateArrow(PathFigure pathfig, Point pt1, Point pt2)
+        PathFigure CalculateArrow(Point pt1, Point pt2)
         {
+            PathFigure pathfig = new();
+
             Matrix matx = new Matrix();
             Vector vect = pt1 - pt2;
             vect = vect.Normalize();
             vect *= ArrowLength;
 
-            PolyLineSegment polyseg = pathfig.Segments[0] as PolyLineSegment;
-            polyseg.Points.Clear();
+            PolyLineSegment polyseg = new();
             //matx.Rotate(ArrowAngle / 2);
             //pathfig.StartPoint = pt2 + vect * matx;
             matx = MatrixHelper.Rotation(ToRad(ArrowAngle / 2));
@@ -817,6 +841,8 @@ namespace DominoVisualizer
             polyseg.Points.Add(pt2 + MatrixHelper.TransformVector(matx, vect));
             pathfig.IsClosed = IsArrowClosed;
 
+            pathfig.Segments.Add(polyseg);
+
             return pathfig;
         }
 
@@ -825,23 +851,26 @@ namespace DominoVisualizer
             return (Math.PI / 180) * deg;
         }
 
-        PathFigure CalculateDot(PathFigure pathfig, Point pt1, Point pt2)
+        PathFigure CalculateDot(Point pt)
         {
-            pathfig.StartPoint = pt2;
+            PathFigure pathfig = new();
+            pathfig.IsClosed = false;
+            pathfig.StartPoint = pt;
 
-            PolyLineSegment polyseg = pathfig.Segments[0] as PolyLineSegment;
-            polyseg.Points.Clear();
-            polyseg.Points.Add(new(pt2.X - 2, pt2.Y - 5));
-            polyseg.Points.Add(new(pt2.X + 3, pt2.Y - 5));
-            polyseg.Points.Add(new(pt2.X + 3, pt2.Y + 5));
-            polyseg.Points.Add(new(pt2.X - 2, pt2.Y + 5));
+            PolyLineSegment polyseg = new();
+            polyseg.Points.Add(new(pt.X - 2, pt.Y - 5));
+            polyseg.Points.Add(new(pt.X + 3, pt.Y - 5));
+            polyseg.Points.Add(new(pt.X + 3, pt.Y + 5));
+            polyseg.Points.Add(new(pt.X - 2, pt.Y + 5));
 
-            polyseg.Points.Add(new(pt2.X - 2, pt2.Y - 3));
-            polyseg.Points.Add(new(pt2.X + 1, pt2.Y - 3));
-            polyseg.Points.Add(new(pt2.X + 1, pt2.Y + 3));
-            polyseg.Points.Add(new(pt2.X - 1, pt2.Y + 3));
+            polyseg.Points.Add(new(pt.X - 2, pt.Y - 3));
+            polyseg.Points.Add(new(pt.X + 1, pt.Y - 3));
+            polyseg.Points.Add(new(pt.X + 1, pt.Y + 3));
+            polyseg.Points.Add(new(pt.X - 1, pt.Y + 3));
 
-            polyseg.Points.Add(new(pt2.X - 1, pt2.Y - 3));
+            polyseg.Points.Add(new(pt.X - 1, pt.Y - 3));
+
+            pathfig.Segments.Add(polyseg);
 
             return pathfig;
         }

@@ -2,7 +2,7 @@
 
 namespace DominoVisualizer
 {
-    internal class ColorEntry
+    public class ColorEntry
     {
         public SolidColorBrush Color { set; get; }
     }

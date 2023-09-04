@@ -2,7 +2,7 @@
 
 namespace DominoVisualizer
 {
-    internal class ParamEntry
+    public class ParamEntry
     {
         public string ParamName { set; get; }
 

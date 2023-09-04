@@ -29,7 +29,7 @@ using static WpfPanAndZoom.CustomControls.PanAndZoomCanvas;
 
 namespace DominoVisualizer
 {
-    internal class DVClass
+    public class DVClass
 	{
         /* TODO
 		 * -param lua file open							ok / maybe
@@ -114,6 +114,13 @@ namespace DominoVisualizer
 		 * -stick to grid - borders						ok
 		 * -lines points bezier							ok
 		 * -export - markers as saved					ok
+
+		 * -global vars - show info about undefined in init
+		 * -edit top - change UI, not remove add
+		 * -edit controlin, controlout disable
+		 * -edit data in - same name err
+		 * -
+		 * -
 		 */
 
         string workspaceName = "";
@@ -213,7 +220,7 @@ namespace DominoVisualizer
         {
             get
             {
-                return dominoGraphs[selGraph].Name;
+                return dominoGraphs.Count > selGraph ? dominoGraphs[selGraph].Name : "";
             }
         }
 
@@ -2300,7 +2307,7 @@ namespace DominoVisualizer
 
 		private Button DrawBtn(string name, string tag, EventHandler<RoutedEventArgs> act)
 		{
-			Button btn = new Button() { Content = name, Tag = tag };
+			Button btn = new Button() { Content = name, Tag = tag, FontWeight = FontWeight.Bold };
 			btn.Classes.Add("BoxBtn");
 			btn.Click += act;
 			return btn;
@@ -2354,7 +2361,7 @@ namespace DominoVisualizer
 			if (execBox.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + execBox.DynIntExec.ToString();
 
 			Grid gh = new() { Height = 18 };
-			gh.Children.Add(new TextBox() { Text = execStr + " > " + execBox.Box.ID, Margin = new(0, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Center, FontWeight = FontWeight.Bold, Width = double.NaN });
+			gh.Children.Add(new TextBox() { Text = execStr + " > " + execBox.Box.ID, Margin = new(0, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Center, FontWeight = FontWeight.Black, Width = double.NaN });
 
 			Button btn = new Button() { Tag = conn.ID + "|" + execBox.Box.ID };
 			btn.Classes.Add("EditBtn");

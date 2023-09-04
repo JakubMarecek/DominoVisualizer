@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DominoVisualizer
 {
-    class LinesVal
+    public class LinesVal
     {
         public LinesVal(string point1, string point2, ArrowLineNew ui)
         {

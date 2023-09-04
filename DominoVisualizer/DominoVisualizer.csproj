@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net7.0</TargetFramework>
-		<ApplicationIcon>domino.ico</ApplicationIcon>
+		<ApplicationIcon>Assets/domino.ico</ApplicationIcon>
 		<Copyright>Copyright © ArmanIII 2022-2023</Copyright>
 		<Company>ArmanIII</Company>
 		<Product>Domino Visualizer</Product>
@@ -39,18 +39,19 @@
 		<PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
 		<PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
 		<PackageReference Include="Avalonia.Themes.Simple" Version="11.0.4" />
-		<PackageReference Include="DiscordRichPresence" Version="1.1.3.18" />
-		<PackageReference Include="Obfuscar" Version="2.2.37">
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.0.4" />
+<!-- 		<PackageReference Include="Obfuscar" Version="2.2.37">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		</PackageReference> -->
 	</ItemGroup>
 
 	<ItemGroup>
-		<AvaloniaResource Include="domino.ico" />
+<!-- 		<AvaloniaResource Include="domino.ico" />
 		<AvaloniaResource Include="OpenSans-Bold.ttf" />
 		<AvaloniaResource Include="OpenSans-Regular.ttf" />
-		<AvaloniaResource Include="BuiltWithAvalonia.png" />
+		<AvaloniaResource Include="BuiltWithAvalonia.png" /> -->
+        <AvaloniaResource Include="Assets/**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -67,10 +68,10 @@
 		</None>
 	</ItemGroup>
 
-	<Target Name="PostBuild" AfterTargets="AfterCompile" Condition="$(ConfigurationName) == Release">
+<!-- 	<Target Name="PostBuild" AfterTargets="AfterCompile" Condition="$(ConfigurationName) == Release">
 		<Exec Command="&quot;$(Obfuscar)&quot; .\obfuscar.xml" />
 		<Exec Command="&quot;..\..\FC5ModInstaller\signtool\signtool.exe&quot; sign /fd sha256 /td sha256 /v /f &quot;..\..\FC5ModInstaller\JakubMarecekSPC.pfx&quot; /p J42bKN89p9XtLV5RXSSkCtUXmpxnLh /tr http://timestamp.sectigo.com &quot;..\bin\net7.0-windows\win-x64\Obfuscated\DominoVisualizer.dll&quot;" />
 
 		<Exec Command="copy &quot;..\bin\net7.0-windows\win-x64\Obfuscated\DominoVisualizer.dll&quot; &quot;..\DominoVisualizer\obj\Release\net7.0-windows\win-x64\DominoVisualizer.dll&quot;" />
-	</Target>
+	</Target> -->
 </Project>

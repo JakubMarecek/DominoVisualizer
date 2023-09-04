@@ -12,7 +12,7 @@
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaTitleBarHeightHint="-1"
     xmlns:local="clr-namespace:DominoVisualizer" mc:Ignorable="d" Title="appName" Height="900" Width="1600" MinHeight="500" MinWidth="500" Loaded="Window_Loaded" KeyDown="W_KeyDown"
-		WindowStartupLocation="CenterScreen" Icon="avares://DominoVisualizer/domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
+		WindowStartupLocation="CenterScreen" Icon="avares://DominoVisualizer/Assets/domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
 
 	<Window.Styles>
 		<StyleInclude Source="avares://DominoVisualizer/Style.axaml" />
@@ -22,7 +22,7 @@
 		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
 			<CustomControls:PanAndZoomCanvas x:Name="canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True" />
 			<Grid Background="#99000000" Name="gridMainMenu" Margin="0,-100,0,0">
-				<Image Source="avares://DominoVisualizer/domino.ico" Margin="-450,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
+				<Image Source="avares://DominoVisualizer/Assets/domino.ico" Margin="-450,-510,0,0" Width="50" Height="50" VerticalAlignment="Center" HorizontalAlignment="Center" />
 				<StackPanel Orientation="Vertical" VerticalAlignment="Center">
 					<Label Content="Domino Visualizer" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="45" FontWeight="Bold" Foreground="White" Margin="0,0,-30,-10" />
 					<Label Name="verT" Content="v1.00" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="Gray" Margin="0,0,0,-10" />
@@ -34,9 +34,14 @@
 					<Label Content="Or open workspace:" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" Foreground="White" Margin="0,50,0,15" />
 					<Button Classes="CBtn" Content="Open" Click="ButtonSelDialog_Click" Tag="1" />
 				</StackPanel>
-				<Image Source="avares://DominoVisualizer/BuiltWithAvalonia.png" Margin="0,0,0,-800" Height="70" VerticalAlignment="Center" HorizontalAlignment="Center" />
+				<Image Source="avares://DominoVisualizer/Assets/BuiltWithAvalonia.png" Margin="0,0,0,-800" Height="70" VerticalAlignment="Center" HorizontalAlignment="Center" />
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogSelGame" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogSelGame" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Game base" Classes="Header" />
@@ -48,8 +53,13 @@
 						<Button Classes="CBtn" Content="Cancel" Click="ButtonSelGame_Click" Tag="cancel" Margin="0,20,0,10" />
 					</StackPanel>
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" IsVisible="false" Margin="0,40,0,0">
+			<Grid Name="gridMainClose" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="700" IsVisible="false" Opacity="0" Margin="0,40,0,0">
 				<Grid Background="#cc000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="550" Height="80">
 					<Label Content="Workspace:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,5,0,0" Foreground="White" Width="150" />
 					<Label Content="--name--" Name="mainWorkspaceName" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="150,5,0,0" Foreground="White" Width="390" />
@@ -58,7 +68,7 @@
 
 					<Label Content="Graph:" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Margin="15,38,0,0" Foreground="White" Width="150" />
 
-					<ComboBox Name="mainGraphs" Width="345" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
+					<ComboBox Name="mainGraphs" Width="330" Margin="150,41,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="mainGraphs_SelectionChanged">
 						<ComboBox.ItemsPanel>
 							<ItemsPanelTemplate>
 								<StackPanel/>
@@ -73,7 +83,7 @@
 						</ComboBox.ItemTemplate>
 					</ComboBox>
 
-					<Button Classes="EditBtn EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,30,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
+					<Button Classes="EditBtn EditBtnWhite" Click="ButtonWorkspaceRename_Click" Tag="graph" Margin="0,45,40,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 					<Button Classes="EditBtn DelBtn DelBtnWhite" Click="ButtonMainGraphDel_Click" Margin="0,45,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
 				</Grid>
 				<Grid Background="#cc000000" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" Height="550" Margin="0,80,0,0">
@@ -87,8 +97,13 @@
 					<Button Classes="CBtn" Content="Add comment" Click="ButtonAddComment_Click" Margin="10,450,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
 					<Button Classes="CBtn" Content="Add border" Click="ButtonAddBorder_Click" Margin="10,500,0,0" Width="130" VerticalAlignment="Top" HorizontalAlignment="Left" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditExecBox" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogEditExecBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit exec box" Classes="Header" />
@@ -225,8 +240,13 @@
 					<Button Classes="CBtn" Content="Save" Click="ButtonDialogEditExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddExecBox" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddExecBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add exec box" Classes="Header" />
@@ -253,8 +273,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddExecBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddExecBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add connector" Classes="Header" />
@@ -300,8 +325,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBoxConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBoxConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddConnector" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddConnector" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add new connector" Classes="Header" />
@@ -316,8 +346,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddConnector_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddConnector_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBox" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add new box" Classes="Header" />
@@ -346,8 +381,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditData" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogEditData" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="editDataLblName" Content="--name--" Classes="Header" />
@@ -395,7 +435,7 @@
 									<Grid Margin="0,2">
 										<Grid.ColumnDefinitions>
 											<ColumnDefinition Width="290"></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition Width="320"></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
 											<ColumnDefinition></ColumnDefinition>
@@ -476,8 +516,13 @@
 					<Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditData_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditData_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddComment" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddComment" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit comment" Classes="Header" />
@@ -505,8 +550,13 @@
 					<Button Classes="CBtn" Content="Set" Click="ButtonDialogAddComment_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddComment_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddBorder" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddBorder" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit border" Classes="Header" />
@@ -568,8 +618,13 @@
 					<Button Classes="CBtn" Content="Set" Click="ButtonDialogAddBorder_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddBorder_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditResource" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogEditResource" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Edit resource" Classes="Header" />
@@ -600,8 +655,13 @@
 					<Button Classes="CBtn" Content="Set" Click="ButtonDialogEditResource_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditResource_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogEditName" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogEditName" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
@@ -612,8 +672,13 @@
 					<Button Classes="CBtn" Content="Edit" Click="ButtonDialogEditName_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogEditName_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Get data from box" Classes="Header" />
@@ -657,8 +722,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogGetDataFromBox_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogGetDataFromBox_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogWorkspace" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogWorkspace" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Workspace" Classes="Header" />
@@ -675,8 +745,13 @@
 					<Button Classes="CBtn" Content="OK" Click="ButtonDialogWrksp_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogWrksp_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAddGraph" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAddGraph" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Add graph" Classes="Header" />
@@ -687,8 +762,13 @@
 					<Button Classes="CBtn" Content="Add" Click="ButtonDialogAddGraph_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogAddGraph_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogSettings" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogSettings" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="320">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Settings" Classes="Header" />
@@ -702,37 +782,67 @@
 					<Button Classes="CBtn" Content="Save" Click="ButtonDialogSettings_Click" Tag="1" Margin="0,0,130,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="Cancel" Click="ButtonDialogSettings_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
 
 			<Grid Width="NaN" Background="Black" HorizontalAlignment="Center" VerticalAlignment="Top" Name="gridNoticeNote" Opacity="0" Margin="0,40,0,0">
 				<Grid Background="#77000000">
 					<Label Name="noticeNote" Content="a notice text" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridLoading" IsVisible="false" Cursor="Wait">
+			<Grid Background="#99000000" Name="gridLoading" IsVisible="false" Opacity="0" Cursor="Wait">
 				<Label Content="Loading..." VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold" Foreground="White" />
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#cc000000" Name="gridException" IsVisible="false">
+			<Grid Background="#cc000000" Name="gridException" IsVisible="false" Opacity="0">
 				<Label Content="An exception occured" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="40" Margin="50,50,0,0" FontWeight="Bold" Foreground="Red" />
 				<Label Content="Please report this to the author." VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="20" Margin="50,120,0,0" Foreground="White" />
 				<TextBlock Text="__err__" Name="excLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="80,170,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridException}" TextWrapping="Wrap" Foreground="White" />
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" IsVisible="false">
+			<Grid Name="gridSearch" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,40,0,0" Width="500" Height="65" IsVisible="false" Opacity="0">
 				<Grid Background="#77000000">
 					<TextBox Name="searchTB" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="20,10,0,0" Width="240" Height="38" Tag="Type a name of a function..." KeyDown="searchTB_KeyDown" />
 					<Button Classes="CBtn" Content="Search" Click="ButtonSearch_Click" Margin="270,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
 					<Button Classes="CBtn" Content="Close" Click="ButtonX_Click" Margin="380,10,0,0" Width="100" VerticalAlignment="Top" HorizontalAlignment="Left" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogInfo" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogInfo" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Content="Info" Name="dialogInfoName" Classes="Header" />
 					<TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
 					<Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
-			<Grid Background="#99000000" Name="gridDialogAsk" IsVisible="false">
+			<Grid Background="#99000000" Name="gridDialogAsk" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
 					<Rectangle Classes="DialogRect" />
 					<Label Name="dialogAskName" Content="--name--" Classes="Header" />
@@ -740,6 +850,11 @@
 					<Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 					<Button Classes="CBtn" Content="No" Click="ButtonDialogAskClose_Click" Tag="0" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
 				</Grid>
+				<Grid.Transitions>
+					<Transitions>
+						<DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+					</Transitions>
+				</Grid.Transitions>
 			</Grid>
 			<!-- <Button Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="25" Content="Export picture" Click="ExportPicture" /> -->
 		</Grid>

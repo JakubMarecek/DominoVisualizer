@@ -128,7 +128,7 @@ namespace WpfPanAndZoom.CustomControls
                     StartPoint = new(x, MinY - 100),
                     EndPoint = new(x, MaxY + 1000),
                     RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute)
-            };
+                };
 
                 if (x % 1000 == 0)
                 {
@@ -143,7 +143,7 @@ namespace WpfPanAndZoom.CustomControls
                 Children.Add(verticalLine);
                 _gridLines.Add(verticalLine);
             }
-            
+
             for (int y = MinY - 100; y <= MaxY + 1000; y += 100)
             {
                 Line horizontalLine = new Line
@@ -446,45 +446,7 @@ namespace WpfPanAndZoom.CustomControls
                 var translate = new TranslateTransform(delta.X, delta.Y);
                 _transform.Matrix = translate.Value * _transform.Matrix;
 
-				Point wndStart = Transform3(new(100, 100));
-				Point wndEnd = Transform3(new(MainWindow.MainWnd.Bounds.Width - 100, MainWindow.MainWnd.Bounds.Height - 100));
-                
-                foreach (Control child in this.Children)
-                {
-                    if (child is ArrowLineNew)
-                    {
-                        var arrowB = ((ArrowLineNew)child).GetStartEnd();
-                        Point ps = Transform4(arrowB.Item1);
-                        Point pe = Transform4(arrowB.Item2);
-
-				        if (
-                            (ps.X > wndEnd.X) ||
-                            (pe.X < wndStart.X) ||
-                            (ps.Y > wndEnd.Y) ||
-                            (pe.Y < wndStart.Y)
-                            )
-				        	child.IsVisible = false;
-                        else
-				        	child.IsVisible = true;
-                    }
-                    else
-                    {
-                        Point childBounds = Transform4(new(child.Bounds.Width, child.Bounds.Height));
-
-				        if (
-                            (Canvas.GetLeft(child) > wndEnd.X) ||
-                            (Canvas.GetLeft(child) + childBounds.X < wndStart.X) ||
-                            (Canvas.GetTop(child) > wndEnd.Y) ||
-                            (Canvas.GetTop(child) + childBounds.Y < wndStart.Y)
-                            )
-				        	child.IsVisible = false;
-                        else
-				        	child.IsVisible = true;
-                    }
-                    
-                    if (child.IsVisible)
-                        child.RenderTransform = _transform;
-                }
+                HideOutside();
             }
 
             if (_dragging && props.IsLeftButtonPressed && e.KeyModifiers == KeyModifiers.Control && !_selectionItems.Any())
@@ -594,7 +556,7 @@ namespace WpfPanAndZoom.CustomControls
                     if (_selectionItems[i] != _selectedElement)
                     {
                         Point parentPosition = new Point(Canvas.GetLeft(_selectedElement), Canvas.GetTop(_selectedElement));
-    
+
                         Canvas.SetLeft(_selectionItems[i], parentPosition.X + _selectionItemsDeltas[i].X);
                         Canvas.SetTop(_selectionItems[i], parentPosition.Y + _selectionItemsDeltas[i].Y);
                     }
@@ -669,6 +631,49 @@ namespace WpfPanAndZoom.CustomControls
                     }
         }
 
+        private void HideOutside()
+        {
+            Point wndStart = Transform3(new(100, 100));
+            Point wndEnd = Transform3(new(MainWindow.MainWnd.Bounds.Width - 100, MainWindow.MainWnd.Bounds.Height - 100));
+
+            foreach (Control child in this.Children)
+            {
+                if (child is ArrowLineNew)
+                {
+                    var arrowB = ((ArrowLineNew)child).GetStartEnd();
+                    Point ps = Transform4(arrowB.Item1);
+                    Point pe = Transform4(arrowB.Item2);
+
+                    if (
+                        (ps.X > wndEnd.X) ||
+                        (pe.X < wndStart.X) ||
+                        (ps.Y > wndEnd.Y) ||
+                        (pe.Y < wndStart.Y)
+                        )
+                        child.IsVisible = false;
+                    else
+                        child.IsVisible = true;
+                }
+                else
+                {
+                    Point childBounds = Transform4(new(child.Bounds.Width, child.Bounds.Height));
+
+                    if (
+                        (Canvas.GetLeft(child) > wndEnd.X) ||
+                        (Canvas.GetLeft(child) + childBounds.X < wndStart.X) ||
+                        (Canvas.GetTop(child) > wndEnd.Y) ||
+                        (Canvas.GetTop(child) + childBounds.Y < wndStart.Y)
+                        )
+                        child.IsVisible = false;
+                    else
+                        child.IsVisible = true;
+                }
+
+                if (child.IsVisible)
+                    child.RenderTransform = _transform;
+            }
+        }
+
         /*
         int zoom = 0;
 
@@ -735,8 +740,10 @@ namespace WpfPanAndZoom.CustomControls
                 Canvas.SetLeft(child, sx);
                 Canvas.SetTop(child, sy);
 
-                child.RenderTransform = _transform;
+                //child.RenderTransform = _transform;
             }
+
+            HideOutside();
         }
     }
 }

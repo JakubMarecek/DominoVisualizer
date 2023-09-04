@@ -9,7 +9,23 @@
 				"build",
 				"${workspaceFolder}/DominoVisualizer/DominoVisualizer.csproj",
 				"/property:GenerateFullPaths=true",
-				"/consoleloggerparameters:NoSummary"
+				"/consoleloggerparameters:NoSummary",
+				"-c",
+				"Debug"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "buildLinux",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/DominoVisualizer/DominoVisualizer.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary",
+				"-c",
+				"DebugLinux"
 			],
 			"problemMatcher": "$msCompile"
 		},

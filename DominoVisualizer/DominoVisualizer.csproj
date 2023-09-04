@@ -12,7 +12,6 @@
 		<Description>Domino Visualizer</Description>
 		<AssemblyTitle>Domino Visualizer</AssemblyTitle>
 		<TieredPGO>true</TieredPGO>
-		<Platforms>x64</Platforms>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

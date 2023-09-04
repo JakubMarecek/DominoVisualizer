@@ -1649,8 +1649,9 @@ namespace DominoVisualizer
 			foreach (var b in dominoComments.Values)
 				b.ContainerUI.IsVisible = zoom < -30 ? false : true;
 
-			foreach (var b in lines)
-				b.UI.IsVisible = zoom < -30 ? false : true;
+			// done directly in canvas
+			/*foreach (var b in lines)
+				b.UI.IsVisible = zoom < -30 ? false : true;*/
 
 			/*foreach (var b in dominoBorders)
 				b.ContainerUI.Visibility = zoom < -20 ? Visibility.Hidden : Visibility.Visible;*/
@@ -2507,7 +2508,7 @@ namespace DominoVisualizer
 			foreach (var setVar in conn.SetVariables)
 			{
 				DrawConnVariable(conn, setVar);
-				conn.Height += 38.5;
+				conn.Height += 40;
             }
 
 			foreach (string outFunc in conn.OutFuncName)
@@ -2634,7 +2635,7 @@ namespace DominoVisualizer
             }
 			else
             {
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60 };
 				inCtrl.ContainerUI = b2;
 				wiMetaControlIn.list.Children.Add(inCtrl.ContainerUI);
             }
@@ -2664,7 +2665,7 @@ namespace DominoVisualizer
             }
 			else
             {
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60 };
 				outCtrl.ContainerUI = b2;
 				wiMetaControlOut.list.Children.Add(outCtrl.ContainerUI);
             }
@@ -2758,7 +2759,7 @@ namespace DominoVisualizer
         private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
 		{
 			var sp2 = DrawConnVariableChild(conn, setVar);
-            Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+            Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 40 };
 			setVar.ContainerUI = b2;
 
 			int pos = 1;
@@ -3186,7 +3187,7 @@ namespace DominoVisualizer
                         }
                     }
 
-                    posYCo += 55;
+                    posYCo += 60;
                 }
             }
         }
@@ -3206,7 +3207,7 @@ namespace DominoVisualizer
                         double posYCoC = 52;
 
                         for (int aaa = 0; aaa < conn.SetVariables.Count; aaa++)
-                            posYCoC += 38.5;
+                            posYCoC += 40;
 
                         if (conn.Widget != null)
                         {
@@ -3245,7 +3246,7 @@ namespace DominoVisualizer
                         }
                     }
 
-                    posYCo += 55;
+                    posYCo += 60;
                 }
             }
         }
@@ -3261,7 +3262,7 @@ namespace DominoVisualizer
                 posYCo += 20;
 
             for (int aaa = 0; aaa < conn.SetVariables.Count; aaa++)
-                posYCo += 38.5;
+                posYCo += 40;
 
             foreach (var execBox in conn.ExecBoxes)
             {
@@ -7119,6 +7120,8 @@ namespace DominoVisualizer
 						DrawLinePoint(line, lp.DrawX, lp.DrawY, lp.DrawX, lp.DrawY);
 
 			loadPoints.Clear();
+
+			canvas.RefreshChilds();
 
             SetWorkspaceNameAndGraphs();
 

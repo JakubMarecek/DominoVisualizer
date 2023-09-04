@@ -594,7 +594,7 @@
 						<Border.BorderBrush>
 							<SolidColorBrush Color="#F28C28" />
 						</Border.BorderBrush>
-						<TextBlock Text="{TemplateBinding Content}" Margin="5,5,5,5" FontSize="16" Foreground="White" FontFamily="{StaticResource MainFont}" />
+						<TextBlock Text="{TemplateBinding Content}" Margin="5,5,5,5" FontSize="16" Foreground="White" FontWeight="Normal" FontFamily="{StaticResource MainFont}" />
 					</Border>
 				</ControlTemplate>
 			</Setter.Value>

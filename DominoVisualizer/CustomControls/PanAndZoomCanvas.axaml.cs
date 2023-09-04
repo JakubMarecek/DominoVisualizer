@@ -633,26 +633,31 @@ namespace WpfPanAndZoom.CustomControls
 
         private void HideOutside()
         {
-            Point wndStart = Transform3(new(100, 100));
-            Point wndEnd = Transform3(new(MainWindow.MainWnd.Bounds.Width - 100, MainWindow.MainWnd.Bounds.Height - 100));
+            Point wndStart = Transform3(new(0, 0));
+            Point wndEnd = Transform3(new(MainWindow.MainWnd.Bounds.Width - 0, MainWindow.MainWnd.Bounds.Height - 0));
 
             foreach (Control child in this.Children)
             {
-                if (child is ArrowLineNew)
+                if (child is ArrowLineNew @new)
                 {
-                    var arrowB = ((ArrowLineNew)child).GetStartEnd();
-                    Point ps = Transform4(arrowB.Item1);
-                    Point pe = Transform4(arrowB.Item2);
-
-                    if (
-                        (ps.X > wndEnd.X) ||
-                        (pe.X < wndStart.X) ||
-                        (ps.Y > wndEnd.Y) ||
-                        (pe.Y < wndStart.Y)
-                        )
+                    if (zoom < -30)
                         child.IsVisible = false;
                     else
-                        child.IsVisible = true;
+                    {
+                        var arrowB = @new.GetStartEnd();
+                        Point ps = Transform4(arrowB.Item1);
+                        Point pe = Transform4(arrowB.Item2);
+
+                        if (
+                            (ps.X > wndEnd.X) ||
+                            (pe.X < wndStart.X) ||
+                            (ps.Y > wndEnd.Y) ||
+                            (pe.Y < wndStart.Y)
+                            )
+                            child.IsVisible = false;
+                        else
+                            child.IsVisible = true;
+                    }
                 }
                 else
                 {

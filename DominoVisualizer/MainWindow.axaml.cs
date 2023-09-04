@@ -693,7 +693,7 @@ namespace DominoVisualizer
 
             if (tag == "1")
             {
-				parser.EditMetadataInfoCreate(editDataName.Text, editDataAnchorDynType.Text, (string)editDataDataTypeID.SelectedItem, editDataHostExecFunc.Text, editDataIsDelayed.IsChecked, editDataList.ItemsSource.OfType<ParamEntry>().ToList());
+				parser.EditMetadataInfoCreate(editDataName.Text, editDataAnchorDynType.Text, (string)editDataDataTypeID.SelectedItem, editDataHostExecFunc.Text, editDataIsDelayed.IsChecked, editDataList.ItemsSource != null ? editDataList.ItemsSource.OfType<ParamEntry>().ToList() : null);
             }
 
             Animation(false, gridDialogEditData);

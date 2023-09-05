@@ -143,7 +143,7 @@
 						<TextBox Name="editExecBoxDynInt" Width="260" Margin="0,0,0,0" HorizontalAlignment="Right" />
 					</StackPanel>
 
-					<ScrollViewer Margin="10,220,8,60">
+					<ScrollViewer Margin="10,220,10,60">
 						<ItemsRepeater Name="paramsList">
 							<ItemsRepeater.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">
@@ -159,7 +159,7 @@
 										</Grid.ColumnDefinitions>
 										<Grid>
 											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
-											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" Width="270" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<CheckBox Grid.Column="1" IsChecked="{Binding ParamUsed}" />
 										<TextBox Grid.Column="2" Text="{Binding ParamValue}" IsReadOnly="{Binding ParamHasArray}" />
@@ -443,7 +443,7 @@
 										</Grid.ColumnDefinitions>
 										<Grid>
 											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
-											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" Width="270" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<TextBox Grid.Column="1" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
 										<Button Grid.Column="2" Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditBtn EditExecArrayBtn" />

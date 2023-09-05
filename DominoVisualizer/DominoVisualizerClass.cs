@@ -2346,7 +2346,7 @@ namespace DominoVisualizer
 			DrawExecBoxChildren(c, eb, sp);
 			eb.MainUI = sp;
 			eb.INT_clr = clr;
-			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp };
+			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = Brushes.LightGray };
 			c.Widget.list.Children.Add(b);
 			eb.ContainerUI = b;
 		}
@@ -2440,7 +2440,7 @@ namespace DominoVisualizer
 
 				sp2.Children.Add(g);
 
-				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = Brushes.LightGray };
 				box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
@@ -2637,7 +2637,7 @@ namespace DominoVisualizer
             }
 			else
             {
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60, CornerRadius = new(5), Background = Brushes.LightGray };
 				inCtrl.ContainerUI = b2;
 				wiMetaControlIn.list.Children.Add(inCtrl.ContainerUI);
             }
@@ -2667,7 +2667,7 @@ namespace DominoVisualizer
             }
 			else
             {
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, Height = 60, CornerRadius = new(5), Background = Brushes.LightGray };
 				outCtrl.ContainerUI = b2;
 				wiMetaControlOut.list.Children.Add(outCtrl.ContainerUI);
             }
@@ -2807,7 +2807,7 @@ namespace DominoVisualizer
             }
 			else
             {
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = Brushes.LightGray };
 				var.ContainerUI = b2;
 				wiGlobalVars.list.Children.Add(var.ContainerUI);
             }
@@ -2965,7 +2965,7 @@ namespace DominoVisualizer
             btnDel.Click += EditCommentDialog;
 			g.Children.Add(btnDel);
 
-			DominoUIComment b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g };
+			DominoUIComment b2 = new() { BorderBrush = new SolidColorBrush(linesColors[c.Color]), Background = new SolidColorBrush(Color.FromArgb(150, 150, 150, 150)), Padding = new Thickness(10, 5, 5, 5), BorderThickness = new(2, 2, 2, 2), Child = g, CornerRadius = new(5) };
 			b2.ID = c.UniqueID;
 			c.ContainerUI = b2;
 
@@ -3008,6 +3008,8 @@ namespace DominoVisualizer
 			r.StrokeDashArray = lineStyle;
 			r.Stroke = new SolidColorBrush(linesColors[b.Color]);
 			r.StrokeThickness = 2;
+            r.RadiusX = 5;
+            r.RadiusY = 5;
 			g.Children.Add(r);
 
 			SolidColorBrush clr = new SolidColorBrush(Colors.Transparent);
@@ -3062,7 +3064,7 @@ namespace DominoVisualizer
 
 			sp2.Children.Add(new TextBox() { Text = res.Value, Margin = new(10, 0, 0, 0) });
 
-			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+			Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = Brushes.LightGray };
 			res.ContainerUI = b2;
 			wiResources.list.Children.Add(b2);
 		}

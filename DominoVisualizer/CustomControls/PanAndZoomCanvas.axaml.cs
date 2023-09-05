@@ -82,6 +82,8 @@ namespace WpfPanAndZoom.CustomControls
             _selectRect.Fill = new SolidColorBrush(Color.Parse("#552979ff"));
             _selectRect.Stroke = new SolidColorBrush(Color.Parse("#2979ff"));
             _selectRect.StrokeThickness = 2;
+            _selectRect.RadiusX = 5;
+            _selectRect.RadiusY = 5;
             _selectRect.Width = 1;
             _selectRect.Height = 1;
             _selectRect.IsVisible = false;

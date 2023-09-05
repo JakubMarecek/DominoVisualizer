@@ -100,6 +100,9 @@
 		<None Update="luac51.dll">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="luac51.so">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 <!-- 	<Target Name="PostBuild" AfterTargets="AfterCompile" Condition="$(ConfigurationName) == Release">

@@ -639,6 +639,7 @@ namespace DominoVisualizer
 			editDataLblDesc.Text = desc;
 
 			editDataList.IsVisible = false;
+			editDataListSV.IsVisible = false;
             editDataAnchorDynTypeC.IsVisible = false;
             editDataNameC.IsVisible = false;
             editDataDataTypeIDC.IsVisible = false;
@@ -681,6 +682,7 @@ namespace DominoVisualizer
             if (dataList != null)
             {
                 editDataList.ItemsSource = dataList;
+                editDataListSV.IsVisible = true;
                 editDataList.IsVisible = true;
             }
 

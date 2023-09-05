@@ -9,7 +9,6 @@ using Avalonia.Platform.Storage;
 using DominoVisualizer.CustomControls;
 using Gibbed.Dunia2.FileFormats;
 using Gibbed.IO;
-using HarfBuzzSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -115,10 +114,10 @@ namespace DominoVisualizer
 		 * -lines points bezier							ok
 		 * -export - markers as saved					ok
 
-		 * -global vars - show info about undefined in init
+		 * -global vars - show info about undefined in init		ok
 		 * -edit top - change UI, not remove add
 		 * -edit controlin, controlout disable
-		 * -edit data in - same name err
+		 * -edit data in - same name err				not
 		 * -
 		 * -
 		 */
@@ -2383,6 +2382,10 @@ namespace DominoVisualizer
 			{
 				foreach (var param in execBox.Params)
 				{
+                    Grid g = new() { Height = 30 };
+
+					CheckDictVarState(g, param);
+
 					string pv = ParamsAsString(param);
 
 					/*if (param.ValueArray.Count > 1)
@@ -2402,7 +2405,6 @@ namespace DominoVisualizer
                         }
                     }
 
-                    Grid g = new() { Height = 30 };
 					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					sp.Children.Add(g);
@@ -2731,9 +2733,11 @@ namespace DominoVisualizer
 
         private StackPanel DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
         {
-            string pv = ParamsAsString(setVar);
-
             StackPanel sp2 = new();
+
+			CheckDictVarState(sp2, setVar);
+
+            string pv = ParamsAsString(setVar);
 
             Grid g = new() { Height = 18 };
             g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
@@ -3395,6 +3399,83 @@ namespace DominoVisualizer
             }
         }
 
+
+		private bool CheckDictVarState(Panel ctrlToChange, DominoDict dict)
+		{
+			bool CheckVarState(Panel ctrlToChange, string var)
+			{
+				if (
+					!globalVariables.Any(a => "self." + a.Name == var) &&
+					!dominoGraphs[selGraph].Metadata.DatasIn.Any(a => "self." + a.Name == var) &&
+					!dominoGraphs[selGraph].Metadata.DatasOut.Any(a => "self." + a.Name == var)
+					)
+				{
+					ctrlToChange.Background = new SolidColorBrush(Color.Parse("#f44336"));
+					ToolTip.SetTip(ctrlToChange, "Variable \"" + var + "\" is not defined in Global variables or DatasIn or DatasOut.");
+					return true;
+				}
+				else
+				{
+					ctrlToChange.Background = new SolidColorBrush(Color.Parse("#4caf50"));
+				}
+
+				return false;
+			}
+
+			if (dict.Name != null && dict.Name.StartsWith("self."))
+			{
+				if (CheckVarState(ctrlToChange, dict.Name))
+					return true;
+			}
+
+			if (dict.Value != null && dict.Value.StartsWith("self."))
+			{
+				if (CheckVarState(ctrlToChange, dict.Value))
+					return true;
+			}
+
+			foreach (var si in dict.ValueArray)
+				if (CheckDictVarState(ctrlToChange, si))
+					return true;
+				
+			return false;
+		}
+
+		private void RefreshConnectorsVariables(string oldVarName, string newVarName)
+		{
+			foreach (var c in dominoConnectors.Values)
+			{
+				foreach (var v in c.SetVariables)
+					if (v.Name == "self." + oldVarName || v.Name == "self." + newVarName)
+                        v.ContainerUI.Child = DrawConnVariableChild(c, v);
+
+				foreach (var eb in c.ExecBoxes)
+					foreach (var p in eb.Params)
+					{
+						bool found = false;
+
+						void f(DominoDict dominoDict)
+						{
+							if (dominoDict.Name == "self." + oldVarName || dominoDict.Name == "self." + newVarName)
+								found = true;
+
+							if (dominoDict.Value != null)
+								if (dominoDict.Value == "self." + oldVarName || dominoDict.Value == "self." + newVarName)
+									found = true;
+
+							foreach (var si in dominoDict.ValueArray)
+								f(si);
+						}
+						f(p);
+
+						if (found)
+						{
+							eb.MainUI.Children.Clear();
+							DrawExecBoxChildren(c, eb, eb.MainUI);
+						}
+					}
+			}
+		}
 
         public delegate void OpenAskDialog(string name, string desc);
 		public OpenAskDialog openAskDialog;
@@ -4279,18 +4360,24 @@ namespace DominoVisualizer
 					var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == tag[1]).Single();
 					wiMetaDataIn.list.Children.Remove(m.ContainerUI);
 					dominoGraphs[selGraph].Metadata.DatasIn.RemoveAll(a => a.Name == tag[1]);
+					
+					RefreshConnectorsVariables(m.Name, "");
 				}
 				if (tag[0] == "dataout")
 				{
 					var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == tag[1]).Single();
 					wiMetaDataOut.list.Children.Remove(m.ContainerUI);
 					dominoGraphs[selGraph].Metadata.DatasOut.RemoveAll(a => a.Name == tag[1]);
+					
+					RefreshConnectorsVariables(m.Name, "");
 				}
 				if (tag[0] == "globalvar")
 				{
 					var m = globalVariables.Where(a => a.UniqueID == tag[1]).Single();
 					wiGlobalVars.list.Children.Remove(m.ContainerUI);
 					globalVariables.RemoveAll(a => a.UniqueID == tag[1]);
+					
+					RefreshConnectorsVariables(m.Name, "");
 				}
                 /*if (tag[0] == "controlin")
 				{
@@ -4416,6 +4503,9 @@ namespace DominoVisualizer
 			if (editMetadataDialogData[0] == "datain")
 			{
 				var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.UniqueID == editMetadataDialogData[1]).Single();
+
+				string oldName = m.Name;
+
 				m.Name = name;
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.DataTypeID = dataTypeID;
@@ -4423,16 +4513,23 @@ namespace DominoVisualizer
                 //wiMetaDataIn.list.Children.Remove(m.ContainerUI);
                 //DrawMetaDataIn(m, true);
                 DrawMetaDataIn(m, true, true);
+
+				RefreshConnectorsVariables(oldName, name);
             }
             if (editMetadataDialogData[0] == "dataout")
 			{
 				var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.UniqueID == editMetadataDialogData[1]).Single();
+
+				string oldName = m.Name;
+
 				m.Name = name;
 				m.AnchorDynType = int.Parse(anchorDynType);
 				m.DataTypeID = dataTypeID;
 
 				//wiMetaDataOut.list.Children.Remove(m.ContainerUI);
 				DrawMetaDataIn(m, false, true);
+
+				RefreshConnectorsVariables(oldName, name);
 			}
 			if (editMetadataDialogData[0] == "controlin")
 			{
@@ -4460,6 +4557,8 @@ namespace DominoVisualizer
 
 				//wiGlobalVars.list.Children.Remove(m.ContainerUI);
 
+				string oldName = m.Name;
+
 				EditExecBoxUIGetParams(paramsList);
 				//m = paramsEdit[0]; // loose instance
 				m.Name = name;
@@ -4468,6 +4567,8 @@ namespace DominoVisualizer
 				m.UniqueID = paramsEdit[0].UniqueID;
 
 				DrawGlobalVar(m, true);
+
+				RefreshConnectorsVariables(oldName, name);
 			}
 			if (editMetadataDialogData[0] == "connvar")
 			{

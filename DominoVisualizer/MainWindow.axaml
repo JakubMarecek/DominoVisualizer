@@ -428,7 +428,7 @@
 						</StackPanel>
 					</StackPanel>
 
-					<ScrollViewer Margin="10,140,10,60">
+					<ScrollViewer Margin="10,140,10,60" Name="editDataListSV">
 						<ItemsRepeater Name="editDataList">
 							<ItemsRepeater.ItemTemplate>
 								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">

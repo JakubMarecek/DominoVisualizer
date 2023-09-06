@@ -2352,7 +2352,7 @@ namespace DominoVisualizer
 			DrawExecBoxChildren(c, eb, sp);
 			eb.MainUI = sp;
 			eb.INT_clr = clr;
-			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = new SolidColorBrush(GetLight(linesColors[clr])) };
+			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[clr])) : Brushes.LightGray };
 			c.Widget.list.Children.Add(b);
 			eb.ContainerUI = b;
 		}
@@ -2447,7 +2447,7 @@ namespace DominoVisualizer
 
 				sp2.Children.Add(g);
 
-				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = new SolidColorBrush(GetLight(linesColors[colorConnSel])) };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[colorConnSel])) : Brushes.LightGray };
 				box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
@@ -4897,6 +4897,7 @@ namespace DominoVisualizer
             settings.Add("snapToGrid", false);
             settings.Add("bytecode", false);
             settings.Add("bytecodeDebug", false);
+            settings.Add("coloredBoxes", true);
         }
 
         public void UseSettings(bool saved)
@@ -6635,6 +6636,7 @@ namespace DominoVisualizer
                 xSettings.Add(new XElement("LinePointsBezier", (bool)settings["linePointsBezier"] ? "true" : "false"));
                 xSettings.Add(new XElement("Bytecode", (bool)settings["bytecode"] ? "true" : "false"));
                 xSettings.Add(new XElement("BytecodeDebug", (bool)settings["bytecodeDebug"] ? "true" : "false"));
+                xSettings.Add(new XElement("ColoredBoxes", (bool)settings["coloredBoxes"] ? "true" : "false"));
             }
 
             if (File.Exists(file))
@@ -7142,6 +7144,7 @@ namespace DominoVisualizer
                 settings["linePointsBezier"] = xSettings.Element("LinePointsBezier").Value == "true";
                 settings["bytecode"] = xSettings.Element("Bytecode").Value == "true";
                 settings["bytecodeDebug"] = xSettings.Element("BytecodeDebug").Value == "true";
+                settings["coloredBoxes"] = xSettings.Element("ColoredBoxes")?.Value == "true";
 
                 UseSettings(false);
             }

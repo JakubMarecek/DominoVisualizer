@@ -1069,6 +1069,7 @@ namespace DominoVisualizer
                 s["snapToGrid"] = settingsSnap.IsChecked == true;
                 s["bytecode"] = settingsBytecode.IsChecked == true;
                 s["bytecodeDebug"] = settingsBytecodeDebug.IsChecked == true;
+                s["coloredBoxes"] = settingsColoredBoxes.IsChecked == true;
                 parser.UseSettings(true);
             }
 
@@ -1102,6 +1103,7 @@ namespace DominoVisualizer
                 settingsSnap.IsChecked = (bool)s["snapToGrid"];
                 settingsBytecode.IsChecked = (bool)s["bytecode"];
                 settingsBytecodeDebug.IsChecked = (bool)s["bytecodeDebug"];
+                settingsColoredBoxes.IsChecked = (bool)s["coloredBoxes"];
                 Animation(true, gridDialogSettings);
             }
         }

@@ -118,8 +118,8 @@ namespace DominoVisualizer
 		 * -edit top - change UI, not remove add
 		 * -edit controlin, controlout disable
 		 * -edit data in - same name err				not
-		 * -
-		 * -
+		 * -bezier lines - points no bez				ok
+		 * -settings - colored boxes
 		 */
 
         string workspaceName = "";
@@ -1596,6 +1596,12 @@ namespace DominoVisualizer
                     linesColors.Add(c);
         }
 
+		private Color GetLight(Color source, double amount = 0.9)
+		{
+			HslColor hsl = new HslColor(source);
+			return HslColor.ToRgb(hsl.H, hsl.S, amount);
+		}
+
 		private void HandleMoving(string id, double x, double y)
         {
             dominoConnectors.TryGetValue(id, out var conn);
@@ -2346,7 +2352,7 @@ namespace DominoVisualizer
 			DrawExecBoxChildren(c, eb, sp);
 			eb.MainUI = sp;
 			eb.INT_clr = clr;
-			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = Brushes.LightGray };
+			Border b = new() { BorderBrush = new SolidColorBrush(linesColors[clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = new SolidColorBrush(GetLight(linesColors[clr])) };
 			c.Widget.list.Children.Add(b);
 			eb.ContainerUI = b;
 		}
@@ -2382,10 +2388,6 @@ namespace DominoVisualizer
 			{
 				foreach (var param in execBox.Params)
 				{
-                    Grid g = new() { Height = 30 };
-
-					CheckDictVarState(g, param);
-
 					string pv = ParamsAsString(param);
 
 					/*if (param.ValueArray.Count > 1)
@@ -2405,9 +2407,14 @@ namespace DominoVisualizer
                         }
                     }
 
+                    Grid g = new() { Height = 30 };
 					g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(execBox.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
-					sp.Children.Add(g);
+					
+					Border b = null;
+					CheckDictVarState(ref b, param);
+					b.Child = g;
+					sp.Children.Add(b);
 
 					conn.Height += 30;
                 }
@@ -2440,7 +2447,7 @@ namespace DominoVisualizer
 
 				sp2.Children.Add(g);
 
-				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = Brushes.LightGray };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = new SolidColorBrush(GetLight(linesColors[colorConnSel])) };
 				box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
@@ -2606,7 +2613,7 @@ namespace DominoVisualizer
             }
 			else
             {
-                Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+                Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = Brushes.LightGray };
                 inData.ContainerUI = b2;
                 if (indt) wiMetaDataIn.list.Children.Add(inData.ContainerUI);
                 else wiMetaDataOut.list.Children.Add(inData.ContainerUI);
@@ -2731,12 +2738,8 @@ namespace DominoVisualizer
 			AddConnectorLines(conn, 1);
 		}
 
-        private StackPanel DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
+        private Border DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
         {
-            StackPanel sp2 = new();
-
-			CheckDictVarState(sp2, setVar);
-
             string pv = ParamsAsString(setVar);
 
             Grid g = new() { Height = 18 };
@@ -2753,11 +2756,15 @@ namespace DominoVisualizer
             btn2.Click += RemoveConnVar;
             g.Children.Add(btn2);
 
+            StackPanel sp2 = new();
             sp2.Children.Add(g);
-
             sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
-			return sp2;
+			Border b = null;
+			CheckDictVarState(ref b, setVar);
+			b.Child = sp2;
+
+			return b;
         }
 
         private void DrawConnVariable(DominoConnector conn, DominoDict setVar)
@@ -3402,9 +3409,11 @@ namespace DominoVisualizer
         }
 
 
-		private bool CheckDictVarState(Panel ctrlToChange, DominoDict dict)
+		Color varNotDefClr = Color.Parse("#f44336");
+		Color varIsDefClr = Color.Parse("#4caf50");
+		private bool CheckDictVarState(ref Border borderInst, DominoDict dict, bool baseIt = true)
 		{
-			bool CheckVarState(Panel ctrlToChange, string var)
+			bool CheckVarState(ref Border borderInstS, string var, bool isSetter)
 			{
 				if (
 					!globalVariables.Any(a => "self." + a.Name == var) &&
@@ -3412,13 +3421,22 @@ namespace DominoVisualizer
 					!dominoGraphs[selGraph].Metadata.DatasOut.Any(a => "self." + a.Name == var)
 					)
 				{
-					ctrlToChange.Background = new SolidColorBrush(Color.Parse("#f44336"));
-					ToolTip.SetTip(ctrlToChange, "Variable \"" + var + "\" is not defined in Global variables or DatasIn or DatasOut.");
+					borderInstS = new()
+					{
+						Background = new SolidColorBrush(isSetter ? GetLight(varNotDefClr, 0.8) : varNotDefClr),
+						CornerRadius = new(5)
+					};
+					ToolTip.SetTip(borderInstS, "Variable \"" + var + "\" is NOT defined in Global variables or DatasIn or DatasOut.");
 					return true;
 				}
 				else
 				{
-					ctrlToChange.Background = new SolidColorBrush(Color.Parse("#4caf50"));
+					borderInstS ??= new()
+					{
+						Background = new SolidColorBrush(isSetter ? GetLight(varIsDefClr, 0.8) : varIsDefClr),
+						CornerRadius = new(5)
+					};
+					ToolTip.SetTip(borderInstS, "Variable \"" + var + "\" IS defined in Global variables or DatasIn or DatasOut.");
 				}
 
 				return false;
@@ -3426,19 +3444,24 @@ namespace DominoVisualizer
 
 			if (dict.Name != null && dict.Name.StartsWith("self."))
 			{
-				if (CheckVarState(ctrlToChange, dict.Name))
+				if (CheckVarState(ref borderInst, dict.Name, true))
 					return true;
 			}
 
 			if (dict.Value != null && dict.Value.StartsWith("self."))
 			{
-				if (CheckVarState(ctrlToChange, dict.Value))
+				if (CheckVarState(ref borderInst, dict.Value, false))
 					return true;
 			}
 
 			foreach (var si in dict.ValueArray)
-				if (CheckDictVarState(ctrlToChange, si))
+				if (CheckDictVarState(ref borderInst, si, false))
 					return true;
+
+			if (baseIt && borderInst == null)
+			{
+				borderInst = new();
+			}
 				
 			return false;
 		}
@@ -4887,7 +4910,7 @@ namespace DominoVisualizer
 
                 l.UI.PointBezier = (bool)settings["linePointsBezier"];
 
-                l.UI.Measure(new(1, 1));
+                l.UI.InvalidateVisual();
             }
 
 			if (saved)

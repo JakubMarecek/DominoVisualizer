@@ -391,6 +391,8 @@
 	<Style Selector="Button.CloseBtnWhite">
 		<Setter Property="HorizontalAlignment" Value="Right"/>
 		<Setter Property="ToolTip.Tip" Value="Close" />
+		<Setter Property="Height" Value="35"/>
+		<Setter Property="Width" Value="35"/>
 
 		<Setter Property="Template">
 			<Setter.Value>
@@ -410,6 +412,12 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
+		<Style Selector="^:pointerover /template/ Path">
+			<Setter Property="Fill" Value="#F28C28" />
+		</Style>
+		<Style Selector="^:pressed /template/ Path">
+			<Setter Property="Fill" Value="#F28C28" />
+		</Style>
 	</Style>
 
 	<Style Selector="Button.MaxBtnWhite">
@@ -437,7 +445,6 @@
 
 	<Style Selector="Button.MinBtnWhite">
 		<Setter Property="ToolTip.Tip" Value="Minimize" />
-		<Setter Property="VerticalAlignment" Value="Bottom"/>
 
 		<Setter Property="Template">
 			<Setter.Value>
@@ -446,10 +453,11 @@
 						<Rectangle Fill="#01000000" />
 						<Path
 							Width="15"
-							Height="15"
+							Height="12"
 							x:Name="CheckMark"
 							StrokeThickness="1"
 							Stretch="Uniform"
+							VerticalAlignment="Bottom"
 							Data="M0 456C0 442.7 10.75 432 24 432H488C501.3 432 512 442.7 512 456C512 469.3 501.3 480 488 480H24C10.75 480 0 469.3 0 456z"
 							Fill="#ccc">
 						</Path>

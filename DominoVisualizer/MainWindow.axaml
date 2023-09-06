@@ -861,11 +861,11 @@
 
 		<Grid Background="#cc000000" Height="40" HorizontalAlignment="Stretch" VerticalAlignment="Top" PointerPressed="MoveWnd">
 			<Label Content="Wnd title" Name="wndTitle" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" FontWeight="Bold" Margin="10,0,0,0" />
-			<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,130,0" />
-			<Button Classes="EditBtn CloseBtnWhite SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,140,0" Name="chromeBtnSettings" IsVisible="false" />
-			<Button Classes="EditBtn CloseBtnWhite MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,100,0" />
-			<Button Classes="EditBtn CloseBtnWhite MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,60,0" />
-			<Button Classes="EditBtn CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,20,0" />
+			<Label Content="Wnd title" Name="wndTitleW" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="15" Foreground="#ccc" Margin="290,0,170,0" />
+			<Button Classes="EditBtn CloseBtnWhite SettBtnWhite" Click="ButtonChrome_Click" Tag="3" Margin="0,0,130,0" Name="chromeBtnSettings" IsVisible="false" />
+			<Button Classes="EditBtn CloseBtnWhite MinBtnWhite" Click="ButtonChrome_Click" Tag="2" Margin="0,0,90,0" />
+			<Button Classes="EditBtn CloseBtnWhite MaxBtnWhite" Click="ButtonChrome_Click" Tag="1" Margin="0,0,50,0" />
+			<Button Classes="EditBtn CloseBtnWhite" Click="ButtonChrome_Click" Tag="0" Margin="0,0,10,0" />
 		</Grid>
 	</Grid>
 </Window>

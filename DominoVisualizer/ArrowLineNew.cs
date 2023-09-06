@@ -347,11 +347,20 @@ namespace DominoVisualizer
 
                         double lineLen = Vector.Subtract(Points[i].Point, previousPoint).Length;
 
-                        BezierSegment bezierSegment = new BezierSegment();
-                        bezierSegment.Point1 = new Point(previousPoint.X + Math.Min(100, lineLen / 3), previousPoint.Y);
-                        bezierSegment.Point2 = new Point(Points[i].Point.X - Math.Min(100, lineLen / 3), Points[i].Point.Y);
-                        bezierSegment.Point3 = Points[i].Point;
-                        pathfigLine.Segments.Add(bezierSegment);
+                        if ((!PointBezier && i == 0) || PointBezier)
+                        {
+                            BezierSegment bezierSegment = new BezierSegment();
+                            bezierSegment.Point1 = new Point(previousPoint.X + Math.Min(100, lineLen / 3), previousPoint.Y);
+                            bezierSegment.Point2 = PointBezier ? new Point(Points[i].Point.X - Math.Min(100, lineLen / 3), Points[i].Point.Y) : Points[i].Point;
+                            bezierSegment.Point3 = Points[i].Point;
+                            pathfigLine.Segments.Add(bezierSegment);
+                        }
+                        else
+                        {
+                            PolyLineSegment polyLineSegment = new();
+                            polyLineSegment.Points.Add(Points[i].Point);
+                            pathfigLine.Segments.Add(polyLineSegment);
+                        }
 
                         if (i == 0)
                             pathgeo.Figures.Add(CalculateDot(pathfigLine.StartPoint));
@@ -360,7 +369,7 @@ namespace DominoVisualizer
                     double lineLenLast = Vector.Subtract(new Point(X2, Y2), Points[^1].Point).Length;
 
                     BezierSegment bezierSegment2 = new BezierSegment();
-                    bezierSegment2.Point1 = new Point(Points[^1].Point.X + Math.Min(100, lineLenLast / 3), Points[^1].Point.Y);
+                    bezierSegment2.Point1 = PointBezier ? new Point(Points[^1].Point.X + Math.Min(100, lineLenLast / 3), Points[^1].Point.Y) : Points[^1].Point;
                     bezierSegment2.Point2 = new Point(X2 - Math.Min(100, lineLenLast / 3), Y2);
                     bezierSegment2.Point3 = new Point(X2, Y2);
                     pathfigLine.Segments.Add(bezierSegment2);

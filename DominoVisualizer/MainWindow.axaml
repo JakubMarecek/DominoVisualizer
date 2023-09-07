@@ -43,7 +43,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogSelGame" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Game base" Classes="Header" />
 					<TextBlock Text="Select what Far Cry version you will use for the workspace:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogSelGame}" TextWrapping="Wrap" Foreground="White" />
 					<StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,130,0,10">
@@ -105,7 +105,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogEditExecBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="830" MaxHeight="600">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Edit exec box" Classes="Header" />
 					<TextBlock Text="Edit exec parameters for box:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditExecBox}" TextWrapping="Wrap" Foreground="White" />
 
@@ -248,7 +248,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddExecBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Height="200">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Add exec box" Classes="Header" />
 					<TextBlock Text="Select a box which the connector will launch:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddExecBox}" TextWrapping="Wrap" Foreground="White" />
 
@@ -281,7 +281,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddBoxConnector" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="600" Height="290">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Add connector" Classes="Header" />
 					<TextBlock Text="Select an output from the box and assign it to a connector:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddBoxConnector}" TextWrapping="Wrap" Foreground="White" />
 
@@ -333,7 +333,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddConnector" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="290">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Add new connector" Classes="Header" />
 					<TextBlock Text="Write a name of the new connector, it must be unique:" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddConnector}" TextWrapping="Wrap" Foreground="White" />
 
@@ -354,7 +354,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="650" Height="260">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Add new box" Classes="Header" />
 					<TextBlock Text="Define if the box will be global (unchecked means local):" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddBox}" TextWrapping="Wrap" Foreground="White" />
 
@@ -389,7 +389,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogEditData" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="780">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Name="editDataLblName" Content="--name--" Classes="Header" />
 					<TextBlock Name="editDataLblDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditData}" TextWrapping="Wrap" Foreground="White" />
 
@@ -524,7 +524,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddComment" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="900" Height="500">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Edit comment" Classes="Header" />
 
 					<TextBox Text="" Name="addCommentName" Width="880" Margin="0,60,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="380" AcceptsReturn="True" VerticalContentAlignment="Top" />
@@ -558,7 +558,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddBorder" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="330">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Edit border" Classes="Header" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
@@ -626,7 +626,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogEditResource" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Edit resource" Classes="Header" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
@@ -663,7 +663,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogEditName" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Name="dialogEditNameTitle" Content="title" Classes="Header" />
 					<TextBlock Name="dialogEditNameDesc" Text="desc" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogEditName}" TextWrapping="Wrap" Foreground="White" />
 
@@ -680,7 +680,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogGetDataFromBox" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Get data from box" Classes="Header" />
 
 					<StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,60,0,0">
@@ -730,7 +730,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogWorkspace" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="370">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Workspace" Classes="Header" />
 
 					<TextBlock Text="Set name of the new workspace" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,0,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogWorkspace}" TextWrapping="Wrap" Foreground="White" />
@@ -753,7 +753,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAddGraph" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="200">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Add graph" Classes="Header" />
 
 					<TextBlock Text="Set name of the default graph" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="20,65,80,0" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAddGraph}" TextWrapping="Wrap" Foreground="White" />
@@ -770,7 +770,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogSettings" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="550" Height="360">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Settings" Classes="Header" />
 
 					<CheckBox Content=" Use Bezier curve on lines" Name="settingsBezier" Margin="20,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
@@ -832,7 +832,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogInfo" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Content="Info" Name="dialogInfoName" Classes="Header" />
 					<TextBlock Text="Some description." Name="dialogInfoLabel" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,30,60" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogInfo}" TextWrapping="Wrap" Foreground="White" />
 					<Button Classes="CBtn" Content="Close" Click="ButtonDialogInfoClose_Click" Margin="0,0,10,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
@@ -845,7 +845,7 @@
 			</Grid>
 			<Grid Background="#99000000" Name="gridDialogAsk" IsVisible="false" Opacity="0">
 				<Grid VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
-					<Rectangle Classes="DialogRect" />
+					<Border Classes="DialogRect" />
 					<Label Name="dialogAskName" Content="--name--" Classes="Header" />
 					<TextBlock Name="dialogAskDesc" Text="--desc--" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="16" Margin="30,65,80,80" MaxWidth="{Binding Bounds.Width, ElementName=gridDialogAsk}" TextWrapping="Wrap" Foreground="White" />
 					<Button Classes="CBtn" Content="Yes" Click="ButtonDialogAskClose_Click" Tag="1" Margin="0,0,120,10" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" />

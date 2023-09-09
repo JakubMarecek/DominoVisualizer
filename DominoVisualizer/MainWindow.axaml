@@ -149,17 +149,21 @@
 								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">
 									<Grid Margin="0,2">
 										<Grid.ColumnDefinitions>
-											<ColumnDefinition Width="290"></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition Width="320"></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition Width="*"></ColumnDefinition>
+											<ColumnDefinition Width="32"></ColumnDefinition>
+											<ColumnDefinition Width="*"></ColumnDefinition>
+											<ColumnDefinition Width="20"></ColumnDefinition>
+											<ColumnDefinition Width="20"></ColumnDefinition>
+											<ColumnDefinition Width="20"></ColumnDefinition>
+											<ColumnDefinition Width="20"></ColumnDefinition>
 										</Grid.ColumnDefinitions>
 										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto"></ColumnDefinition>
+												<ColumnDefinition></ColumnDefinition>
+											</Grid.ColumnDefinitions>
 											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
-											<TextBox Grid.Column="1" Text="{Binding ParamName}" Width="270" IsReadOnly="{Binding ParamIsBase}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<CheckBox Grid.Column="1" IsChecked="{Binding ParamUsed}" />
 										<TextBox Grid.Column="2" Text="{Binding ParamValue}" IsReadOnly="{Binding ParamHasArray}" />
@@ -442,8 +446,12 @@
 											<ColumnDefinition></ColumnDefinition>
 										</Grid.ColumnDefinitions>
 										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto"></ColumnDefinition>
+												<ColumnDefinition></ColumnDefinition>
+											</Grid.ColumnDefinitions>
 											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
-											<TextBox Grid.Column="1" Text="{Binding ParamName}" Width="270" IsReadOnly="{Binding ParamIsBase}" />
+											<TextBox Grid.Column="1" Text="{Binding ParamName}" Margin="0,0,10,0" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<TextBox Grid.Column="1" Text="{Binding ParamValue}" Width="320" IsReadOnly="{Binding ParamHasArray}" />
 										<Button Grid.Column="2" Click="ButtonEDLArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditBtn EditExecArrayBtn" />

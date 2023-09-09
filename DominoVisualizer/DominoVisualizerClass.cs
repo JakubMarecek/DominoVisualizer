@@ -2529,7 +2529,7 @@ namespace DominoVisualizer
 				g.Children.Add(new TextBox() { Text = outFunc, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 				sp2.Children.Add(g);
 
-				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Orange), BorderThickness = new(2, 2, 2, 2), Child = sp2 };
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Orange), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(Colors.Orange)) : Brushes.LightGray };
 				w.list.Children.Add(b2);
 
 				conn.Height += 55;
@@ -4913,6 +4913,20 @@ namespace DominoVisualizer
 
                 l.UI.InvalidateVisual();
             }
+
+			foreach (var c in dominoConnectors.Values)
+				foreach (var eb in c.ExecBoxes)
+				{
+					c.Widget.list.Children.Remove(eb.ContainerUI);
+					DrawExecBoxContainerUI(c, eb, eb.INT_clr);
+				}
+
+			foreach (var b in dominoBoxes.Values)
+				foreach (var c in b.Connections)
+				{
+					b.Widget.list.Children.Remove(c.ContainerUI);
+					DrawBoxConnectors(b, c);
+				}
 
 			if (saved)
 				WasEdited();

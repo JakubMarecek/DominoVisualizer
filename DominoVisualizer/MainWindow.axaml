@@ -150,12 +150,12 @@
 									<Grid Margin="0,2">
 										<Grid.ColumnDefinitions>
 											<ColumnDefinition Width="*"></ColumnDefinition>
-											<ColumnDefinition Width="32"></ColumnDefinition>
+											<ColumnDefinition Width="40"></ColumnDefinition>
 											<ColumnDefinition Width="*"></ColumnDefinition>
-											<ColumnDefinition Width="20"></ColumnDefinition>
-											<ColumnDefinition Width="20"></ColumnDefinition>
-											<ColumnDefinition Width="20"></ColumnDefinition>
-											<ColumnDefinition Width="20"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
 										</Grid.ColumnDefinitions>
 										<Grid>
 											<Grid.ColumnDefinitions>
@@ -163,10 +163,10 @@
 												<ColumnDefinition></ColumnDefinition>
 											</Grid.ColumnDefinitions>
 											<Ellipse Fill="White" StrokeThickness="1" Width="7" Height="7" Margin="{Binding NameMargin}" IsVisible="{Binding ArrayBulletVs}" />
-											<TextBox Grid.Column="1" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
+											<TextBox Grid.Column="1" Margin="0,0,10,0" Text="{Binding ParamName}" IsReadOnly="{Binding ParamIsBase}" />
 										</Grid>
 										<CheckBox Grid.Column="1" IsChecked="{Binding ParamUsed}" />
-										<TextBox Grid.Column="2" Text="{Binding ParamValue}" IsReadOnly="{Binding ParamHasArray}" />
+										<TextBox Grid.Column="2" Margin="0,0,10,0" Text="{Binding ParamValue}" IsReadOnly="{Binding ParamHasArray}" />
 										<Button Grid.Column="3" Click="ButtonLVArray_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddArrayVs}" Classes="EditBtn EditExecArrayBtn" />
 										<Button Grid.Column="4" Click="ButtonLVAdd_Click" Tag="{Binding UniqueID}" IsVisible="{Binding AddVs}" Classes="EditBtn EditExecAddBtn" />
 										<Button Grid.Column="5" Click="ButtonLVDelete_Click" Tag="{Binding UniqueID}" IsVisible="{Binding RemoveVs}" Classes="EditBtn EditExecRemoveBtn" />
@@ -438,12 +438,12 @@
 								<DataTemplate x:DataType="{x:Type globalData:ParamEntry}">
 									<Grid Margin="0,2">
 										<Grid.ColumnDefinitions>
-											<ColumnDefinition Width="290"></ColumnDefinition>
-											<ColumnDefinition Width="320"></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
-											<ColumnDefinition></ColumnDefinition>
+											<ColumnDefinition Width="*"></ColumnDefinition>
+											<ColumnDefinition Width="*"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
+											<ColumnDefinition Width="25"></ColumnDefinition>
 										</Grid.ColumnDefinitions>
 										<Grid>
 											<Grid.ColumnDefinitions>

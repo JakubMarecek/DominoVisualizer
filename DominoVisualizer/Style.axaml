@@ -91,7 +91,7 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-		<Style Selector="^[IsReadOnly=true] Rectangle#outerRectangle">
+		<Style Selector="^[IsReadOnly=true] Border#outerRectangle">
 			<Setter Property="Opacity" Value="0" />
 		</Style>
 	</Style>

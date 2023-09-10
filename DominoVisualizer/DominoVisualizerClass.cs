@@ -2412,7 +2412,7 @@ namespace DominoVisualizer
 					g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 					
 					Border b = null;
-					CheckDictVarState(ref b, param);
+					CheckDictVarState(ref b, param, false);
 					b.Child = g;
 					sp.Children.Add(b);
 
@@ -2761,7 +2761,7 @@ namespace DominoVisualizer
             sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
 
 			Border b = null;
-			CheckDictVarState(ref b, setVar);
+			CheckDictVarState(ref b, setVar, true);
 			b.Child = sp2;
 
 			return b;
@@ -3411,7 +3411,7 @@ namespace DominoVisualizer
 
 		Color varNotDefClr = Color.Parse("#f44336");
 		Color varIsDefClr = Color.Parse("#4caf50");
-		private bool CheckDictVarState(ref Border borderInst, DominoDict dict, bool baseIt = true)
+		private bool CheckDictVarState(ref Border borderInst, DominoDict dict, bool isVar, bool baseIt = true)
 		{
 			bool CheckVarState(ref Border borderInstS, string var, bool isSetter)
 			{
@@ -3455,13 +3455,18 @@ namespace DominoVisualizer
 			}
 
 			foreach (var si in dict.ValueArray)
-				if (CheckDictVarState(ref borderInst, si, false))
+				if (CheckDictVarState(ref borderInst, si, isVar, false))
 					return true;
 
 			if (baseIt && borderInst == null)
 			{
 				borderInst = new();
-			}
+				if (isVar)
+				{
+					borderInst.Background = Brushes.LightGray;
+                    borderInst.CornerRadius = new(5);
+                }
+            }
 				
 			return false;
 		}

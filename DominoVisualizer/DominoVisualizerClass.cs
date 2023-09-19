@@ -2423,7 +2423,7 @@ namespace DominoVisualizer
 			return sp;
 		}
 
-		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1)
+		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1, bool updateUI = false)
 		{
 			string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
 			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
@@ -2448,14 +2448,15 @@ namespace DominoVisualizer
 				sp2.Children.Add(g);
 
 				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[colorConnSel])) : Brushes.LightGray };
-				box.Widget.list.Children.Add(b2);
+				if (!updateUI)
+					box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
 			}
 
 			foreach (var sc in c.SubConnections)
 			{
-				DrawBoxConnectors(box, sc, name + " > ");
+				DrawBoxConnectors(box, sc, name + " > ", sc.INT_clr, updateUI);
 			}
 		}
 
@@ -4280,10 +4281,10 @@ namespace DominoVisualizer
 			}
 
 			var b = dominoBoxes.Values.Where(a => findBox(a.Connections)).SingleOrDefault();
-			if (b != null)
+			/*if (b != null)
 			{
 				b.Widget.list.Children.Remove(editConnector.ContainerUI);
-			}
+			}*/
 
 			foreach (var l in lines)
 			{
@@ -4322,7 +4323,7 @@ namespace DominoVisualizer
 
 			if (b != null)
 			{
-				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), editConnector.INT_clr);
+				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), editConnector.INT_clr, true);
 			}
 
             WasEdited();

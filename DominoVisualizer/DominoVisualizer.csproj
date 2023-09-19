@@ -20,7 +20,7 @@
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	</PropertyGroup>
+  </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='DebugLinux'">
 		<PlatformTarget>x64</PlatformTarget>

@@ -20,7 +20,6 @@ namespace DominoVisualizer
         private static int nonce = 0;
         private static string timestamp = "";
         private static bool end = false;
-        private static string imageName = "";
         private static string largeText = "";
         private static string detailsName = "";
         private static string stateName = "";

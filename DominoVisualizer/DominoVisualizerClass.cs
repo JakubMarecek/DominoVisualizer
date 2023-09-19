@@ -2890,9 +2890,9 @@ namespace DominoVisualizer
 			b.Widget.swapBtn.Tag = b.ID;
 
 			foreach (var btn in b.Widget.list.Children)
-				if (btn is Button)
+				if (btn is Button button)
 				{
-					((Button)btn).Tag = b.ID;
+					button.Tag = b.ID;
 				}
 
 			dominoBoxes[b.ID] = b;
@@ -4922,7 +4922,6 @@ namespace DominoVisualizer
 			foreach (var c in dominoConnectors.Values)
 				foreach (var eb in c.ExecBoxes)
 				{
-					c.Widget.list.Children.Remove(eb.ContainerUI);
 					DrawExecBoxContainerUI(c, eb, eb.INT_clr);
 				}
 
@@ -4930,7 +4929,7 @@ namespace DominoVisualizer
 				foreach (var c in b.Connections)
 				{
 					b.Widget.list.Children.Remove(c.ContainerUI);
-					DrawBoxConnectors(b, c);
+					DrawBoxConnectors(b, c, "", c.INT_clr);
 				}
 
 			if (saved)

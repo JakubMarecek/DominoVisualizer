@@ -2345,6 +2345,8 @@ namespace DominoVisualizer
 			//Panel.SetZIndex(l, 40);
 			l.ZIndex = 40;
 
+			canvas.RefreshChild(l);
+
 			lines.Add(new(startIndex, endIndex, l));
 		}
 
@@ -2902,10 +2904,10 @@ namespace DominoVisualizer
 
 			for (int i = 0; i < lines.Count; i++)
 			{
-				if (lines[i].Point1.StartsWith(tag))
+				if (lines[i].Point1.StartsWith(tag + "-"))
 					lines[i].Point1 = lines[i].Point1.Replace(tag, b.ID);
 
-				if (lines[i].Point2.StartsWith(tag))
+				if (lines[i].Point2.StartsWith(tag + "-"))
 					lines[i].Point2 = lines[i].Point2.Replace(tag, b.ID);
 			}
 
@@ -2985,6 +2987,8 @@ namespace DominoVisualizer
 			Canvas.SetTop(b2, currY);
 			//Panel.SetZIndex(b2, 40);
 			b2.ZIndex = 40;
+
+			canvas.RefreshChild(b2);
 		}
 
 		private void DrawBorder(DominoBorder b, double currX, double currY, double w, double h, bool? moveChilds)
@@ -3050,6 +3054,8 @@ namespace DominoVisualizer
 			Canvas.SetTop(b2, currY);
 			//Panel.SetZIndex(b2, 10);
 			b2.ZIndex = 10;
+
+			canvas.RefreshChild(b2);
 		}
 
 		private void DrawResource(DominoDict res)
@@ -3509,7 +3515,8 @@ namespace DominoVisualizer
 						}*/
 					}
 
-				NewDrawConnector(c, c.DrawX, c.DrawY, true);
+				if (found)
+					NewDrawConnector(c, c.DrawX, c.DrawY, true);
 			}
 		}
 
@@ -3518,14 +3525,14 @@ namespace DominoVisualizer
 
 		private void NewDrawBox(DominoBox box, double currX, double currYBox, bool renew = false)
         {
-            if (renew)
-            {
-                currX = Canvas.GetLeft(box.Widget);
-                currYBox = Canvas.GetTop(box.Widget);
-            }
-
             if (box.Widget != null)
             {
+            	if (renew)
+            	{
+            	    currX = Canvas.GetLeft(box.Widget);
+            	    currYBox = Canvas.GetTop(box.Widget);
+            	}
+
                 canvas.Children.Remove(box.Widget);
             }
 
@@ -3619,14 +3626,14 @@ namespace DominoVisualizer
 
 		private void NewDrawConnector(DominoConnector conn, double currX, double currY, bool renew = false)
 		{
-			if (renew)
-			{
-				currX = Canvas.GetLeft(conn.Widget);
-				currY = Canvas.GetTop(conn.Widget);
-            }
-
             if (conn.Widget != null)
             {
+				if (renew)
+				{
+					currX = Canvas.GetLeft(conn.Widget);
+					currY = Canvas.GetTop(conn.Widget);
+            	}
+
                 canvas.Children.Remove(conn.Widget);
             }
 
@@ -4289,7 +4296,7 @@ namespace DominoVisualizer
 
 			AddConnectorLines(connEdit, 2);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
         }
@@ -4500,7 +4507,7 @@ namespace DominoVisualizer
 
             AddBoxLines(boxEdit, 2);
 
-            canvas.RefreshChilds();
+            //canvas.RefreshChilds();
 
             WasEdited();
 
@@ -4563,7 +4570,7 @@ namespace DominoVisualizer
 			if (isOut == true)
 				AddControlOutLines(0);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
 
@@ -5008,7 +5015,7 @@ namespace DominoVisualizer
 			DrawComment(c, (int)pnt.X, (int)pnt.Y);
 			dominoComments.Add(c.UniqueID, c);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
         }
@@ -5057,7 +5064,7 @@ namespace DominoVisualizer
 
 			DrawComment(editComment, x, y);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
         }
@@ -5077,7 +5084,7 @@ namespace DominoVisualizer
 			DrawBorder(b, (int)pnt.X, (int)pnt.Y, 50, 50, true);
 			dominoBorders.Add(b.UniqueID, b);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
         }
@@ -5129,7 +5136,7 @@ namespace DominoVisualizer
 
 			DrawBorder(editBorder, x, y, w, h, moveChilds);
 
-			canvas.RefreshChilds();
+			//canvas.RefreshChilds();
 
             WasEdited();
         }

@@ -2909,7 +2909,13 @@ namespace DominoVisualizer
 
 				if (lines[i].Point2.StartsWith(tag + "-"))
 					lines[i].Point2 = lines[i].Point2.Replace(tag, b.ID);
-			}
+
+                if (lines[i].Point1.EndsWith("-" + tag))
+                    lines[i].Point1 = lines[i].Point1.Replace(tag, b.ID);
+
+                if (lines[i].Point2.EndsWith("-" + tag))
+                    lines[i].Point2 = lines[i].Point2.Replace(tag, b.ID);
+            }
 
 			foreach (var c in dominoConnectors.Values)
 			{
@@ -4436,7 +4442,6 @@ namespace DominoVisualizer
 					o.SubConnections.Add(c);
 
 					//DrawBoxConnectors(boxEdit, o, parentName);
-					NewDrawBox(boxEdit, boxEdit.DrawX, boxEdit.DrawY, true);
 					added = true;
 				}
 				else
@@ -4447,7 +4452,6 @@ namespace DominoVisualizer
 					o.FromBoxConnectIDStr = a;
 
 					//DrawBoxConnectors(boxEdit, o, parentName);
-					NewDrawBox(boxEdit, boxEdit.DrawX, boxEdit.DrawY, true);
                     added = true;
 				}
 
@@ -4504,6 +4508,9 @@ namespace DominoVisualizer
 
 			if (!added)
 				subs(boxEdit.Connections); //add to any subconnections
+
+			if (added)
+                NewDrawBox(boxEdit, boxEdit.DrawX, boxEdit.DrawY, true);
 
             AddBoxLines(boxEdit, 2);
 
@@ -4724,17 +4731,17 @@ namespace DominoVisualizer
 
 				if (tag[0] == "datain")
 				{
-					var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.Name == tag[1]).Single();
+					var m = dominoGraphs[selGraph].Metadata.DatasIn.Where(a => a.UniqueID == tag[1]).Single();
 					wiMetaDataIn.list.Children.Remove(m.ContainerUI);
-					dominoGraphs[selGraph].Metadata.DatasIn.RemoveAll(a => a.Name == tag[1]);
+					dominoGraphs[selGraph].Metadata.DatasIn.RemoveAll(a => a.UniqueID == tag[1]);
 					
 					RefreshConnectorsVariables(m.Name, "");
 				}
 				if (tag[0] == "dataout")
 				{
-					var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.Name == tag[1]).Single();
+					var m = dominoGraphs[selGraph].Metadata.DatasOut.Where(a => a.UniqueID == tag[1]).Single();
 					wiMetaDataOut.list.Children.Remove(m.ContainerUI);
-					dominoGraphs[selGraph].Metadata.DatasOut.RemoveAll(a => a.Name == tag[1]);
+					dominoGraphs[selGraph].Metadata.DatasOut.RemoveAll(a => a.UniqueID == tag[1]);
 					
 					RefreshConnectorsVariables(m.Name, "");
 				}

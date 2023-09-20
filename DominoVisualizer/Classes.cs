@@ -85,9 +85,9 @@ namespace DominoVisualizer
 
         public List<DominoDict> Params { set; get; }
 
-        public StackPanel MainUI { set; get; }
+        //public StackPanel MainUI { set; get; }
 
-        public Border ContainerUI { set; get; }
+        //public Border ContainerUI { set; get; }
 
         public int INT_clr { set; get; }
     }
@@ -131,7 +131,7 @@ namespace DominoVisualizer
 
         public List<string> OutFuncName { set; get; }
 
-        public Border ContainerUI { set; get; }
+        //public Border ContainerUI { set; get; }
 
         public string UniqueID { get; }
 

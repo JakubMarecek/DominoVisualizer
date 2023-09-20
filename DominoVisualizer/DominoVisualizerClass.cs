@@ -2111,7 +2111,8 @@ namespace DominoVisualizer
 						currY = (int)pos.Y;
 					}
 
-					DrawConnector(conn, currX, currY);
+                    //DrawConnector(conn, currX, currY);
+                    NewDrawConnector(conn, currX, currY);
 				}
 				else
 				{
@@ -2130,7 +2131,7 @@ namespace DominoVisualizer
 					{
 						//colorBoxSel = r.Next(0, 16);
 
-						DrawExecBoxContainerUI(conn, execBox, colorBoxSel);
+						//DrawExecBoxContainerUI(conn, execBox, colorBoxSel);
 
 						// ===
 
@@ -2150,13 +2151,14 @@ namespace DominoVisualizer
 								currYBox = (int)pos.Y;
 							}
 
-							DrawBox(execBox.Box, currX, currYBox);
+                            //DrawBox(execBox.Box, currX, currYBox);
+                            NewDrawBox(execBox.Box, currX, currYBox, true);
 
-							execBoxNull = true;
+                            execBoxNull = true;
 
 							foreach (var subConn in execBox.Box.Connections)
 							{
-								DrawBoxConnectors(execBox.Box, subConn, "");
+								//DrawBoxConnectors(execBox.Box, subConn, "");
 
 								/*if (subConn.ID != null && subConn.ID != "")
 								{
@@ -2346,7 +2348,7 @@ namespace DominoVisualizer
 			lines.Add(new(startIndex, endIndex, l));
 		}
 
-		private void DrawExecBoxContainerUI(DominoConnector c, ExecBox eb, int clr)
+		/*private void DrawExecBoxContainerUI(DominoConnector c, ExecBox eb, int clr)
 		{
 			StackPanel sp = new();
 			DrawExecBoxChildren(c, eb, sp);
@@ -2357,7 +2359,7 @@ namespace DominoVisualizer
 			eb.ContainerUI = b;
 		}
 
-		private StackPanel DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
+		private void DrawExecBoxChildren(DominoConnector conn, ExecBox execBox, StackPanel sp)
 		{
 			string name = execBox.ExecStr;
 			//if (regBoxesAll.ContainsKey(execBox.Box.Name))
@@ -2393,7 +2395,7 @@ namespace DominoVisualizer
 					/*if (param.ValueArray.Count > 1)
 						pv = "{" + string.Join(", ", param.ValueArra) + "}";
 					else
-						pv = GetSetVarOutName(param.Value);*/
+						pv = GetSetVarOutName(param.Value);*
 
 					var paramName = "PARAM DOESN'T EXIST";
 					var paramType = "";
@@ -2419,11 +2421,9 @@ namespace DominoVisualizer
 					conn.Height += 30;
                 }
 			}
-
-			return sp;
 		}
 
-		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1, bool updateUI = false)
+		private void DrawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1)
 		{
 			string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
 			int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
@@ -2448,15 +2448,14 @@ namespace DominoVisualizer
 				sp2.Children.Add(g);
 
 				Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[colorConnSel])) : Brushes.LightGray };
-				if (!updateUI)
-					box.Widget.list.Children.Add(b2);
+				box.Widget.list.Children.Add(b2);
 
 				c.ContainerUI = b2;
 			}
 
 			foreach (var sc in c.SubConnections)
 			{
-				DrawBoxConnectors(box, sc, name + " > ", sc.INT_clr, updateUI);
+				DrawBoxConnectors(box, sc, name + " > ");
 			}
 		}
 
@@ -2467,7 +2466,7 @@ namespace DominoVisualizer
 
 			/*var brsh = Brushes.Yellow;
 			if (conn.INT_isIn) brsh = Brushes.Red;
-			if (conn.INT_isOut) brsh = Brushes.Orange;*/
+			if (conn.INT_isOut) brsh = Brushes.Orange;*
 
 			var brsh = new SolidColorBrush(Colors.Yellow).ToImmutable();
 
@@ -2579,7 +2578,7 @@ namespace DominoVisualizer
 			}
 
 			wb.list.Children.Add(DrawBtn("Add new output connector", box.ID, AddBoxConnector));
-		}
+		}*/
 
 		private void DrawMetaDataIn(DominoBoxMetadataDatasIn inData, bool indt, bool updateUI = false)
 		{
@@ -2739,7 +2738,7 @@ namespace DominoVisualizer
 			AddConnectorLines(conn, 1);
 		}
 
-        private Border DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
+        /*private Border DrawConnVariableChild(DominoConnector conn, DominoDict setVar)
         {
             string pv = ParamsAsString(setVar);
 
@@ -2778,7 +2777,7 @@ namespace DominoVisualizer
 			if (!conn.INT_isOut) pos++;
 
 			conn.Widget.list.Children.Insert(pos, b2);
-		}
+		}*/
 
 		private void DrawGlobalVar(DominoDict var, bool updateUI = false)
 		{
@@ -2830,11 +2829,13 @@ namespace DominoVisualizer
 				{
 					foreach (var ebf in eb)
                     {
-                        c.Widget.list.Children.Remove(ebf.ContainerUI);
+                        //c.Widget.list.Children.Remove(ebf.ContainerUI);
                         c.ExecBoxes.RemoveAll(a => a.Box.ID == box.ID);
 
                         RemoveLine(c.ID + "-OUT-" + ebf.Box.ID);
                     }
+
+					NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
                 	AddConnectorLines(c, 1);
 				}
@@ -2910,7 +2911,7 @@ namespace DominoVisualizer
 
 			foreach (var c in dominoConnectors.Values)
 			{
-				var eb = c.ExecBoxes.Where(a => a.Box.ID == b.ID).SingleOrDefault();
+				/*var eb = c.ExecBoxes.Where(a => a.Box.ID == b.ID).SingleOrDefault();
 				if (eb != null)
 				{
 					c.Widget.list.Children.Remove(eb.ContainerUI);
@@ -2949,7 +2950,9 @@ namespace DominoVisualizer
 							c.Widget.list.Children.Remove(ee.ContainerUI);
 							DrawExecBoxContainerUI(c, ee, ee.INT_clr);
 						}
-				}
+				}*/
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 			}
 
             WasEdited();
@@ -3409,9 +3412,8 @@ namespace DominoVisualizer
             }
         }
 
-
-		Color varNotDefClr = Color.Parse("#f44336");
-		Color varIsDefClr = Color.Parse("#4caf50");
+        private readonly Color varNotDefClr = Color.Parse("#f44336");
+        private readonly Color varIsDefClr = Color.Parse("#4caf50");
 		private bool CheckDictVarState(ref Border borderInst, DominoDict dict, bool isVar, bool baseIt = true)
 		{
 			bool CheckVarState(ref Border borderInstS, string var, bool isSetter)
@@ -3476,15 +3478,16 @@ namespace DominoVisualizer
 		{
 			foreach (var c in dominoConnectors.Values)
 			{
+				bool found = false;
+
 				foreach (var v in c.SetVariables)
 					if (v.Name == "self." + oldVarName || v.Name == "self." + newVarName)
-                        v.ContainerUI.Child = DrawConnVariableChild(c, v);
+						found = true;
+                        //v.ContainerUI.Child = DrawConnVariableChild(c, v);
 
 				foreach (var eb in c.ExecBoxes)
 					foreach (var p in eb.Params)
 					{
-						bool found = false;
-
 						void f(DominoDict dominoDict)
 						{
 							if (dominoDict.Name == "self." + oldVarName || dominoDict.Name == "self." + newVarName)
@@ -3499,14 +3502,327 @@ namespace DominoVisualizer
 						}
 						f(p);
 
-						if (found)
+						/*if (found)
 						{
 							eb.MainUI.Children.Clear();
 							DrawExecBoxChildren(c, eb, eb.MainUI);
-						}
+						}*/
 					}
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 			}
 		}
+
+
+
+
+		private void NewDrawBox(DominoBox box, double currX, double currYBox, bool renew = false)
+        {
+            if (renew)
+            {
+                currX = Canvas.GetLeft(box.Widget);
+                currYBox = Canvas.GetTop(box.Widget);
+            }
+
+            if (box.Widget != null)
+            {
+                canvas.Children.Remove(box.Widget);
+            }
+
+            var wb = new DominoUIBox();
+			wb.Header.Text = box.ID + " - " + box.Name;
+			wb.Header.Margin = new(0, 0, 40, 0);
+			//wb.Height = 30;
+			wb.Width = width;
+			wb.HeaderRectangle.Fill = Brushes.White;
+			wb.ID = box.ID;
+			canvas.Children.Add(wb);
+
+			wb.delBtn.Tag = box.ID;
+			wb.delBtn.Click += (sender, e) => {
+				AskDialog("Remove box", "Do you want to remove the box?", () =>
+				{
+					string tag = (string)(sender as Button).Tag;
+					var b = dominoBoxes[tag];
+					RemoveBox(b);
+				});
+			};
+
+			wb.swapBtn.IsVisible = true;
+			wb.swapBtn.Tag = box.ID;
+			wb.swapBtn.Click += SwapBox;
+
+			Canvas.SetLeft(wb, currX);
+			Canvas.SetTop(wb, currYBox);
+			//Panel.SetZIndex(wb, 30);
+			wb.ZIndex = 30;
+			box.DrawX = currX;
+			box.DrawY = currYBox;
+			box.Widget = wb;
+			box.Height = 40;
+
+			if (regBoxesAll.ContainsKey(box.Name) && !regBoxesAll[box.Name].IsSystem && !regBoxesAll[box.Name].INT_Graph)
+			{
+				wb.list.Children.Add(DrawBtn("Open in new window >>>", box.Name, OnOpenClick));
+				box.Height += 20;
+				box.INT_open = true;
+			}
+
+			wb.list.Children.Add(DrawBtn("Add new output connector", box.ID, AddBoxConnector));
+		
+			void drawBoxConnectors(DominoBox box, DominoConnector c, string parentName = "", int selClr = -1)
+			{
+				string name = parentName + "(" + c.FromBoxConnectID.ToString() + ") " + c.FromBoxConnectIDStr;
+				int colorConnSel = selClr >= 0 ? selClr : box.Widget.list.Children.Count - 1; // r.Next(0, 16);
+
+				//colorConnSel = r.Next(0, linesColors.Count);
+
+				if (c.ID != null && c.ID != "")
+				{
+					c.INT_clr = colorConnSel;
+
+					StackPanel sp2 = new();
+
+					Grid g = new() { Height = 18 };
+					g.Children.Add(new TextBox() { Text = name + " = " + c.ID, Margin = new(0, 0, 20, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+					Button btnDel = new Button() { Tag = box.ID + "|" + c.ID, Margin = new(0) };
+        	        btnDel.Classes.Add("EditBtn");
+        	        btnDel.Classes.Add("DelBtn");
+        	        btnDel.Click += RemoveBoxConn;
+					g.Children.Add(btnDel);
+
+					sp2.Children.Add(g);
+
+					Border b2 = new() { BorderBrush = new SolidColorBrush(linesColors[colorConnSel]), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[colorConnSel])) : Brushes.LightGray };
+					box.Widget.list.Children.Add(b2);
+
+					//c.ContainerUI = b2;
+				}
+
+				foreach (var sc in c.SubConnections)
+				{
+					drawBoxConnectors(box, sc, name + " > ");
+				}
+			}
+		
+			foreach (var c in box.Connections)
+			{
+				drawBoxConnectors(box, c);
+            }
+
+            if (renew)
+            {
+                canvas.RefreshChild(box.Widget);
+            }
+        }
+
+		private void NewDrawConnector(DominoConnector conn, double currX, double currY, bool renew = false)
+		{
+			if (renew)
+			{
+				currX = Canvas.GetLeft(conn.Widget);
+				currY = Canvas.GetTop(conn.Widget);
+            }
+
+            if (conn.Widget != null)
+            {
+                canvas.Children.Remove(conn.Widget);
+            }
+
+            conn.INT_isIn = dominoGraphs[selGraph].Metadata.ControlsIn.Where(a => a.Name == conn.ID).Any();
+			conn.INT_isOut = dominoGraphs[selGraph].Metadata.ControlsOut.Where(a => conn.OutFuncName.Contains(a.Name)).Any();
+
+			/*var brsh = Brushes.Yellow;
+			if (conn.INT_isIn) brsh = Brushes.Red;
+			if (conn.INT_isOut) brsh = Brushes.Orange;*/
+
+			var brsh = new SolidColorBrush(Colors.Yellow).ToImmutable();
+
+			var w = new DominoUIConnector();
+			w.Header.Text = (conn.INT_isIn ? "ControlIn - " : "") + conn.ID;
+			//w.Height = 30;
+			w.Width = width;
+			w.HeaderRectangle.Fill = brsh;
+			w.ID = conn.ID;
+			canvas.Children.Add(w);
+
+			w.delBtn.Tag = conn.ID;
+			w.delBtn.Click += (sender, e) => {
+
+				AskDialog("Remove connector", "Do you want to remove the connector?", () =>
+				{
+					string tag = (string)(sender as Button).Tag;
+					var conn = dominoConnectors[tag];
+					RemoveConector(conn);
+				});
+			};
+
+			w.editBtn.IsVisible = conn.INT_isIn || conn.INT_isOut ? false : true;
+			w.editBtn.Tag = conn.ID;
+			w.editBtn.Click += EditConnectorDialog;
+
+			Canvas.SetLeft(w, currX);
+			Canvas.SetTop(w, currY);
+			//Panel.SetZIndex(w, 30);
+			w.ZIndex = 30;
+			conn.DrawX = currX;
+			conn.DrawY = currY;
+			conn.Widget = w;
+			conn.Height = 32;
+
+			if (!conn.INT_isOut)
+			{
+				w.list.Children.Add(DrawBtn("Add new exec box", conn.ID, AddExecBox));
+                conn.Height += 20;
+            }
+
+			if (!conn.INT_isIn)
+			{
+				w.list.Children.Add(DrawBtn("Add new set variable", conn.ID, AddConnVar));
+                conn.Height += 20;
+            }
+
+			foreach (var setVar in conn.SetVariables)
+			{
+            	string pv = ParamsAsString(setVar);
+
+            	Grid g = new() { Height = 18 };
+            	g.Children.Add(new TextBox() { Text = setVar.Name, FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+            	Button btn = new Button() { Tag = "connvar" + "|" + conn.ID + "|" + setVar.UniqueID };
+            	btn.Classes.Add("EditBtn");
+            	btn.Click += EditMetadataInfo;
+            	g.Children.Add(btn);
+
+            	Button btn2 = new Button() { Tag = conn.ID + "|" + setVar.UniqueID };
+            	btn2.Classes.Add("EditBtn");
+            	btn2.Classes.Add("DelBtn");
+            	btn2.Click += RemoveConnVar;
+            	g.Children.Add(btn2);
+
+            	StackPanel sp2 = new();
+            	sp2.Children.Add(g);
+            	sp2.Children.Add(new TextBox() { Text = pv, Margin = new(10, 0, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+				Border b = null;
+				CheckDictVarState(ref b, setVar, true);
+				b.Child = sp2;
+	
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Black), BorderThickness = new(2, 2, 2, 2), Child = b, Height = 40 };
+				setVar.ContainerUI = b2;
+
+				int pos = 1;
+				if (!conn.INT_isOut) pos++;
+
+				w.list.Children.Insert(pos, b2);
+				conn.Height += 40;
+            }
+
+			foreach (string outFunc in conn.OutFuncName)
+			{
+				StackPanel sp2 = new();
+
+				Grid g = new() { Height = 30 };
+				g.Children.Add(new TextBox() { Text = "ControlOut", FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+				g.Children.Add(new TextBox() { Text = outFunc, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+				sp2.Children.Add(g);
+
+				Border b2 = new() { BorderBrush = new SolidColorBrush(Colors.Orange), BorderThickness = new(2, 2, 2, 2), Child = sp2, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(Colors.Orange)) : Brushes.LightGray };
+				w.list.Children.Add(b2);
+
+				conn.Height += 55;
+            }
+
+			foreach (var eb in conn.ExecBoxes)
+			{
+				StackPanel sp = new();
+
+				string name = eb.ExecStr;
+				//if (regBoxesAll.ContainsKey(execBox.Box.Name))
+				//	name = execBox.Exec < regBoxesAll[execBox.Box.Name].ControlsIn.Count ? regBoxesAll[execBox.Box.Name].ControlsIn[execBox.Exec].Name : "EXEC DOESN'T EXIST";
+
+				string execStr = "Exec: " + "(" + eb.Exec.ToString() + ") " + name;
+				if (eb.Type == ExecType.ExecDynInt) execStr += ", DynInt: " + eb.DynIntExec.ToString();
+
+				Grid gh = new() { Height = 18 };
+				gh.Children.Add(new TextBox() { Text = execStr + " > " + eb.Box.ID, Margin = new(0, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Center, FontWeight = FontWeight.Black, Width = double.NaN });
+
+				Button btn = new Button() { Tag = conn.ID + "|" + eb.Box.ID };
+				btn.Classes.Add("EditBtn");
+				btn.Click += EditExecBox;
+				gh.Children.Add(btn);
+
+				Button btn2 = new Button() { Tag = conn.ID + "|" + eb.Box.ID };
+            	btn2.Classes.Add("EditBtn");
+            	btn2.Classes.Add("DelBtn");
+				btn2.Click += RemoveExecBox;
+            	gh.Children.Add(btn2);
+
+				sp.Children.Add(gh);
+
+				conn.Height += 22;
+
+            	if (eb.Params != null && eb.Params.Count > 0)
+				{
+					foreach (var param in eb.Params)
+					{
+						string pv = ParamsAsString(param);
+
+						/*if (param.ValueArray.Count > 1)
+							pv = "{" + string.Join(", ", param.ValueArra) + "}";
+						else
+							pv = GetSetVarOutName(param.Value);*/
+
+						var paramName = "PARAM DOESN'T EXIST";
+						var paramType = "";
+
+						if (regBoxesAll.ContainsKey(eb.Box.Name))
+						{
+							if (int.Parse(param.Name) < regBoxesAll[eb.Box.Name].DatasIn.Count)
+            	            {
+            	                paramName = regBoxesAll[eb.Box.Name].DatasIn[int.Parse(param.Name)].Name;
+            	                paramType = " (" + regBoxesAll[eb.Box.Name].DatasIn[int.Parse(param.Name)].DataTypeID + ")";
+            	            }
+            	        }
+
+            	        Grid g = new() { Height = 30 };
+						g.Children.Add(new TextBox() { Text = "(" + param.Name + ") " + (regBoxesAll.ContainsKey(eb.Box.Name) ? paramName : "") + paramType, Margin = new(0, 0, 0, 0), FontWeight = FontWeight.Bold, Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+						g.Children.Add(new TextBox() { Text = pv, Margin = new(10, 13, 0, 0), Width = double.NaN, HorizontalAlignment = HorizontalAlignment.Left });
+
+						Border brd = null;
+						CheckDictVarState(ref brd, param, false);
+						brd.Child = g;
+						sp.Children.Add(brd);
+
+						conn.Height += 30;
+            	    }
+				}
+				
+				//eb.MainUI = sp;
+				//eb.INT_clr = clr;
+				Border b = new() { BorderBrush = new SolidColorBrush(linesColors[eb.INT_clr]), BorderThickness = new(2, 2, 2, 2), Child = sp, CornerRadius = new(5), Background = (bool)settings["coloredBoxes"] ? new SolidColorBrush(GetLight(linesColors[eb.INT_clr])) : Brushes.LightGray };
+				w.list.Children.Add(b);
+				//eb.ContainerUI = b;
+			}
+
+            if (renew)
+            {
+				canvas.RefreshChild(conn.Widget);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
 
         public delegate void OpenAskDialog(string name, string desc);
 		public OpenAskDialog openAskDialog;
@@ -3869,11 +4185,13 @@ namespace DominoVisualizer
 					if (ceb.Box.ID == execBoxEdit.Box.ID)
 					{
 						ceb.Params = paramsEdit;
-						ceb.MainUI.Children.Clear();
-						DrawExecBoxChildren(c, ceb, ceb.MainUI);
+						//ceb.MainUI.Children.Clear();
+						//DrawExecBoxChildren(c, ceb, ceb.MainUI);
 						AddConnectorLines(c, 1);
 					}
 				}
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 			}
 
             WasEdited();
@@ -3889,8 +4207,10 @@ namespace DominoVisualizer
 
 				var c = dominoConnectors[ids[0]];
 				var eb = c.ExecBoxes.Where(a => a.Box.ID == ids[1]).Single();
-				c.Widget.list.Children.Remove(eb.ContainerUI);
+				//c.Widget.list.Children.Remove(eb.ContainerUI);
 				c.ExecBoxes.RemoveAll(a => a.Box.ID == ids[1]);
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
 				RemoveLine(ids[0] + "-OUT-" + eb.Box.ID);
 
@@ -3964,7 +4284,8 @@ namespace DominoVisualizer
 
 			var clr = connEdit.ExecBoxes.Count - 1;
 
-			DrawExecBoxContainerUI(connEdit, eb, clr);
+			//DrawExecBoxContainerUI(connEdit, eb, clr);
+			NewDrawConnector(connEdit, connEdit.DrawX, connEdit.DrawY, true);
 
 			AddConnectorLines(connEdit, 2);
 
@@ -3980,8 +4301,11 @@ namespace DominoVisualizer
 			{
 				conn.FromBoxConnectID = -1;
 				conn.FromBoxConnectIDStr = "MISSING BOX";
-				box.Widget.list.Children.Remove(conn.ContainerUI);
+				//box.Widget.list.Children.Remove(conn.ContainerUI);
 				c.RemoveAll(a => a.ID == connID);
+
+				NewDrawConnector(conn, conn.DrawX, conn.DrawY, true);
+
 				RemoveLine(conn.ID + "-IN");
 			}
 
@@ -4104,7 +4428,8 @@ namespace DominoVisualizer
 					c.FromBoxConnectIDStr = arrayKey;
 					o.SubConnections.Add(c);
 
-					DrawBoxConnectors(boxEdit, o, parentName);
+					//DrawBoxConnectors(boxEdit, o, parentName);
+					NewDrawBox(boxEdit, boxEdit.DrawX, boxEdit.DrawY, true);
 					added = true;
 				}
 				else
@@ -4114,7 +4439,8 @@ namespace DominoVisualizer
 					o.FromBoxConnectID = index;
 					o.FromBoxConnectIDStr = a;
 
-					DrawBoxConnectors(boxEdit, o, parentName);
+					//DrawBoxConnectors(boxEdit, o, parentName);
+					NewDrawBox(boxEdit, boxEdit.DrawX, boxEdit.DrawY, true);
                     added = true;
 				}
 
@@ -4228,7 +4554,8 @@ namespace DominoVisualizer
 			Point pnt = new(widthA / 2, height / 2);
 
 			var pntc = canvas.Transform3(pnt);
-			DrawConnector(c, (int)pntc.X, (int)pntc.Y);
+			//DrawConnector(c, (int)pntc.X, (int)pntc.Y);
+			NewDrawConnector(c, (int)pntc.X, (int)pntc.Y, true);
 
 			if (isIn == true)
 				AddControlInLines(0);
@@ -4323,7 +4650,9 @@ namespace DominoVisualizer
 
 			if (b != null)
 			{
-				DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), editConnector.INT_clr, true);
+				//DrawBoxConnectors(b, editConnector, findParentName("", b.Connections), editConnector.INT_clr);
+				NewDrawConnector(editConnector, editConnector.DrawX, editConnector.DrawY, true);
+				NewDrawBox(b, b.DrawX, b.DrawY, true);
 			}
 
             WasEdited();
@@ -4371,8 +4700,8 @@ namespace DominoVisualizer
 			Point pnt = new(width / 2, height / 2);
 			pnt = canvas.Transform3(pnt);
 
-			DrawBox(b, (int)pnt.X, (int)pnt.Y);
-			canvas.RefreshChilds();
+			NewDrawBox(b, (int)pnt.X, (int)pnt.Y, true);
+			//canvas.RefreshChilds();
 
             WasEdited();
 
@@ -4616,7 +4945,9 @@ namespace DominoVisualizer
 				v.Value = paramsEdit[0].Value;
 				v.ValueArray = paramsEdit[0].ValueArray;
 				v.UniqueID = paramsEdit[0].UniqueID;
-                v.ContainerUI.Child = DrawConnVariableChild(c, v);
+                //v.ContainerUI.Child = DrawConnVariableChild(c, v);
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
 				AddConnectorLines(c, 1);
 				AddControlOutLines(1);
@@ -4634,8 +4965,10 @@ namespace DominoVisualizer
 				var c = dominoConnectors[tags[0]];
 
 				var m = c.SetVariables.Where(a => a.UniqueID == tags[1]).Single();
-				c.Widget.list.Children.Remove(m.ContainerUI);
+				//c.Widget.list.Children.Remove(m.ContainerUI);
 				c.SetVariables.RemoveAll(a => a.UniqueID == tags[1]);
+
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
                 AddConnectorLines(c, 1);
 				AddControlOutLines(1);
@@ -4651,7 +4984,9 @@ namespace DominoVisualizer
 			var c = dominoConnectors[(string)((Button)sender).Tag];
 			var v = new DominoDict() { Name = "NewVariable", Value = "\"A value\"" };
 			c.SetVariables.Add(v);
-			DrawConnVariable(c, v);
+			//DrawConnVariable(c, v);
+			
+			NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
 			AddConnectorLines(c, 1);
 			AddControlOutLines(1);
@@ -4921,17 +5256,10 @@ namespace DominoVisualizer
             }
 
 			foreach (var c in dominoConnectors.Values)
-				foreach (var eb in c.ExecBoxes)
-				{
-					DrawExecBoxContainerUI(c, eb, eb.INT_clr);
-				}
+				NewDrawConnector(c, c.DrawX, c.DrawY, true);
 
 			foreach (var b in dominoBoxes.Values)
-				foreach (var c in b.Connections)
-				{
-					b.Widget.list.Children.Remove(c.ContainerUI);
-					DrawBoxConnectors(b, c, "", c.INT_clr);
-				}
+				NewDrawBox(b, b.DrawX, b.DrawY, true);
 
 			if (saved)
 				WasEdited();
@@ -6963,7 +7291,7 @@ namespace DominoVisualizer
 					loadConn(xConnections, box, null);
 				}
 
-				if (asNew)
+				/*if (asNew)
                 {
                     box.DrawX -= sX;
                     box.DrawY -= sY;
@@ -6973,7 +7301,7 @@ namespace DominoVisualizer
                     np += new Point(mX, mY);
 
                     DrawBox(box, np.X, np.Y);
-                }
+                }*/
             }
 
             foreach (var a in boxes)
@@ -7022,7 +7350,7 @@ namespace DominoVisualizer
                     connectors.Add(conn.ID, conn);
                 }
 
-                if (asNew)
+                /*if (asNew)
                 {
                     conn.DrawX -= sX;
                     conn.DrawY -= sY;
@@ -7032,7 +7360,7 @@ namespace DominoVisualizer
                     np += new Point(mX, mY);
 
                     DrawConnector(conn, np.X, np.Y);
-                }
+                }*/
 
                 var xExecBoxes = xConnector.Element("ExecBoxes")?.Elements("ExecBox");
 				if (xExecBoxes != null)
@@ -7069,7 +7397,7 @@ namespace DominoVisualizer
                             {
                                 int clr = conn.ExecBoxes.Count - 1;
 
-                                DrawExecBoxContainerUI(conn, execBox, clr);
+                                //DrawExecBoxContainerUI(conn, execBox, clr);
                             }
 						}
 					}
@@ -7081,19 +7409,46 @@ namespace DominoVisualizer
 
 			if (asNew)
             {
-				foreach (var b in boxes.Values)
+				/*foreach (var b in boxes.Values)
 				{
 					foreach (var c in b.Connections)
                     {
                         DrawBoxConnectors(b, c);
                     }
-				}
+				}*/
 
                 foreach (var c in dominoConnectors.Values)
                     AddConnectorLines(c, 0);
 
                 foreach (var b in dominoBoxes.Values)
                     AddBoxLines(b, 0);
+            }
+
+            if (asNew)
+            {
+            	foreach (var conn in dominoConnectors.Values)
+				{
+                    conn.DrawX -= sX;
+                    conn.DrawY -= sY;
+
+                    var np = canvas.Transform4(new(conn.DrawX, conn.DrawY));
+
+                    np += new Point(mX, mY);
+
+					NewDrawConnector(conn, np.X, np.Y);
+				}
+
+            	foreach (var box in dominoBoxes.Values)
+                {
+                    box.DrawX -= sX;
+                    box.DrawY -= sY;
+
+                    var np = canvas.Transform4(new(box.DrawX, box.DrawY));
+
+                    np += new Point(mX, mY);
+
+                    NewDrawBox(box, np.X, np.Y);
+                }
             }
 
             var xPoints = xGraph.Element("Points")?.Elements("Point");

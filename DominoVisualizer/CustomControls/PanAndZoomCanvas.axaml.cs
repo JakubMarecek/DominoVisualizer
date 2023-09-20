@@ -180,6 +180,12 @@ namespace WpfPanAndZoom.CustomControls
             }
         }
 
+        public void RefreshChild(Control child)
+        {
+            child.RenderTransformOrigin = new(new(0, 0), RelativeUnit.Absolute);
+            child.RenderTransform = _transform;
+        }
+
         /*public void ResetZoom()
         {
             for (int i = 0; i < Math.Abs(zoom); i++)

@@ -329,7 +329,7 @@ namespace DominoVisualizer
             Keyboard.Clear();
         }
 
-        private void W_KeyDown(object sender, KeyEventArgs e)
+        private async void W_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.F && Keyboard.IsKeyDown(Key.LeftCtrl))
 			{
@@ -344,7 +344,7 @@ namespace DominoVisualizer
 			if (e.Key == Key.V && Keyboard.IsKeyDown(Key.LeftCtrl))
 			{
 				if (loaded)
-                    parser.CopyingPaste();
+                    await parser.CopyingPaste();
 			}
 			if (e.Key == Key.Delete)
 			{

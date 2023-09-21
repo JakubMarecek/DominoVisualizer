@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using UnluacNET;
@@ -5510,9 +5511,9 @@ namespace DominoVisualizer
 			canvas.ResetSelection();
 		}
 
-		public void CopyingPaste()
+		public async Task CopyingPaste()
 		{
-			string strData = wnd.Clipboard.GetTextAsync().Result;
+			string strData = await wnd.Clipboard.GetTextAsync();
 
 			XElement xData = null;
 
@@ -7109,8 +7110,8 @@ namespace DominoVisualizer
 
                     if (cID != null)
                     {
-						if (newCID.Contains("_") && newCID.StartsWith("f_") && newCID.Count(c => c == '_') > 1)
-                        	newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_') + 1));
+						if (newCID.Contains('_') && newCID.StartsWith("f_") && newCID.Count(c => c == '_') > 1)
+                        	newCID = string.Concat(newID.ToString(), cID.AsSpan(cID.IndexOf('_', cID.IndexOf('_') + 1)));
 						else if (newCID.Contains("_") && newCID.StartsWith("f_") && newCID.Count(c => c == '_') == 1)
                             newCID = newID.ToString() + cID.Substring(cID.IndexOf('_', cID.IndexOf('_')));
 

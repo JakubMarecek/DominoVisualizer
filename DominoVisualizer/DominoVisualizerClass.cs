@@ -7432,16 +7432,7 @@ namespace DominoVisualizer
                     }
 				}*/
 
-                foreach (var c in dominoConnectors.Values)
-                    AddConnectorLines(c, 0);
-
-                foreach (var b in dominoBoxes.Values)
-                    AddBoxLines(b, 0);
-            }
-
-            if (asNew)
-            {
-            	foreach (var conn in dominoConnectors.Values)
+            	foreach (var conn in connectors.Values)
 				{
                     conn.DrawX -= sX;
                     conn.DrawY -= sY;
@@ -7453,7 +7444,7 @@ namespace DominoVisualizer
 					NewDrawConnector(conn, np.X, np.Y);
 				}
 
-            	foreach (var box in dominoBoxes.Values)
+            	foreach (var box in boxes.Values)
                 {
                     box.DrawX -= sX;
                     box.DrawY -= sY;
@@ -7464,6 +7455,12 @@ namespace DominoVisualizer
 
                     NewDrawBox(box, np.X, np.Y);
                 }
+
+                foreach (var c in dominoConnectors.Values)
+                    AddConnectorLines(c, 0);
+
+                foreach (var b in dominoBoxes.Values)
+                    AddBoxLines(b, 0);
             }
 
             var xPoints = xGraph.Element("Points")?.Elements("Point");

@@ -3748,8 +3748,12 @@ namespace DominoVisualizer
 				conn.Height += 55;
             }
 
+			int c = 0;
 			foreach (var eb in conn.ExecBoxes)
 			{
+				eb.INT_clr = c % linesColors.Count;
+				c++;
+
 				StackPanel sp = new();
 
 				string name = eb.ExecStr;
@@ -4437,7 +4441,7 @@ namespace DominoVisualizer
 					o.FromBoxConnectID = index;
 					o.FromBoxConnectIDStr = name;
 
-					DominoConnector c = connSel(acname + "_" + name + (arrayKey != "" ? "_" : "") + arrayKey);
+					DominoConnector c = connSel(acname + "_" + name + (arrayKey != null && arrayKey != "" ? "_" : "") + arrayKey);
 					c.FromBoxConnectID = 0;
 					c.FromBoxConnectIDStr = arrayKey;
 					o.SubConnections.Add(c);
@@ -4448,7 +4452,7 @@ namespace DominoVisualizer
 				else
 				{
 					var a = name == "" ? arrayKey : name;
-					o = connSel(acname + (a != "" ? "_" : "") + a);
+					o = connSel(acname + (a != null && a != "" ? "_" : "") + a);
 					o.FromBoxConnectID = index;
 					o.FromBoxConnectIDStr = a;
 

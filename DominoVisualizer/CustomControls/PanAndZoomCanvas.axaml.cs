@@ -540,6 +540,11 @@ namespace WpfPanAndZoom.CustomControls
                 double x = e.GetPosition(this).X;
                 double y = e.GetPosition(this).Y;
 
+                ShowOutside();
+
+                if (_selectedElement == null)
+                    return;
+
                 if (SnapToGrid)
                 {
                     var a = Transform4(new(100, 100));
@@ -637,6 +642,15 @@ namespace WpfPanAndZoom.CustomControls
                                 (_selectedElement as Control).Height = a.Y;
                         }
                     }
+        }
+
+        private void ShowOutside()
+        {
+            foreach (Control child in this.Children)
+            {
+                child.IsVisible = true;
+                child.RenderTransform = _transform;
+            }
         }
 
         private void HideOutside()

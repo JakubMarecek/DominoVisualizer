@@ -250,7 +250,11 @@ namespace WpfPanAndZoom.CustomControls
                 Cursor = new(StandardCursorType.SizeAll);
 
                 Control ct = ((Control)e.Source).FindAncestorOfType<Widget>();
-                if (ct == null && e.Source is DominoUILinePoint)
+                if (
+                    (ct == null && e.Source is DominoUILinePoint) ||
+                    (ct == null && e.Source is DominoUIBorder) ||
+                    (ct == null && e.Source is DominoUIComment)
+                    )
                 {
                     ct = (Control)e.Source;
                 }

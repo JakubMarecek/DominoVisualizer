@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.IO;
 
 namespace DominoVisualizer;
 
@@ -18,6 +19,7 @@ class Program
         }
         catch (Exception ex)
         {
+            File.WriteAllText(AppContext.BaseDirectory + Path.DirectorySeparatorChar + "Error.txt", ex.ToString());
         }
     }
 

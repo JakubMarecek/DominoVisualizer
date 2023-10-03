@@ -3326,6 +3326,7 @@ namespace DominoVisualizer
                             {
                                 line.UI.X1 = b.X + width;
                                 line.UI.Y1 = b.Y + posYCo + 11;
+								line.UI.Stroke = new SolidColorBrush(execBox.INT_clr == -1 ? Color.FromArgb(150, 150, 150, 150) : linesColors[execBox.INT_clr]);
                             }
                         }
                     }
@@ -7180,8 +7181,11 @@ namespace DominoVisualizer
 							if (val.Contains(":GetDataOutValue(") && asNew)
 							{
 								string p = val.Split(':')[0];
-								var oldNewID = oldNewBoxes[p];
-								val = val.Replace(p, oldNewID);
+								if (oldNewBoxes.ContainsKey(p))
+                                {
+                                    var oldNewID = oldNewBoxes[p];
+                                    val = val.Replace(p, oldNewID);
+                                }
 							}
 
                             prm.Value = val;
@@ -7409,7 +7413,8 @@ namespace DominoVisualizer
 							execBox.Exec = int.Parse(xExecBox.Attribute("Exec").Value);
 							execBox.DynIntExec = cc;
 							execBox.Box = box;
-							conn.ExecBoxes.Add(execBox);
+							if (asNew) execBox.ExecStr = regBoxesAll[box.Name].ControlsIn[execBox.Exec].Name;
+                            conn.ExecBoxes.Add(execBox);
 
 							execBox.Params = readParams(xExecBox, "Params", "Param");
 							if (asNew)

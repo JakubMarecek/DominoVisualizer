@@ -15,6 +15,7 @@
 		WindowStartupLocation="CenterScreen" Icon="avares://DominoVisualizer/Assets/domino.ico" Closing="Window_Closing" Deactivated="MainWindow_Deactivated">
 
 	<Window.Styles>
+		<StyleInclude Source="avares://DominoVisualizer/StyleBase.axaml" />
 		<StyleInclude Source="avares://DominoVisualizer/Style.axaml" />
 	</Window.Styles>
 

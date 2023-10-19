@@ -74,6 +74,7 @@
 		<PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
 		<PackageReference Include="Avalonia.Themes.Simple" Version="11.0.4" />
 		<PackageReference Include="Avalonia.Diagnostics" Version="11.0.4" />
+		<ProjectReference Include="..\..\UILibrary\UILibrary.csproj" />
 <!-- 		<PackageReference Include="Obfuscar" Version="2.2.37">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
